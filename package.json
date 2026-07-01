@@ -4,7 +4,8 @@
   "description": "Real-Time Esports Scoreboards & Stream Overlay System",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "desktop": "electron electron/main.js"
   },
   "dependencies": {
     "express": "^4.21.2",
