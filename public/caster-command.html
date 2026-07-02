@@ -697,9 +697,17 @@ button {
 const FALLBACK_CONTROL_URL = "http://localhost:3000/room/default-room/control";
 const FALLBACK_OVERLAY_URL = "http://localhost:3000/room/default-room/overlay";
 const ROCKET_LEAGUE_MODULE_ID = "rocket-league-scoreboard";
+const FALLBACK_ROCKET_LEAGUE_MODULE = {
+    id: ROCKET_LEAGUE_MODULE_ID,
+    shortName: "Rocket League",
+    controlUrl: "/room/default-room/control",
+    overlayUrl: "/room/default-room/overlay",
+    runnable: true
+};
 const selectedModules = new Set();
 let selectedPreset = "";
 let rocketLeagueModuleConfig = null;
+let activeModule = null;
 
 function resolveAppUrl(pathOrUrl, fallbackUrl) {
     if (typeof pathOrUrl !== "string" || pathOrUrl.trim() === "") {
@@ -714,12 +722,18 @@ function resolveAppUrl(pathOrUrl, fallbackUrl) {
     }
 }
 
-function getRocketLeagueControlUrl() {
-    return resolveAppUrl(rocketLeagueModuleConfig && rocketLeagueModuleConfig.controlUrl, FALLBACK_CONTROL_URL);
+function getRocketLeagueModule() {
+    return rocketLeagueModuleConfig || FALLBACK_ROCKET_LEAGUE_MODULE;
 }
 
-function getRocketLeagueOverlayUrl() {
-    return resolveAppUrl(rocketLeagueModuleConfig && rocketLeagueModuleConfig.overlayUrl, FALLBACK_OVERLAY_URL);
+function getActiveControlUrl() {
+    const moduleConfig = activeModule || getRocketLeagueModule();
+    return resolveAppUrl(moduleConfig.controlUrl, FALLBACK_CONTROL_URL);
+}
+
+function getActiveOverlayUrl() {
+    const moduleConfig = activeModule || getRocketLeagueModule();
+    return resolveAppUrl(moduleConfig.overlayUrl, FALLBACK_OVERLAY_URL);
 }
 
 async function loadModuleCatalog() {
@@ -739,6 +753,11 @@ async function loadModuleCatalog() {
         }
 
         rocketLeagueModuleConfig = rocketLeagueModule;
+
+        if (selectedModules.has("rocketLeagueScoreboard") || selectedPreset === "rocketLeagueCast") {
+            activeModule = getRocketLeagueModule();
+            updateStartState();
+        }
 
         const rocketLeagueLabel = document.querySelector("#rocketLeagueModule .module-title");
         if (rocketLeagueLabel) {
@@ -765,7 +784,7 @@ function hasRocketLeagueModule() {
 
 function updateStartState() {
     const startButton = document.getElementById("startControlRoomButton");
-    const canStart = hasRocketLeagueModule();
+    const canStart = !!(activeModule && activeModule.runnable && hasRocketLeagueModule());
 
     startButton.disabled = !canStart;
 }
@@ -793,7 +812,7 @@ function showControlScene() {
 
     setDesktopAdminStorage();
     const controlFrame = document.getElementById("controlFrame");
-    const controlUrl = getRocketLeagueControlUrl();
+    const controlUrl = getActiveControlUrl();
 
     if (controlFrame.src !== controlUrl) {
         controlFrame.src = controlUrl;
@@ -805,7 +824,7 @@ function showControlScene() {
 
 function showOverlayScene() {
     const overlayFrame = document.getElementById("overlayFrame");
-    const overlayUrl = getRocketLeagueOverlayUrl();
+    const overlayUrl = getActiveOverlayUrl();
 
     if (overlayFrame.src !== overlayUrl) {
         overlayFrame.src = overlayUrl;
@@ -846,6 +865,12 @@ function setModuleSelection(moduleId, isSelected) {
     } else {
         selectedModules.delete(moduleId);
     }
+
+    if (moduleId === "rocketLeagueScoreboard") {
+        activeModule = isSelected ? getRocketLeagueModule() : null;
+    } else if (activeModule && activeModule.id !== ROCKET_LEAGUE_MODULE_ID) {
+        activeModule = null;
+    }
 }
 
 document.querySelectorAll(".module-card[data-module]").forEach((moduleButton) => {
@@ -859,6 +884,7 @@ document.querySelectorAll(".module-card[data-module]").forEach((moduleButton) =>
 
 function applyPresetModules(presetId) {
     selectedModules.clear();
+    activeModule = null;
     document.querySelectorAll(".module-card[data-module]").forEach((moduleButton) => {
         moduleButton.classList.remove("selected");
     });
