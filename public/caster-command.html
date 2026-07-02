@@ -552,9 +552,6 @@ button {
                         <div class="module-column">
                             <h3 class="section-label">STREAM</h3>
                             <div class="module-list">
-                                <button class="module-card stream" type="button" data-module="streamTestButton">
-                                    <div class="module-title">Test Button</div>
-                                </button>
                                 <button class="module-card disabled" type="button" disabled>
                                     <div class="module-title">Twitch Goal Bar</div>
                                 </button>
@@ -573,9 +570,6 @@ button {
                                 <button class="module-card esports" type="button" id="rocketLeagueModule" data-module="rocketLeagueScoreboard">
                                     <div class="module-title">Rocket League</div>
                                 </button>
-                                <button class="module-card esports" type="button" data-module="esportsTestButton">
-                                    <div class="module-title">Test Button</div>
-                                </button>
                                 <button class="module-card disabled" type="button" disabled>
                                     <div class="module-title">Match Predictions</div>
                                 </button>
@@ -589,9 +583,6 @@ button {
                     <div class="preset-list">
                         <button class="preset-card" type="button" data-preset="rocketLeagueCast">
                             <div class="module-title">Rocket League Cast</div>
-                        </button>
-                        <button class="preset-card" type="button" data-preset="testPreset">
-                            <div class="module-title">Test Preset</div>
                         </button>
                     </div>
                 </div>
@@ -891,9 +882,6 @@ function applyPresetModules(presetId) {
 
     if (presetId === "rocketLeagueCast") {
         setModuleSelection("rocketLeagueScoreboard", true);
-    } else if (presetId === "testPreset") {
-        setModuleSelection("streamTestButton", true);
-        setModuleSelection("esportsTestButton", true);
     }
 }
 
