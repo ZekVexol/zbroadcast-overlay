@@ -60,6 +60,22 @@ compatibility metadata: local desktop, OBS browser source, room-based workflow
 
 The first version of the module system should describe the current working module. It should not force a rewrite of the controller.
 
+## Progress / Status
+
+Phase 3C is in progress. The first integration chunks are complete:
+
+- Phase 3C-1: Module metadata / config is complete.
+- Phase 3C-2: App shell reads module metadata is complete.
+- Phase 3C-3: Module-aware launch flow is complete.
+- Phase 3C-4: Embedded wrapper / navigation cleanup is complete.
+
+Future work remains open:
+
+- Safer Rocket League module polish.
+- Desktop layout improvements.
+- Eventual `control.html` split only when safe.
+- Eventual responsive module layout.
+
 ## Recommended Migration Phases
 
 ### Phase 3C-1: Module Metadata / Config Only

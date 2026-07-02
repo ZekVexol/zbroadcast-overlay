@@ -87,6 +87,16 @@ Current active sub-phase:
 
 Phase 3C is about turning the current embedded Rocket League controller into a cleaner first-class desktop module over time, while preserving the working scoreboard behavior.
 
+Progress so far:
+
+- Rocket League module plan added.
+- Module catalog created.
+- Rocket League defined as the first active/runnable module.
+- Control Room selector reads module catalog data.
+- Launch flow is module-aware.
+- Embedded wrapper strip was removed.
+- Existing `public/control.html` and `public/overlay.html` behavior preserved.
+
 Current focus:
 
 - Keep Caster Command as the first desktop screen.
