@@ -694,10 +694,60 @@ button {
 </main>
 
 <script>
-const CONTROL_URL = "http://localhost:3000/room/default-room/control";
-const OVERLAY_URL = "http://localhost:3000/room/default-room/overlay";
+const FALLBACK_CONTROL_URL = "http://localhost:3000/room/default-room/control";
+const FALLBACK_OVERLAY_URL = "http://localhost:3000/room/default-room/overlay";
+const ROCKET_LEAGUE_MODULE_ID = "rocket-league-scoreboard";
 const selectedModules = new Set();
 let selectedPreset = "";
+let rocketLeagueModuleConfig = null;
+
+function resolveAppUrl(pathOrUrl, fallbackUrl) {
+    if (typeof pathOrUrl !== "string" || pathOrUrl.trim() === "") {
+        return fallbackUrl;
+    }
+
+    try {
+        return new URL(pathOrUrl, window.location.origin).href;
+    } catch (error) {
+        console.warn("Invalid module URL in catalog:", pathOrUrl, error);
+        return fallbackUrl;
+    }
+}
+
+function getRocketLeagueControlUrl() {
+    return resolveAppUrl(rocketLeagueModuleConfig && rocketLeagueModuleConfig.controlUrl, FALLBACK_CONTROL_URL);
+}
+
+function getRocketLeagueOverlayUrl() {
+    return resolveAppUrl(rocketLeagueModuleConfig && rocketLeagueModuleConfig.overlayUrl, FALLBACK_OVERLAY_URL);
+}
+
+async function loadModuleCatalog() {
+    try {
+        const response = await fetch("/modules/catalog.json", { cache: "no-store" });
+
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+
+        const catalog = await response.json();
+        const modules = Array.isArray(catalog.modules) ? catalog.modules : [];
+        const rocketLeagueModule = modules.find((module) => module.id === ROCKET_LEAGUE_MODULE_ID);
+
+        if (!rocketLeagueModule) {
+            throw new Error(`Module not found: ${ROCKET_LEAGUE_MODULE_ID}`);
+        }
+
+        rocketLeagueModuleConfig = rocketLeagueModule;
+
+        const rocketLeagueLabel = document.querySelector("#rocketLeagueModule .module-title");
+        if (rocketLeagueLabel) {
+            rocketLeagueLabel.textContent = rocketLeagueModule.shortName || rocketLeagueModule.displayName || "Rocket League";
+        }
+    } catch (error) {
+        console.warn("Could not load module catalog. Using hardcoded Rocket League fallback.", error);
+    }
+}
 
 function setDesktopAdminStorage() {
     try {
@@ -743,9 +793,10 @@ function showControlScene() {
 
     setDesktopAdminStorage();
     const controlFrame = document.getElementById("controlFrame");
+    const controlUrl = getRocketLeagueControlUrl();
 
-    if (controlFrame.src !== CONTROL_URL) {
-        controlFrame.src = CONTROL_URL;
+    if (controlFrame.src !== controlUrl) {
+        controlFrame.src = controlUrl;
     }
 
     hideAllScenes();
@@ -754,9 +805,10 @@ function showControlScene() {
 
 function showOverlayScene() {
     const overlayFrame = document.getElementById("overlayFrame");
+    const overlayUrl = getRocketLeagueOverlayUrl();
 
-    if (overlayFrame.src !== OVERLAY_URL) {
-        overlayFrame.src = OVERLAY_URL;
+    if (overlayFrame.src !== overlayUrl) {
+        overlayFrame.src = overlayUrl;
     }
 
     hideAllScenes();
@@ -849,6 +901,7 @@ document.getElementById("quitButton").addEventListener("click", () => {
 
 setDesktopAdminStorage();
 updateStartState();
+loadModuleCatalog();
 </script>
 </body>
 </html>
