@@ -60,16 +60,38 @@ Known watch item:
 
 - The first desktop launch may be slower than later launches. This should be watched during testing, but it is not currently a blocker.
 
+### Phase 3B - Main Menu / Control Room Flow: Complete
+
+The first real in-app product flow is complete.
+
+Completed capabilities:
+
+- Game-style main menu added.
+- Control Room setup flow added.
+- Stream / Esports / Presets selector added.
+- START flow added.
+- Existing Rocket League controller launches from Control Room.
+- Preview Overlay flow works.
+- Home navigation works.
+- Existing `server.js`, `public/control.html`, and `public/overlay.html` behavior preserved.
+
 ## Current Active Phase
 
 ### Phase 3 - Desktop Foundation: In progress
 
 The active phase is building the desktop foundation without breaking the working web overlay system.
 
+Current active sub-phase:
+
+### Phase 3C - Rocket League Module Integration
+
+Phase 3C is about turning the current embedded Rocket League controller into a cleaner first-class desktop module over time, while preserving the working scoreboard behavior.
+
 Current focus:
 
 - Keep Caster Command as the first desktop screen.
-- Keep the existing control and overlay pages working.
+- Keep the existing Rocket League scoreboard behavior working.
+- Improve the embedded controller experience gradually.
 - Keep OBS using the local overlay URL.
 - Keep local desktop testing smooth.
 - Avoid rewriting scoreboard, overlay, room, Socket.IO, asset, history, undo, delay, or queued/instant update behavior too early.
@@ -88,21 +110,13 @@ Goal:
 
 ## Future Milestone Ladder
 
-### Phase 3B - Clean In-App Navigation
+### Phase 3C - Rocket League Module Integration
 
 Goal:
 
-- Make Electron navigation feel like a normal desktop app.
-- Keep Control, Overlay Preview, Caster Command, and Reload available through app-level navigation.
-- Avoid sending the operator into external browser tabs during desktop use.
-
-### Phase 3C - Desktop Control/Test Flow Polish
-
-Goal:
-
-- Smooth out the local desktop testing flow.
-- Keep the temporary desktop admin convenience local-only.
-- Confirm score buttons, resets, undo, metadata updates, rosters, assets, delay, and overlay output all work when launched through Electron.
+- Turn the current embedded Rocket League controller into a cleaner first-class desktop module over time.
+- Preserve the working scoreboard behavior while improving the desktop module wrapper.
+- Keep the current controller usable until each replacement piece is proven.
 
 ### Phase 3D - Caster Command Dashboard v1
 
