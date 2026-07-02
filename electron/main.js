@@ -1,11 +1,9 @@
-const { app, BrowserWindow, Menu } = require("electron");
+const { app, BrowserWindow, Menu, ipcMain } = require("electron");
 const { spawn } = require("child_process");
 const http = require("http");
 const path = require("path");
 
 const CASTER_COMMAND_URL = "http://localhost:3000/caster-command.html";
-const CONTROL_URL = "http://localhost:3000/room/default-room/control";
-const OVERLAY_PREVIEW_URL = "http://localhost:3000/room/default-room/overlay";
 const SERVER_ENTRY = path.join(__dirname, "..", "server.js");
 const PRELOAD_ENTRY = path.join(__dirname, "preload.js");
 const PROJECT_ROOT = path.join(__dirname, "..");
@@ -23,38 +21,12 @@ function loadAppUrl(url) {
 }
 
 function createApplicationMenu() {
-    const template = [
-        {
-            label: "ZBroadcast",
-            submenu: [
-                {
-                    label: "Caster Command",
-                    click: () => loadAppUrl(CASTER_COMMAND_URL)
-                },
-                {
-                    label: "Control",
-                    click: () => loadAppUrl(CONTROL_URL)
-                },
-                {
-                    label: "Overlay Preview",
-                    click: () => loadAppUrl(OVERLAY_PREVIEW_URL)
-                },
-                { type: "separator" },
-                {
-                    label: "Reload",
-                    accelerator: "CmdOrCtrl+R",
-                    click: () => {
-                        if (mainWindow && !mainWindow.isDestroyed()) {
-                            mainWindow.reload();
-                        }
-                    }
-                }
-            ]
-        }
-    ];
-
-    Menu.setApplicationMenu(Menu.buildFromTemplate(template));
+    Menu.setApplicationMenu(null);
 }
+
+ipcMain.on("zbroadcast:quit", () => {
+    app.quit();
+});
 
 function checkUrl(url) {
     return new Promise((resolve) => {
@@ -185,8 +157,8 @@ async function createWindow() {
     mainWindow = new BrowserWindow({
         width: 1180,
         height: 760,
-        minWidth: 900,
-        minHeight: 620,
+        minWidth: 1100,
+        minHeight: 680,
         backgroundColor: "#111214",
         webPreferences: {
             preload: PRELOAD_ENTRY,
