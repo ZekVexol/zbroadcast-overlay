@@ -689,6 +689,7 @@ button {
         <div class="top-app-bar">
             <div class="top-left-controls">
                 <button class="home-button" type="button" data-home>⌂ Home</button>
+                <button class="home-button" type="button" id="changeModuleButton">Change Module</button>
             </div>
             <div class="top-right-controls">
                 <button class="home-button" type="button" id="openOverlayPreviewButton">Preview Overlay</button>
@@ -1028,6 +1029,7 @@ document.querySelectorAll("[data-preset]").forEach((button) => {
 });
 
 document.getElementById("startControlRoomButton").addEventListener("click", showControlScene);
+document.getElementById("changeModuleButton").addEventListener("click", () => showSubmenu("controlRoomScene"));
 document.getElementById("openOverlayPreviewButton").addEventListener("click", showOverlayScene);
 document.getElementById("backToControlButton").addEventListener("click", showControlScene);
 document.getElementById("controlFrame").addEventListener("load", (event) => {
