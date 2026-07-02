@@ -485,9 +485,9 @@ button {
     left: 0;
     right: 0;
     bottom: 0;
-    top: var(--app-control-space);
+    top: 0;
     width: 100%;
-    height: calc(100% - var(--app-control-space));
+    height: 100%;
     border: 0;
     background: #121212;
 }
@@ -688,6 +688,7 @@ button {
 const FALLBACK_CONTROL_URL = "http://localhost:3000/room/default-room/control";
 const FALLBACK_OVERLAY_URL = "http://localhost:3000/room/default-room/overlay";
 const ROCKET_LEAGUE_MODULE_ID = "rocket-league-scoreboard";
+const EMBEDDED_CONTROL_INSET_PX = 56;
 const FALLBACK_ROCKET_LEAGUE_MODULE = {
     id: ROCKET_LEAGUE_MODULE_ID,
     shortName: "Rocket League",
@@ -769,6 +770,28 @@ function setDesktopAdminStorage() {
     }
 }
 
+function applyEmbeddedFrameInset(frame, insetPx, label) {
+    try {
+        const frameDocument = frame.contentDocument || (frame.contentWindow && frame.contentWindow.document);
+
+        if (!frameDocument || !frameDocument.body || insetPx <= 0) {
+            return;
+        }
+
+        if (!frameDocument.body.dataset.zbroadcastDesktopOriginalPaddingTop) {
+            const computedStyle = frameDocument.defaultView.getComputedStyle(frameDocument.body);
+            frameDocument.body.dataset.zbroadcastDesktopOriginalPaddingTop = computedStyle.paddingTop || "0px";
+        }
+
+        frameDocument.documentElement.style.setProperty("--zbroadcast-desktop-frame-inset", `${insetPx}px`);
+        frameDocument.body.style.boxSizing = "border-box";
+        frameDocument.body.style.paddingTop =
+            `calc(${frameDocument.body.dataset.zbroadcastDesktopOriginalPaddingTop} + var(--zbroadcast-desktop-frame-inset))`;
+    } catch (error) {
+        console.warn(`Could not apply desktop iframe inset for ${label}.`, error);
+    }
+}
+
 function hasRocketLeagueModule() {
     return selectedModules.has("rocketLeagueScoreboard") || selectedPreset === "rocketLeagueCast";
 }
@@ -811,6 +834,7 @@ function showControlScene() {
 
     hideAllScenes();
     document.getElementById("controlAppScene").classList.add("active");
+    window.setTimeout(() => applyEmbeddedFrameInset(controlFrame, EMBEDDED_CONTROL_INSET_PX, "control"), 0);
 }
 
 function showOverlayScene() {
@@ -903,6 +927,9 @@ document.querySelectorAll("[data-preset]").forEach((button) => {
 document.getElementById("startControlRoomButton").addEventListener("click", showControlScene);
 document.getElementById("openOverlayPreviewButton").addEventListener("click", showOverlayScene);
 document.getElementById("backToControlButton").addEventListener("click", showControlScene);
+document.getElementById("controlFrame").addEventListener("load", (event) => {
+    applyEmbeddedFrameInset(event.currentTarget, EMBEDDED_CONTROL_INSET_PX, "control");
+});
 
 document.getElementById("quitButton").addEventListener("click", () => {
     if (window.zbroadcastDesktop && typeof window.zbroadcastDesktop.quit === "function") {
