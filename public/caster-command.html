@@ -486,10 +486,36 @@ button {
     right: 0;
     bottom: 0;
     top: 0;
+    z-index: 0;
     width: 100%;
     height: 100%;
     border: 0;
     background: #121212;
+}
+
+.frame-status {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    color: rgba(244, 246, 248, 0.82);
+    font-size: 14px;
+    font-weight: 800;
+    letter-spacing: 0;
+    text-align: center;
+    text-shadow: 0 2px 14px rgba(0, 0, 0, 0.75);
+    pointer-events: none;
+}
+
+.frame-status.visible {
+    display: flex;
+}
+
+.frame-status.error {
+    color: #ffd0c9;
 }
 
 @media (max-width: 980px) {
@@ -668,6 +694,7 @@ button {
                 <button class="home-button" type="button" id="openOverlayPreviewButton">Preview Overlay</button>
             </div>
         </div>
+        <div class="frame-status" id="controlFrameStatus" aria-live="polite"></div>
         <iframe class="embedded-frame" id="controlFrame" title="Rocket League Scoreboard Control"></iframe>
     </section>
 
@@ -680,6 +707,7 @@ button {
                 <button class="home-button" type="button" id="backToControlButton">Back To Control</button>
             </div>
         </div>
+        <div class="frame-status" id="overlayFrameStatus" aria-live="polite"></div>
         <iframe class="embedded-frame" id="overlayFrame" title="Overlay Preview"></iframe>
     </section>
 </main>
@@ -689,6 +717,7 @@ const FALLBACK_CONTROL_URL = "http://localhost:3000/room/default-room/control";
 const FALLBACK_OVERLAY_URL = "http://localhost:3000/room/default-room/overlay";
 const ROCKET_LEAGUE_MODULE_ID = "rocket-league-scoreboard";
 const EMBEDDED_CONTROL_INSET_PX = 56;
+const FRAME_LOAD_TIMEOUT_MS = 15000;
 const FALLBACK_ROCKET_LEAGUE_MODULE = {
     id: ROCKET_LEAGUE_MODULE_ID,
     shortName: "Rocket League",
@@ -700,6 +729,7 @@ const selectedModules = new Set();
 let selectedPreset = "";
 let rocketLeagueModuleConfig = null;
 let activeModule = null;
+const frameLoadTimers = new Map();
 
 function resolveAppUrl(pathOrUrl, fallbackUrl) {
     if (typeof pathOrUrl !== "string" || pathOrUrl.trim() === "") {
@@ -726,6 +756,11 @@ function getActiveControlUrl() {
 function getActiveOverlayUrl() {
     const moduleConfig = activeModule || getRocketLeagueModule();
     return resolveAppUrl(moduleConfig.overlayUrl, FALLBACK_OVERLAY_URL);
+}
+
+function getActiveModuleName() {
+    const moduleConfig = activeModule || getRocketLeagueModule();
+    return moduleConfig.shortName || moduleConfig.displayName || "Rocket League";
 }
 
 async function loadModuleCatalog() {
@@ -758,6 +793,52 @@ async function loadModuleCatalog() {
     } catch (error) {
         console.warn("Could not load module catalog. Using hardcoded Rocket League fallback.", error);
     }
+}
+
+function setFrameStatus(statusId, message, type = "loading") {
+    const status = document.getElementById(statusId);
+
+    if (!status) {
+        return;
+    }
+
+    status.textContent = message;
+    status.classList.toggle("visible", !!message);
+    status.classList.toggle("error", type === "error");
+}
+
+function clearFrameStatus(statusId) {
+    setFrameStatus(statusId, "");
+}
+
+function beginFrameLoad(frame, statusId, loadingMessage, errorMessage) {
+    window.clearTimeout(frameLoadTimers.get(frame.id));
+    frame.dataset.zbroadcastLoading = "true";
+    setFrameStatus(statusId, loadingMessage);
+
+    const timeoutId = window.setTimeout(() => {
+        if (frame.dataset.zbroadcastLoading === "true") {
+            setFrameStatus(statusId, errorMessage, "error");
+            console.warn(errorMessage);
+        }
+    }, FRAME_LOAD_TIMEOUT_MS);
+
+    frameLoadTimers.set(frame.id, timeoutId);
+}
+
+function finishFrameLoad(frame, statusId) {
+    window.clearTimeout(frameLoadTimers.get(frame.id));
+    frameLoadTimers.delete(frame.id);
+    frame.dataset.zbroadcastLoading = "false";
+    clearFrameStatus(statusId);
+}
+
+function failFrameLoad(frame, statusId, errorMessage) {
+    window.clearTimeout(frameLoadTimers.get(frame.id));
+    frameLoadTimers.delete(frame.id);
+    frame.dataset.zbroadcastLoading = "false";
+    setFrameStatus(statusId, errorMessage, "error");
+    console.warn(errorMessage);
 }
 
 function setDesktopAdminStorage() {
@@ -827,26 +908,48 @@ function showControlScene() {
     setDesktopAdminStorage();
     const controlFrame = document.getElementById("controlFrame");
     const controlUrl = getActiveControlUrl();
+    const didChangeUrl = controlFrame.src !== controlUrl;
 
-    if (controlFrame.src !== controlUrl) {
+    if (didChangeUrl) {
+        beginFrameLoad(
+            controlFrame,
+            "controlFrameStatus",
+            `Loading ${getActiveModuleName()}...`,
+            "Could not load module. Make sure the local server is running."
+        );
         controlFrame.src = controlUrl;
     }
 
     hideAllScenes();
     document.getElementById("controlAppScene").classList.add("active");
     window.setTimeout(() => applyEmbeddedFrameInset(controlFrame, EMBEDDED_CONTROL_INSET_PX, "control"), 0);
+
+    if (!didChangeUrl) {
+        finishFrameLoad(controlFrame, "controlFrameStatus");
+    }
 }
 
 function showOverlayScene() {
     const overlayFrame = document.getElementById("overlayFrame");
     const overlayUrl = getActiveOverlayUrl();
+    const didChangeUrl = overlayFrame.src !== overlayUrl;
 
-    if (overlayFrame.src !== overlayUrl) {
+    if (didChangeUrl) {
+        beginFrameLoad(
+            overlayFrame,
+            "overlayFrameStatus",
+            "Loading Overlay Preview...",
+            "Could not load overlay preview. Make sure the local server is running."
+        );
         overlayFrame.src = overlayUrl;
     }
 
     hideAllScenes();
     document.getElementById("overlayAppScene").classList.add("active");
+
+    if (!didChangeUrl) {
+        finishFrameLoad(overlayFrame, "overlayFrameStatus");
+    }
 }
 
 document.querySelectorAll("[data-submenu]").forEach((button) => {
@@ -929,6 +1032,16 @@ document.getElementById("openOverlayPreviewButton").addEventListener("click", sh
 document.getElementById("backToControlButton").addEventListener("click", showControlScene);
 document.getElementById("controlFrame").addEventListener("load", (event) => {
     applyEmbeddedFrameInset(event.currentTarget, EMBEDDED_CONTROL_INSET_PX, "control");
+    finishFrameLoad(event.currentTarget, "controlFrameStatus");
+});
+document.getElementById("controlFrame").addEventListener("error", (event) => {
+    failFrameLoad(event.currentTarget, "controlFrameStatus", "Could not load module. Make sure the local server is running.");
+});
+document.getElementById("overlayFrame").addEventListener("load", (event) => {
+    finishFrameLoad(event.currentTarget, "overlayFrameStatus");
+});
+document.getElementById("overlayFrame").addEventListener("error", (event) => {
+    failFrameLoad(event.currentTarget, "overlayFrameStatus", "Could not load overlay preview. Make sure the local server is running.");
 });
 
 document.getElementById("quitButton").addEventListener("click", () => {
