@@ -919,6 +919,179 @@ body.settings-high-contrast .scene-copy {
     color: #ffd0c9;
 }
 
+.global-devtools {
+    position: fixed;
+    right: var(--scene-control-x);
+    bottom: 26px;
+    z-index: 80;
+    width: min(240px, calc(100vw - 48px));
+    height: 32px;
+    pointer-events: none;
+}
+
+.global-devtools-toggle {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    min-height: 32px;
+    padding: 0 10px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 4px;
+    background: rgba(18, 21, 28, 0.74);
+    color: rgba(244, 246, 248, 0.84);
+    cursor: pointer;
+    font-size: 11px;
+    font-weight: 800;
+    pointer-events: auto;
+}
+
+.global-devtools-toggle:hover {
+    background: rgba(42, 47, 59, 0.86);
+}
+
+.global-devtools-menu {
+    position: absolute;
+    right: 0;
+    bottom: calc(100% + 8px);
+    display: none;
+    width: min(230px, calc(100vw - 48px));
+    padding: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 6px;
+    background: rgba(9, 11, 16, 0.94);
+    box-shadow: 0 18px 48px rgba(0, 0, 0, 0.35);
+    pointer-events: auto;
+}
+
+.global-devtools.open .global-devtools-menu {
+    display: block;
+}
+
+.global-devtools-list {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+}
+
+.global-devtools-branch {
+    position: relative;
+}
+
+.global-devtools-group {
+    display: grid;
+    gap: 5px;
+}
+
+.global-devtools-control-room {
+    padding-bottom: 8px;
+    margin-bottom: 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.global-devtools-group:last-child {
+    padding-bottom: 0;
+    margin-bottom: 0;
+    border-bottom: 0;
+}
+
+.global-devtools-action,
+.global-devtools-branch-label {
+    display: grid;
+    grid-template-columns: 18px minmax(0, 1fr);
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    min-height: 30px;
+    padding: 0 10px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 4px;
+    background: rgba(31, 36, 48, 0.74);
+    color: var(--text);
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 800;
+    text-align: right;
+}
+
+.global-devtools-action[hidden] {
+    display: none !important;
+}
+
+.global-devtools-branch-label::before {
+    content: "<";
+    grid-column: 1;
+    color: rgba(244, 246, 248, 0.48);
+    text-align: left;
+}
+
+.global-devtools-action::before {
+    content: "";
+    grid-column: 1;
+    text-align: left;
+}
+
+.global-devtools-action.active {
+    border-color: rgba(46, 204, 113, 0.4);
+    background: rgba(46, 204, 113, 0.16);
+    color: rgba(224, 255, 238, 0.96);
+}
+
+.global-devtools-action.active::before {
+    content: "✓";
+    grid-column: 1;
+    text-align: left;
+}
+
+.global-devtools-category {
+    height: 1px;
+    margin: 7px 0 3px;
+    padding: 0;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(244, 246, 248, 0.54);
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+}
+
+.global-devtools-category:first-child {
+    margin-top: 0;
+}
+
+.global-devtools-action:hover,
+.global-devtools-branch:hover > .global-devtools-branch-label,
+.global-devtools-branch:focus-within > .global-devtools-branch-label {
+    background: rgba(45, 108, 255, 0.22);
+    border-color: rgba(45, 108, 255, 0.36);
+}
+
+.global-devtools-submenu {
+    position: absolute;
+    right: calc(100% + 8px);
+    bottom: 0;
+    display: none;
+    min-width: 190px;
+    padding: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 6px;
+    background: rgba(9, 11, 16, 0.96);
+    box-shadow: 0 18px 48px rgba(0, 0, 0, 0.35);
+}
+
+.global-devtools-branch:hover > .global-devtools-submenu,
+.global-devtools-branch:focus-within > .global-devtools-submenu {
+    display: block;
+}
+
+.global-devtools-control-room {
+    display: none;
+}
+
+.global-devtools.show-control-room-tools .global-devtools-control-room {
+    display: block;
+}
+
 @media (max-width: 980px) {
     .status-stack {
         grid-template-columns: 1fr;
@@ -1372,6 +1545,50 @@ body.settings-high-contrast .scene-copy {
         <div class="frame-status" id="overlayFrameStatus" aria-live="polite"></div>
         <iframe class="embedded-frame" id="overlayFrame" title="Overlay Preview"></iframe>
     </section>
+
+    <div class="global-devtools" id="globalDevTools">
+        <button class="global-devtools-toggle" type="button" id="globalDevToolsToggle" aria-expanded="false" aria-controls="globalDevToolsMenu">Dev Tools</button>
+        <div class="global-devtools-menu" id="globalDevToolsMenu">
+            <div class="global-devtools-list">
+                <div class="global-devtools-group global-devtools-control-room">
+                    <div class="global-devtools-branch">
+                        <button class="global-devtools-branch-label" type="button">Modules</button>
+                        <div class="global-devtools-submenu">
+                            <div class="global-devtools-list" id="devControlRoomModules"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="global-devtools-group global-devtools-global">
+                    <div class="global-devtools-branch">
+                        <button class="global-devtools-branch-label" type="button">Navigation</button>
+                        <div class="global-devtools-submenu">
+                            <div class="global-devtools-list">
+                                <div class="global-devtools-branch">
+                                    <button class="global-devtools-branch-label" type="button">Scenes</button>
+                                    <div class="global-devtools-submenu">
+                                        <div class="global-devtools-list">
+                                            <button class="global-devtools-action" type="button" data-dev-scene="control-room">Control Room</button>
+                                            <button class="global-devtools-action" type="button" data-dev-scene="main-menu">Main Menu</button>
+                                            <button class="global-devtools-action" type="button" data-dev-scene="preview-overlay">Preview Overlay</button>
+                                            <button class="global-devtools-action" type="button" data-dev-scene="settings">Settings</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="global-devtools-branch">
+                        <button class="global-devtools-branch-label" type="button">Other Commands</button>
+                        <div class="global-devtools-submenu">
+                            <div class="global-devtools-list">
+                                <button class="global-devtools-action" type="button" id="devReloadUiButton">Reload UI</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </main>
 
 <script>
@@ -1381,6 +1598,46 @@ const ROCKET_LEAGUE_MODULE_ID = "rocket-league-scoreboard";
 const EMBEDDED_CONTROL_INSET_PX = 56;
 const FRAME_LOAD_TIMEOUT_MS = 15000;
 const SETTINGS_STORAGE_KEY = "zbroadcast:settings";
+const IDLE_OUTPUT_HTML = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<style>
+html,
+body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: transparent;
+    color: rgba(244, 246, 248, 0.78);
+    font-family: Arial, sans-serif;
+}
+body {
+    display: grid;
+    place-items: center;
+    background:
+        radial-gradient(circle at 50% 42%, rgba(45, 108, 255, 0.08), transparent 32%),
+        #080a0f;
+}
+.idle-output {
+    text-align: center;
+    font-size: 18px;
+    font-weight: 800;
+}
+.idle-output span {
+    display: block;
+    margin-top: 8px;
+    color: rgba(244, 246, 248, 0.42);
+    font-size: 12px;
+    font-weight: 700;
+}
+</style>
+</head>
+<body>
+    <div class="idle-output">No output loaded</div>
+</body>
+</html>`;
 const FALLBACK_ROCKET_LEAGUE_MODULE = {
     id: ROCKET_LEAGUE_MODULE_ID,
     shortName: "Rocket League",
@@ -1391,7 +1648,9 @@ const FALLBACK_ROCKET_LEAGUE_MODULE = {
 const selectedModules = new Set();
 let selectedPreset = "";
 let rocketLeagueModuleConfig = null;
+let catalogModules = [FALLBACK_ROCKET_LEAGUE_MODULE];
 let activeModule = null;
+let controlRoomModule = null;
 const frameLoadTimers = new Map();
 let availableDesktopDisplays = [];
 let settingsStatusTimer = null;
@@ -1891,19 +2150,25 @@ function getRocketLeagueModule() {
     return rocketLeagueModuleConfig || FALLBACK_ROCKET_LEAGUE_MODULE;
 }
 
-function getActiveControlUrl() {
-    const moduleConfig = activeModule || getRocketLeagueModule();
+function getActiveControlUrl(moduleConfig = activeModule) {
+    if (!moduleConfig) {
+        return "";
+    }
+
     return resolveAppUrl(moduleConfig.controlUrl, FALLBACK_CONTROL_URL);
 }
 
 function getActiveOverlayUrl() {
-    const moduleConfig = activeModule || getRocketLeagueModule();
-    return resolveAppUrl(moduleConfig.overlayUrl, FALLBACK_OVERLAY_URL);
+    if (!controlRoomModule) {
+        return "";
+    }
+
+    return resolveAppUrl(controlRoomModule.overlayUrl, "");
 }
 
-function getActiveModuleName() {
-    const moduleConfig = activeModule || getRocketLeagueModule();
-    return moduleConfig.shortName || moduleConfig.displayName || "Rocket League";
+function getActiveModuleName(moduleConfig = activeModule) {
+    moduleConfig = moduleConfig || getRocketLeagueModule();
+    return moduleConfig.shortName || moduleConfig.displayName || "Control Room";
 }
 
 async function loadModuleCatalog() {
@@ -1923,6 +2188,7 @@ async function loadModuleCatalog() {
             throw new Error(`Module not found: ${ROCKET_LEAGUE_MODULE_ID}`);
         }
 
+        catalogModules = modules;
         rocketLeagueModuleConfig = rocketLeagueModule;
 
         if (selectedModules.has("rocketLeagueScoreboard") || selectedPreset === "rocketLeagueCast") {
@@ -1939,8 +2205,12 @@ async function loadModuleCatalog() {
         if (predictionsLabel && predictionsModule) {
             predictionsLabel.textContent = predictionsModule.shortName || predictionsModule.displayName || "Predictions";
         }
+
+        renderDevControlRoomModules();
     } catch (error) {
         console.warn("Could not load module catalog. Using hardcoded Rocket League fallback.", error);
+        catalogModules = [FALLBACK_ROCKET_LEAGUE_MODULE];
+        renderDevControlRoomModules();
     }
 }
 
@@ -2033,6 +2303,172 @@ function updateStartState() {
     startButton.disabled = !canStart;
 }
 
+function getRunnableDevModules() {
+    const modules = Array.isArray(catalogModules) ? catalogModules : [];
+    const runnableModules = modules.filter((module) => {
+        return module && module.runnable === true && typeof module.controlUrl === "string" && module.controlUrl.trim() !== "";
+    });
+
+    if (!runnableModules.some((module) => module.id === ROCKET_LEAGUE_MODULE_ID)) {
+        runnableModules.unshift(getRocketLeagueModule());
+    }
+
+    return runnableModules;
+}
+
+function isDevModuleActive(moduleId) {
+    return !!(controlRoomModule && controlRoomModule.id === moduleId);
+}
+
+function renderDevControlRoomModules() {
+    const modulesContainer = document.getElementById("devControlRoomModules");
+
+    if (!modulesContainer) {
+        return;
+    }
+
+    const runnableModules = getRunnableDevModules();
+    const categoryOrder = ["stream", "esports"];
+    const groupedModules = runnableModules.reduce((groups, module) => {
+        const category = categoryOrder.includes(module.category) ? module.category : "other";
+        groups[category] = groups[category] || [];
+        groups[category].push(module);
+        return groups;
+    }, {});
+    const orderedCategories = [
+        ...categoryOrder,
+        ...Object.keys(groupedModules).filter((category) => !categoryOrder.includes(category)).sort()
+    ].filter((category) => groupedModules[category] && groupedModules[category].length > 0);
+
+    modulesContainer.innerHTML = orderedCategories.map((category, index) => {
+        const moduleButtons = groupedModules[category]
+            .slice()
+            .sort((firstModule, secondModule) => {
+                const firstName = firstModule.shortName || firstModule.displayName || firstModule.id;
+                const secondName = secondModule.shortName || secondModule.displayName || secondModule.id;
+                return firstName.localeCompare(secondName);
+            })
+            .map((module) => {
+                const moduleName = module.shortName || module.displayName || module.id;
+                const activeClass = isDevModuleActive(module.id) ? " active" : "";
+                return `<button class="global-devtools-action${activeClass}" type="button" data-dev-module="${module.id}">${moduleName}</button>`;
+            }).join("");
+
+        return `${index > 0 ? '<div class="global-devtools-category"></div>' : ""}${moduleButtons}`;
+    }).join("");
+
+    modulesContainer.querySelectorAll("[data-dev-module]").forEach((button) => {
+        button.addEventListener("click", () => toggleDevControlRoomModule(button.dataset.devModule));
+    });
+}
+
+function toggleDevControlRoomModule(moduleId) {
+    const moduleConfig = getRunnableDevModules().find((module) => module.id === moduleId);
+
+    if (!moduleConfig) {
+        return;
+    }
+
+    const shouldRemove = isDevModuleActive(moduleId);
+
+    if (shouldRemove) {
+        controlRoomModule = null;
+        if (activeModule && activeModule.id === moduleId) {
+            activeModule = null;
+        }
+
+        if (moduleId === ROCKET_LEAGUE_MODULE_ID) {
+            clearPresetSelection();
+            setModuleSelection("rocketLeagueScoreboard", false);
+        }
+    } else {
+        activeModule = moduleConfig;
+
+        if (moduleId === ROCKET_LEAGUE_MODULE_ID) {
+            clearPresetSelection();
+            setModuleSelection("rocketLeagueScoreboard", true);
+        }
+    }
+
+    updateStartState();
+    renderDevControlRoomModules();
+    showControlScene({ allowEmpty: true, keepDevToolsOpen: true });
+}
+
+function closeGlobalDevTools() {
+    const devTools = document.getElementById("globalDevTools");
+    const toggle = document.getElementById("globalDevToolsToggle");
+
+    if (devTools) {
+        devTools.classList.remove("open");
+    }
+
+    if (toggle) {
+        toggle.setAttribute("aria-expanded", "false");
+    }
+}
+
+function toggleGlobalDevTools() {
+    const devTools = document.getElementById("globalDevTools");
+    const toggle = document.getElementById("globalDevToolsToggle");
+
+    if (!devTools || !toggle) {
+        return;
+    }
+
+    updateGlobalDevToolsContext();
+    const isOpen = devTools.classList.toggle("open");
+    toggle.setAttribute("aria-expanded", String(isOpen));
+}
+
+function runDevToolsNavigation(action) {
+    closeGlobalDevTools();
+    runWithSettingsGuard(action);
+}
+
+function getCurrentDevScene() {
+    if (document.getElementById("controlAppScene").classList.contains("active")) {
+        return "control-room";
+    }
+
+    if (document.getElementById("mainMenuScene").classList.contains("active")) {
+        return "main-menu";
+    }
+
+    if (document.getElementById("overlayAppScene").classList.contains("active")) {
+        return "preview-overlay";
+    }
+
+    if (document.getElementById("optionsScene").classList.contains("active")) {
+        return "settings";
+    }
+
+    if (document.getElementById("controlRoomScene").classList.contains("active")) {
+        return "control-room";
+    }
+
+    return "";
+}
+
+function updateGlobalDevToolsContext() {
+    const devTools = document.getElementById("globalDevTools");
+
+    if (!devTools) {
+        return;
+    }
+
+    const isControlRoomContext = document.getElementById("controlAppScene").classList.contains("active");
+    const currentScene = getCurrentDevScene();
+
+    devTools.classList.toggle("show-control-room-tools", isControlRoomContext);
+    document.querySelectorAll("[data-dev-scene]").forEach((button) => {
+        const isCurrentScene = button.dataset.devScene === currentScene;
+        button.hidden = isCurrentScene;
+        button.setAttribute("aria-hidden", String(isCurrentScene));
+    });
+    renderDevControlRoomModules();
+}
+
 function hideAllScenes() {
     document.querySelectorAll(".main-menu-scene, .submenu-scene, .app-scene").forEach((scene) => {
         scene.classList.remove("active");
@@ -2040,30 +2476,60 @@ function hideAllScenes() {
 }
 
 function showMainMenu() {
+    closeGlobalDevTools();
     hideAllScenes();
     document.getElementById("mainMenuScene").classList.add("active");
+    updateGlobalDevToolsContext();
 }
 
 function showSubmenu(sceneId) {
+    closeGlobalDevTools();
     hideAllScenes();
     document.getElementById(sceneId).classList.add("active");
+    updateGlobalDevToolsContext();
 }
 
-function showControlScene() {
-    if (!hasRocketLeagueModule()) {
+function showControlScene(options = {}) {
+    const moduleForControlRoom = options.useLoadedOnly ? controlRoomModule : (activeModule || controlRoomModule);
+
+    if (!moduleForControlRoom || !moduleForControlRoom.runnable) {
+        if (options.allowEmpty) {
+            const controlFrame = document.getElementById("controlFrame");
+            if (controlFrame) {
+                window.clearTimeout(frameLoadTimers.get(controlFrame.id));
+                frameLoadTimers.delete(controlFrame.id);
+                controlFrame.dataset.zbroadcastEmpty = "true";
+                controlFrame.src = "about:blank";
+            }
+
+            controlRoomModule = null;
+            setFrameStatus("controlFrameStatus", "No modules loaded. Choose a module from Control Room setup.");
+            if (!options.keepDevToolsOpen) {
+                closeGlobalDevTools();
+            }
+            hideAllScenes();
+            document.getElementById("controlAppScene").classList.add("active");
+            updateGlobalDevToolsContext();
+        }
+
         return;
     }
 
+    if (!options.keepDevToolsOpen) {
+        closeGlobalDevTools();
+    }
     setDesktopAdminStorage();
     const controlFrame = document.getElementById("controlFrame");
-    const controlUrl = getActiveControlUrl();
+    controlFrame.dataset.zbroadcastEmpty = "false";
+    controlRoomModule = moduleForControlRoom;
+    const controlUrl = getActiveControlUrl(moduleForControlRoom);
     const didChangeUrl = controlFrame.src !== controlUrl;
 
     if (didChangeUrl) {
         beginFrameLoad(
             controlFrame,
             "controlFrameStatus",
-            `Loading ${getActiveModuleName()}...`,
+            `Loading ${getActiveModuleName(moduleForControlRoom)}...`,
             "Could not load module. Make sure the local server is running."
         );
         controlFrame.src = controlUrl;
@@ -2071,6 +2537,7 @@ function showControlScene() {
 
     hideAllScenes();
     document.getElementById("controlAppScene").classList.add("active");
+    updateGlobalDevToolsContext();
     window.setTimeout(() => applyEmbeddedFrameInset(controlFrame, EMBEDDED_CONTROL_INSET_PX, "control"), 0);
 
     if (!didChangeUrl) {
@@ -2079,9 +2546,25 @@ function showControlScene() {
 }
 
 function showOverlayScene() {
+    closeGlobalDevTools();
     const overlayFrame = document.getElementById("overlayFrame");
     const overlayUrl = getActiveOverlayUrl();
-    const didChangeUrl = overlayFrame.src !== overlayUrl;
+
+    if (!overlayUrl) {
+        window.clearTimeout(frameLoadTimers.get(overlayFrame.id));
+        frameLoadTimers.delete(overlayFrame.id);
+        overlayFrame.dataset.zbroadcastLoading = "false";
+        overlayFrame.dataset.zbroadcastIdle = "true";
+        overlayFrame.removeAttribute("src");
+        overlayFrame.srcdoc = IDLE_OUTPUT_HTML;
+        clearFrameStatus("overlayFrameStatus");
+        hideAllScenes();
+        document.getElementById("overlayAppScene").classList.add("active");
+        updateGlobalDevToolsContext();
+        return;
+    }
+
+    const didChangeUrl = overlayFrame.src !== overlayUrl || overlayFrame.dataset.zbroadcastIdle === "true";
 
     if (didChangeUrl) {
         beginFrameLoad(
@@ -2090,11 +2573,14 @@ function showOverlayScene() {
             "Loading Overlay Preview...",
             "Could not load overlay preview. Make sure the local server is running."
         );
+        overlayFrame.dataset.zbroadcastIdle = "false";
+        overlayFrame.removeAttribute("srcdoc");
         overlayFrame.src = overlayUrl;
     }
 
     hideAllScenes();
     document.getElementById("overlayAppScene").classList.add("active");
+    updateGlobalDevToolsContext();
 
     if (!didChangeUrl) {
         finishFrameLoad(overlayFrame, "overlayFrameStatus");
@@ -2138,6 +2624,8 @@ function setModuleSelection(moduleId, isSelected) {
     } else if (activeModule && activeModule.id !== ROCKET_LEAGUE_MODULE_ID) {
         activeModule = null;
     }
+
+    renderDevControlRoomModules();
 }
 
 document.querySelectorAll(".module-card[data-module]").forEach((moduleButton) => {
@@ -2179,8 +2667,33 @@ document.querySelectorAll("[data-preset]").forEach((button) => {
 document.getElementById("startControlRoomButton").addEventListener("click", showControlScene);
 document.getElementById("changeModuleButton").addEventListener("click", () => showSubmenu("controlRoomScene"));
 document.getElementById("openOverlayPreviewButton").addEventListener("click", showOverlayScene);
-document.getElementById("backToControlButton").addEventListener("click", showControlScene);
+document.getElementById("backToControlButton").addEventListener("click", () => showControlScene({ allowEmpty: true, useLoadedOnly: true }));
+document.getElementById("globalDevToolsToggle").addEventListener("click", toggleGlobalDevTools);
+document.querySelectorAll("[data-dev-scene]").forEach((button) => {
+    button.addEventListener("click", () => {
+        const scene = button.dataset.devScene;
+
+        if (scene === "control-room") {
+            runDevToolsNavigation(() => showControlScene({ allowEmpty: true, useLoadedOnly: true }));
+        } else if (scene === "main-menu") {
+            runDevToolsNavigation(showMainMenu);
+        } else if (scene === "preview-overlay") {
+            runDevToolsNavigation(showOverlayScene);
+        } else if (scene === "settings") {
+            runDevToolsNavigation(() => showSubmenu("optionsScene"));
+        }
+    });
+});
+document.getElementById("devReloadUiButton").addEventListener("click", () => {
+    closeGlobalDevTools();
+    window.location.reload();
+});
 document.getElementById("controlFrame").addEventListener("load", (event) => {
+    if (event.currentTarget.dataset.zbroadcastEmpty === "true") {
+        setFrameStatus("controlFrameStatus", "No modules loaded. Choose a module from Control Room setup.");
+        return;
+    }
+
     applyEmbeddedFrameInset(event.currentTarget, EMBEDDED_CONTROL_INSET_PX, "control");
     finishFrameLoad(event.currentTarget, "controlFrameStatus");
 });
@@ -2247,6 +2760,7 @@ showSettingsTab("general");
 setDesktopAdminStorage();
 updateStartState();
 loadModuleCatalog();
+updateGlobalDevToolsContext();
 </script>
 </body>
 </html>
