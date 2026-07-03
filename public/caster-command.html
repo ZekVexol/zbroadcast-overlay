@@ -237,6 +237,11 @@ button {
     background: rgba(47, 53, 66, 0.78);
 }
 
+.home-button:disabled {
+    cursor: not-allowed;
+    opacity: 0.45;
+}
+
 .scene-title {
     margin: 0 0 14px 0;
     font-size: clamp(28px, 3vw, 38px);
@@ -438,6 +443,314 @@ button {
     color: #d7dce5;
 }
 
+.settings-content {
+    top: clamp(72px, 10vh, 108px);
+    width: min(1120px, calc(100vw - 96px));
+    max-height: calc(100vh - 102px);
+    overflow: hidden;
+}
+
+.settings-shell {
+    display: grid;
+    grid-template-columns: minmax(190px, 240px) minmax(0, 1fr);
+    gap: clamp(22px, 4vw, 48px);
+    min-height: min(620px, calc(100vh - 170px));
+}
+
+.settings-tabs {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.settings-tab {
+    min-height: 40px;
+    padding: 0 14px;
+    border: 1px solid transparent;
+    border-left: 4px solid rgba(255, 255, 255, 0.16);
+    border-radius: 3px;
+    background: rgba(18, 21, 28, 0.3);
+    color: rgba(244, 246, 248, 0.76);
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 800;
+    text-align: left;
+}
+
+.settings-tab:hover,
+.settings-tab:focus {
+    outline: none;
+    background: rgba(42, 47, 59, 0.68);
+    color: var(--text);
+}
+
+.settings-tab.active {
+    border-color: rgba(45, 108, 255, 0.42);
+    border-left-color: var(--blue);
+    background: linear-gradient(90deg, rgba(45, 108, 255, 0.28), rgba(18, 21, 28, 0.36));
+    color: var(--text);
+}
+
+.settings-panel-area {
+    min-width: 0;
+    max-height: min(620px, calc(100vh - 170px));
+    overflow-y: auto;
+    padding: 0 18px 24px 0;
+    scrollbar-gutter: stable;
+}
+
+.settings-panel {
+    display: none;
+    max-width: 760px;
+}
+
+.settings-panel.active {
+    display: block;
+}
+
+.settings-panel h3 {
+    display: none;
+}
+
+.settings-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.settings-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(150px, 220px);
+    gap: 18px;
+    align-items: center;
+    min-height: 54px;
+    padding: 11px 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.settings-row:first-child {
+    border-top: 0;
+}
+
+.settings-label {
+    color: var(--text);
+    font-size: 14px;
+    font-weight: 800;
+}
+
+.settings-note,
+.settings-value {
+    display: block;
+    margin-top: 4px;
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+.settings-value {
+    font-family: Consolas, "Courier New", monospace;
+}
+
+.settings-control,
+.settings-toggle {
+    justify-self: end;
+}
+
+.settings-toggle {
+    width: 44px;
+    height: 24px;
+    accent-color: var(--blue);
+    cursor: pointer;
+}
+
+.settings-select,
+.settings-range {
+    width: min(220px, 100%);
+}
+
+.settings-select {
+    min-height: 34px;
+    padding: 0 10px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 4px;
+    background: rgba(24, 27, 35, 0.72);
+    color: var(--text);
+    font-weight: 800;
+}
+
+.settings-range {
+    accent-color: var(--blue);
+}
+
+.connection-card {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 16px;
+    align-items: center;
+    min-height: 58px;
+    padding: 12px 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.connection-card:first-child {
+    border-top: 0;
+}
+
+.coming-soon {
+    display: inline-flex;
+    align-items: center;
+    justify-self: end;
+    min-height: 24px;
+    padding: 0 9px;
+    border: 1px solid rgba(255, 255, 255, 0.11);
+    border-radius: 999px;
+    color: #c8cfdb;
+    background: rgba(255, 255, 255, 0.06);
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.settings-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 18px;
+}
+
+.settings-action-bar {
+    position: fixed;
+    right: clamp(34px, 5vw, 68px);
+    bottom: 26px;
+    z-index: 11;
+    display: none;
+    align-items: center;
+    gap: 10px;
+}
+
+.settings-action-bar.visible {
+    display: flex;
+}
+
+.settings-status {
+    min-height: 18px;
+    color: var(--muted);
+    font-size: 12px;
+}
+
+.settings-performance-hud {
+    position: fixed;
+    left: clamp(34px, 5vw, 68px);
+    bottom: 26px;
+    z-index: 10;
+    display: none;
+    min-width: 190px;
+    color: rgba(244, 246, 248, 0.68);
+    font-size: 12px;
+    font-weight: 800;
+    pointer-events: none;
+}
+
+.settings-performance-hud.visible {
+    display: block;
+}
+
+.settings-performance-hud-title {
+    margin-bottom: 9px;
+    color: rgba(244, 246, 248, 0.58);
+    letter-spacing: 0.8px;
+}
+
+.settings-meter-row {
+    display: grid;
+    grid-template-columns: 40px 1fr;
+    gap: 10px;
+    align-items: center;
+    margin-top: 7px;
+}
+
+.settings-meter-track {
+    height: 8px;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.settings-meter-fill {
+    height: 100%;
+    background: rgba(45, 108, 255, 0.48);
+}
+
+.hotkeys-table {
+    display: grid;
+    grid-template-columns: minmax(180px, 1.3fr) minmax(120px, 0.8fr) minmax(120px, 0.8fr);
+    gap: 0;
+    max-width: 760px;
+}
+
+.hotkeys-section,
+.hotkeys-cell {
+    padding: 10px 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.hotkeys-section {
+    grid-column: 1 / -1;
+    margin-top: 8px;
+    border-top-color: rgba(45, 108, 255, 0.34);
+    border-left: 4px solid var(--blue);
+    background: rgba(45, 108, 255, 0.12);
+    color: #dce3ef;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.8px;
+}
+
+.hotkeys-head {
+    border-top: 0;
+    color: rgba(244, 246, 248, 0.7);
+    background: rgba(255, 255, 255, 0.05);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.7px;
+}
+
+.hotkeys-cell {
+    min-height: 40px;
+    color: var(--text);
+    font-size: 13px;
+    font-weight: 800;
+}
+
+.hotkeys-empty {
+    color: var(--muted);
+    font-weight: 700;
+}
+
+body.settings-reduce-motion *,
+body.settings-reduce-motion *::before,
+body.settings-reduce-motion *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+}
+
+body.settings-compact-ui .settings-row {
+    padding: 7px 0;
+    min-height: 44px;
+}
+
+body.settings-high-contrast .settings-tab,
+body.settings-high-contrast .module-card,
+body.settings-high-contrast .preset-card,
+body.settings-high-contrast .placeholder-line {
+    border-color: rgba(255, 255, 255, 0.28);
+}
+
+body.settings-high-contrast .settings-note,
+body.settings-high-contrast .settings-value,
+body.settings-high-contrast .scene-copy {
+    color: #dbe2ee;
+}
+
 .app-scene {
     position: absolute;
     inset: 0;
@@ -532,6 +845,40 @@ button {
     .submenu-content {
         width: calc(100vw - 68px);
     }
+
+    .settings-shell {
+        grid-template-columns: 1fr;
+    }
+
+    .settings-tabs {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .settings-panel-area {
+        max-height: calc(100vh - 300px);
+    }
+
+    .settings-row {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+
+    .settings-control,
+    .settings-toggle,
+    .coming-soon {
+        justify-self: start;
+    }
+
+    .settings-action-bar,
+    .settings-performance-hud {
+        position: static;
+        margin-top: 14px;
+    }
+
+    .settings-action-bar.visible {
+        display: flex;
+    }
 }
 </style>
 </head>
@@ -554,7 +901,7 @@ button {
             <button class="menu-button primary" type="button" data-submenu="controlRoomScene">CONTROL ROOM</button>
             <button class="menu-button" type="button" data-submenu="sceneBuilderScene">SCENE BUILDER</button>
             <button class="menu-button" type="button" data-submenu="libraryScene">LIBRARY</button>
-            <button class="menu-button" type="button" data-submenu="optionsScene">OPTIONS</button>
+            <button class="menu-button" type="button" data-submenu="optionsScene">SETTINGS</button>
             <button class="menu-button" type="button" data-submenu="storeScene">STORE</button>
             <button class="menu-button quit" type="button" id="quitButton">QUIT</button>
         </nav>
@@ -653,18 +1000,236 @@ button {
     </section>
 
     <section class="submenu-scene" id="optionsScene">
-        <div class="submenu-content">
+        <div class="submenu-content settings-content">
             <div class="home-row">
                 <button class="home-button" type="button" data-home>⌂ Home</button>
             </div>
-            <h2 class="scene-title">OPTIONS</h2>
-            <p class="scene-copy">Future settings for OBS connection, Twitch connection, local server/port, hotkeys, and app theme.</p>
-            <div class="placeholder-list">
-                <div class="placeholder-line">OBS connection</div>
-                <div class="placeholder-line">Twitch connection</div>
-                <div class="placeholder-line">Local server / port</div>
-                <div class="placeholder-line">Hotkeys</div>
-                <div class="placeholder-line">App theme</div>
+            <div class="settings-shell">
+                <nav class="settings-tabs" aria-label="Settings categories">
+                    <button class="settings-tab active" type="button" data-settings-tab="general">General</button>
+                    <button class="settings-tab" type="button" data-settings-tab="display">Display</button>
+                    <button class="settings-tab" type="button" data-settings-tab="performance">Performance</button>
+                    <button class="settings-tab" type="button" data-settings-tab="audio">Audio</button>
+                    <button class="settings-tab" type="button" data-settings-tab="connections">Connections</button>
+                    <button class="settings-tab" type="button" data-settings-tab="appearance">Appearance</button>
+                    <button class="settings-tab" type="button" data-settings-tab="accessibility">Accessibility</button>
+                    <button class="settings-tab" type="button" data-settings-tab="hotkeys">Hotkeys</button>
+                    <button class="settings-tab" type="button" data-settings-tab="advanced">Advanced</button>
+                </nav>
+
+                <div class="settings-panel-area">
+                    <section class="settings-panel active" data-settings-panel="general">
+                        <h3>General</h3>
+                        <div class="settings-group">
+                            <div class="settings-row">
+                                <span>
+                                    <span class="settings-label">Local Server Mode</span>
+                                    <span class="settings-note">Desktop development uses the local Node server workflow.</span>
+                                </span>
+                                <span class="coming-soon">Active</span>
+                            </div>
+                            <div class="settings-row">
+                                <span>
+                                    <span class="settings-label">Session Defaults</span>
+                                    <span class="settings-note">Default room and startup preferences will be configurable here later.</span>
+                                </span>
+                                <span class="coming-soon">Coming soon</span>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="settings-panel" data-settings-panel="display">
+                        <h3>Display</h3>
+                        <div class="settings-group">
+                            <div class="settings-row">
+                                <span>
+                                    <span class="settings-label">Window Mode</span>
+                                    <span class="settings-note">Saved locally. Desktop window behavior will be wired next.</span>
+                                </span>
+                                <select class="settings-select settings-control" data-setting="windowMode">
+                                    <option value="windowed">Windowed</option>
+                                    <option value="borderless">Borderless</option>
+                                    <option value="fullscreen">Fullscreen</option>
+                                </select>
+                            </div>
+                            <div class="settings-row">
+                                <span>
+                                    <span class="settings-label">Monitor</span>
+                                    <span class="settings-note">Monitor selection will use desktop display detection later.</span>
+                                </span>
+                                <select class="settings-select settings-control" data-setting="monitor">
+                                    <option value="default">Default Monitor</option>
+                                    <option value="monitor-1">Monitor 1 Placeholder</option>
+                                    <option value="monitor-2">Monitor 2 Placeholder</option>
+                                </select>
+                            </div>
+                            <div class="settings-row">
+                                <span>
+                                    <span class="settings-label">Resolution / Scaling</span>
+                                    <span class="settings-note">Saved locally for a future display pass.</span>
+                                </span>
+                                <select class="settings-select settings-control" data-setting="scaling">
+                                    <option value="auto">Auto</option>
+                                    <option value="100">100%</option>
+                                    <option value="125">125%</option>
+                                    <option value="150">150%</option>
+                                </select>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="settings-panel" data-settings-panel="performance">
+                        <h3>Performance</h3>
+                        <div class="settings-group">
+                            <div class="settings-row">
+                                <span>
+                                    <span class="settings-label">Low Resource Mode</span>
+                                    <span class="settings-note">Saved now; future modules can use it to reduce background work.</span>
+                                </span>
+                                <input class="settings-toggle" type="checkbox" data-setting="lowResourceMode">
+                            </div>
+                            <div class="settings-row">
+                                <span>
+                                    <span class="settings-label">Live Overlay Monitor</span>
+                                    <span class="settings-note">Saved for future Control Room background preview behavior.</span>
+                                </span>
+                                <input class="settings-toggle" type="checkbox" data-setting="liveOverlayMonitor">
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="settings-panel" data-settings-panel="audio">
+                        <h3>Audio</h3>
+                        <div class="settings-group">
+                            <div class="settings-row">
+                                <span>
+                                    <span class="settings-label">Output Device</span>
+                                    <span class="settings-note">Real audio device selection will be added later.</span>
+                                </span>
+                                <select class="settings-select settings-control">
+                                    <option value="default">Default Output</option>
+                                    <option value="placeholder">Device Placeholder</option>
+                                </select>
+                            </div>
+                            <div class="settings-row">
+                                <span>
+                                    <span class="settings-label">Monitoring Device</span>
+                                    <span class="settings-note">Saved placeholder only.</span>
+                                </span>
+                                <select class="settings-select settings-control">
+                                    <option value="default">Default Monitoring</option>
+                                    <option value="placeholder">Device Placeholder</option>
+                                </select>
+                            </div>
+                            <div class="settings-row">
+                                <span>
+                                    <span class="settings-label">Master Volume</span>
+                                    <span class="settings-note">Saved locally; not wired to audio output yet.</span>
+                                </span>
+                                <input class="settings-range settings-control" type="range" min="0" max="100" value="80">
+                            </div>
+                            <div class="settings-row">
+                                <span>
+                                    <span class="settings-label">Alert Volume</span>
+                                    <span class="settings-note">Saved locally for future alert modules.</span>
+                                </span>
+                                <input class="settings-range settings-control" type="range" min="0" max="100" value="80">
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="settings-panel" data-settings-panel="connections">
+                        <h3>Connections</h3>
+                        <div class="settings-group">
+                            <div class="connection-card"><span><span class="settings-label">Discord</span><span class="settings-note">Future community/control integration area.</span></span><span class="coming-soon">Coming soon</span></div>
+                            <div class="connection-card"><span><span class="settings-label">OBS</span><span class="settings-note">Future connect/disconnect area.</span></span><span class="coming-soon">Coming soon</span></div>
+                            <div class="connection-card"><span><span class="settings-label">TikTok</span><span class="settings-note">Future stream platform area.</span></span><span class="coming-soon">Coming soon</span></div>
+                            <div class="connection-card"><span><span class="settings-label">Twitch</span><span class="settings-note">Future login and EventSub area.</span></span><span class="coming-soon">Coming soon</span></div>
+                            <div class="connection-card"><span><span class="settings-label">YouTube</span><span class="settings-note">Future stream platform area.</span></span><span class="coming-soon">Coming soon</span></div>
+                        </div>
+                    </section>
+
+                    <section class="settings-panel" data-settings-panel="appearance">
+                        <h3>Appearance</h3>
+                        <div class="settings-group">
+                            <div class="settings-row">
+                                <span>
+                                    <span class="settings-label">Theme</span>
+                                    <span class="settings-note">Saved placeholder for future themes.</span>
+                                </span>
+                                <select class="settings-select settings-control" data-setting="theme">
+                                    <option value="dark">Dark</option>
+                                    <option value="system">System</option>
+                                    <option value="broadcast">Broadcast</option>
+                                </select>
+                            </div>
+                            <div class="settings-row">
+                                <span><span class="settings-label">Compact UI</span><span class="settings-note">Saves and applies tighter shell spacing.</span></span>
+                                <input class="settings-toggle" type="checkbox" data-setting="compactUi">
+                            </div>
+                            <div class="settings-row">
+                                <span><span class="settings-label">Accent / Style</span><span class="settings-note">Saved placeholder for future visual styles.</span></span>
+                                <select class="settings-select settings-control" data-setting="accentStyle">
+                                    <option value="blue">Blue</option>
+                                    <option value="orange">Orange</option>
+                                    <option value="neutral">Neutral</option>
+                                </select>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="settings-panel" data-settings-panel="accessibility">
+                        <h3>Accessibility</h3>
+                        <div class="settings-group">
+                            <div class="settings-row"><span><span class="settings-label">Reduce Motion</span><span class="settings-note">Minimizes shell animation and transition timing.</span></span><input class="settings-toggle" type="checkbox" data-setting="reduceMotion"></div>
+                            <div class="settings-row"><span><span class="settings-label">Larger Text</span><span class="settings-note">Saved placeholder for a future type scale.</span></span><input class="settings-toggle" type="checkbox" data-setting="largerText"></div>
+                            <div class="settings-row"><span><span class="settings-label">High Contrast</span><span class="settings-note">Saves and applies stronger shell contrast.</span></span><input class="settings-toggle" type="checkbox" data-setting="highContrast"></div>
+                            <div class="settings-row"><span><span class="settings-label">Colorblind-Friendly Overlay</span><span class="settings-note">Overlay style notes and presets will be added later.</span></span><span class="coming-soon">Placeholder</span></div>
+                        </div>
+                    </section>
+
+                    <section class="settings-panel" data-settings-panel="hotkeys">
+                        <h3>Hotkeys</h3>
+                        <div class="hotkeys-table" role="table" aria-label="Future hotkey bindings">
+                            <div class="hotkeys-cell hotkeys-head">ACTION</div>
+                            <div class="hotkeys-cell hotkeys-head">HOTKEY 1</div>
+                            <div class="hotkeys-cell hotkeys-head">HOTKEY 2</div>
+                            <div class="hotkeys-section">GENERAL</div>
+                            <div class="hotkeys-cell">Open Settings</div><div class="hotkeys-cell hotkeys-empty">Unassigned</div><div class="hotkeys-cell hotkeys-empty">Unassigned</div>
+                            <div class="hotkeys-cell">Go Home</div><div class="hotkeys-cell hotkeys-empty">Unassigned</div><div class="hotkeys-cell hotkeys-empty">Unassigned</div>
+                            <div class="hotkeys-cell">Open Control Room</div><div class="hotkeys-cell hotkeys-empty">Unassigned</div><div class="hotkeys-cell hotkeys-empty">Unassigned</div>
+                            <div class="hotkeys-cell">Preview Overlay</div><div class="hotkeys-cell hotkeys-empty">Unassigned</div><div class="hotkeys-cell hotkeys-empty">Unassigned</div>
+                            <div class="hotkeys-cell">Quit App</div><div class="hotkeys-cell hotkeys-empty">Unassigned</div><div class="hotkeys-cell hotkeys-empty">Unassigned</div>
+                            <div class="hotkeys-section">ROCKET LEAGUE</div>
+                            <div class="hotkeys-cell">Blue Goal</div><div class="hotkeys-cell hotkeys-empty">Module later</div><div class="hotkeys-cell hotkeys-empty">Unassigned</div>
+                            <div class="hotkeys-cell">Orange Goal</div><div class="hotkeys-cell hotkeys-empty">Module later</div><div class="hotkeys-cell hotkeys-empty">Unassigned</div>
+                            <div class="hotkeys-cell">Reset Score</div><div class="hotkeys-cell hotkeys-empty">Module later</div><div class="hotkeys-cell hotkeys-empty">Unassigned</div>
+                            <div class="hotkeys-cell">Undo</div><div class="hotkeys-cell hotkeys-empty">Module later</div><div class="hotkeys-cell hotkeys-empty">Unassigned</div>
+                        </div>
+                    </section>
+
+                    <section class="settings-panel" data-settings-panel="advanced">
+                        <h3>Advanced</h3>
+                        <div class="settings-group">
+                            <div class="settings-row"><span><span class="settings-label">Diagnostics Mode</span><span class="settings-note">Saved for future developer troubleshooting tools.</span></span><input class="settings-toggle" type="checkbox" data-setting="diagnosticsMode"></div>
+                            <div class="settings-row"><span><span class="settings-label">Local Admin / Auth</span><span class="settings-note">Local admin/auth settings will be configurable here later.</span></span></div>
+                            <div class="settings-row"><span><span class="settings-label">Local Server URL</span><span class="settings-value">http://localhost:3000</span></span></div>
+                            <div class="settings-actions">
+                                <button class="home-button" type="button" id="resetSettingsButton">Reset Settings</button>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+            <div class="settings-performance-hud" aria-hidden="true">
+                <div class="settings-performance-hud-title">ESTIMATED PERFORMANCE</div>
+                <div class="settings-meter-row"><span>CPU</span><span class="settings-meter-track"><span class="settings-meter-fill" style="width: 34%;"></span></span></div>
+                <div class="settings-meter-row"><span>GPU</span><span class="settings-meter-track"><span class="settings-meter-fill" style="width: 22%;"></span></span></div>
+            </div>
+            <div class="settings-action-bar" id="settingsActionBar">
+                <span class="settings-status" id="settingsStatus" aria-live="polite"></span>
+                <button class="home-button" type="button" id="cancelSettingsButton">Cancel</button>
+                <button class="home-button" type="button" id="applySettingsButton">Apply</button>
             </div>
         </div>
     </section>
@@ -719,6 +1284,7 @@ const FALLBACK_OVERLAY_URL = "http://localhost:3000/room/default-room/overlay";
 const ROCKET_LEAGUE_MODULE_ID = "rocket-league-scoreboard";
 const EMBEDDED_CONTROL_INSET_PX = 56;
 const FRAME_LOAD_TIMEOUT_MS = 15000;
+const SETTINGS_STORAGE_KEY = "zbroadcast:settings";
 const FALLBACK_ROCKET_LEAGUE_MODULE = {
     id: ROCKET_LEAGUE_MODULE_ID,
     shortName: "Rocket League",
@@ -731,6 +1297,184 @@ let selectedPreset = "";
 let rocketLeagueModuleConfig = null;
 let activeModule = null;
 const frameLoadTimers = new Map();
+const defaultAppSettings = {
+    lowResourceMode: false,
+    reduceMotion: false,
+    liveOverlayMonitor: false,
+    compactUi: false,
+    highContrast: false,
+    diagnosticsMode: false,
+    windowMode: "windowed",
+    monitor: "default",
+    scaling: "auto",
+    theme: "dark",
+    accentStyle: "blue",
+    largerText: false
+};
+let appSettings = { ...defaultAppSettings };
+let draftAppSettings = { ...defaultAppSettings };
+
+function showSettingsStatus(message) {
+    const status = document.getElementById("settingsStatus");
+
+    if (status) {
+        status.textContent = message;
+    }
+}
+
+function loadAppSettings() {
+    try {
+        const stored = localStorage.getItem(SETTINGS_STORAGE_KEY);
+
+        if (!stored) {
+            appSettings = { ...defaultAppSettings };
+            draftAppSettings = { ...appSettings };
+            return;
+        }
+
+        const parsed = JSON.parse(stored);
+        appSettings = {
+            ...defaultAppSettings,
+            ...(parsed && typeof parsed === "object" ? parsed : {})
+        };
+        draftAppSettings = { ...appSettings };
+    } catch (error) {
+        console.warn("Could not load ZBroadcast settings. Using defaults.", error);
+        appSettings = { ...defaultAppSettings };
+        draftAppSettings = { ...appSettings };
+    }
+}
+
+function saveAppSettings() {
+    try {
+        localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(appSettings));
+        showSettingsStatus("Settings saved locally.");
+    } catch (error) {
+        console.warn("Could not save ZBroadcast settings.", error);
+        showSettingsStatus("Settings could not be saved.");
+    }
+}
+
+function applyAppSettings() {
+    document.body.classList.toggle("settings-reduce-motion", !!appSettings.reduceMotion);
+    document.body.classList.toggle("settings-compact-ui", !!appSettings.compactUi);
+    document.body.classList.toggle("settings-high-contrast", !!appSettings.highContrast);
+}
+
+function syncSettingsControlsFromDraft() {
+    document.querySelectorAll("[data-setting]").forEach((control) => {
+        const value = draftAppSettings[control.dataset.setting];
+
+        if (control.type === "checkbox") {
+            control.checked = !!value;
+        } else {
+            control.value = value ?? "";
+        }
+    });
+}
+
+function setAppSettingFromControl(control) {
+    const key = control.dataset.setting;
+    const value = control.type === "checkbox" ? control.checked : control.value;
+
+    if (!(key in defaultAppSettings)) {
+        return;
+    }
+
+    if (isSettingsTabStaged(getActiveSettingsTabName())) {
+        draftAppSettings[key] = value;
+        syncSettingsControlsFromDraft();
+        updateSettingsActionState();
+        showSettingsStatus("Unsaved changes.");
+        return;
+    }
+
+    appSettings[key] = value;
+    draftAppSettings = { ...appSettings };
+    applyAppSettings();
+    saveAppSettings();
+    syncSettingsControlsFromDraft();
+    updateSettingsActionState();
+}
+
+function settingsHaveDraftChanges() {
+    return JSON.stringify(appSettings) !== JSON.stringify(draftAppSettings);
+}
+
+function applyDraftSettings() {
+    appSettings = { ...draftAppSettings };
+    applyAppSettings();
+    saveAppSettings();
+    syncSettingsControlsFromDraft();
+    updateSettingsActionState();
+}
+
+function cancelDraftSettings() {
+    draftAppSettings = { ...appSettings };
+    syncSettingsControlsFromDraft();
+    updateSettingsActionState();
+    showSettingsStatus("Changes canceled.");
+}
+
+function resetAppSettings() {
+    if (!window.confirm("Reset all settings to defaults?")) {
+        return;
+    }
+
+    appSettings = { ...defaultAppSettings };
+    draftAppSettings = { ...appSettings };
+    applyAppSettings();
+    saveAppSettings();
+    syncSettingsControlsFromDraft();
+    updateSettingsActionState();
+    showSettingsStatus("Settings reset to defaults.");
+}
+
+function showSettingsTab(tabName) {
+    document.querySelectorAll("[data-settings-tab]").forEach((tab) => {
+        tab.classList.toggle("active", tab.dataset.settingsTab === tabName);
+    });
+
+    document.querySelectorAll("[data-settings-panel]").forEach((panel) => {
+        panel.classList.toggle("active", panel.dataset.settingsPanel === tabName);
+    });
+
+    updateSettingsActionState();
+}
+
+function getActiveSettingsTabName() {
+    const activePanel = document.querySelector(".settings-panel.active");
+    return activePanel ? activePanel.dataset.settingsPanel : "";
+}
+
+function isSettingsTabStaged(tabName) {
+    return tabName === "display" || tabName === "performance";
+}
+
+function updateSettingsActionState() {
+    const activePanel = document.querySelector(".settings-panel.active");
+    const actionBar = document.getElementById("settingsActionBar");
+    const applyButton = document.getElementById("applySettingsButton");
+    const cancelButton = document.getElementById("cancelSettingsButton");
+    const performanceHud = document.querySelector(".settings-performance-hud");
+
+    if (!actionBar || !activePanel || !applyButton || !cancelButton) {
+        return;
+    }
+
+    const tabName = activePanel.dataset.settingsPanel;
+    const hasLocalControls = !!activePanel.querySelector("[data-setting]");
+    const hasChanges = settingsHaveDraftChanges();
+    const showActions = hasLocalControls && isSettingsTabStaged(tabName);
+
+    actionBar.classList.toggle("visible", showActions);
+    applyButton.disabled = !hasChanges;
+    cancelButton.disabled = !hasChanges;
+
+    if (performanceHud) {
+        performanceHud.classList.toggle("visible", tabName === "performance");
+    }
+}
 
 function resolveAppUrl(pathOrUrl, fallbackUrl) {
     if (typeof pathOrUrl !== "string" || pathOrUrl.trim() === "") {
@@ -1055,6 +1799,28 @@ document.getElementById("quitButton").addEventListener("click", () => {
     document.getElementById("quitMessage").textContent = "Quit only works in the desktop app.";
 });
 
+document.querySelectorAll("[data-setting]").forEach((input) => {
+    const eventName = input.type === "range" ? "input" : "change";
+
+    input.addEventListener(eventName, () => {
+        setAppSettingFromControl(input);
+    });
+});
+
+document.querySelectorAll("[data-settings-tab]").forEach((tab) => {
+    tab.addEventListener("click", () => {
+        showSettingsTab(tab.dataset.settingsTab);
+    });
+});
+
+document.getElementById("resetSettingsButton").addEventListener("click", resetAppSettings);
+document.getElementById("applySettingsButton").addEventListener("click", applyDraftSettings);
+document.getElementById("cancelSettingsButton").addEventListener("click", cancelDraftSettings);
+
+loadAppSettings();
+applyAppSettings();
+syncSettingsControlsFromDraft();
+showSettingsTab("general");
 setDesktopAdminStorage();
 updateStartState();
 loadModuleCatalog();
