@@ -158,7 +158,8 @@ button {
     border-color: rgba(45, 108, 255, 0.46);
     border-left-color: var(--blue);
     background: linear-gradient(90deg, rgba(45, 108, 255, 0.3), rgba(18, 21, 28, 0.42));
-    font-size: 19px;
+    font-size: 24px;
+    letter-spacing: 0.4px;
 }
 
 .menu-button.quit {
@@ -520,7 +521,7 @@ button {
 
 .settings-row {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(150px, 220px);
+    grid-template-columns: minmax(0, 1fr) minmax(170px, 280px);
     gap: 18px;
     align-items: center;
     min-height: 54px;
@@ -565,17 +566,40 @@ button {
 
 .settings-select,
 .settings-range {
-    width: min(220px, 100%);
+    width: min(280px, 100%);
 }
 
 .settings-select {
     min-height: 34px;
-    padding: 0 10px;
+    padding: 0 28px 0 10px;
     border: 1px solid rgba(255, 255, 255, 0.16);
     border-radius: 4px;
     background: rgba(24, 27, 35, 0.72);
     color: var(--text);
     font-weight: 800;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.settings-row.is-disabled {
+    opacity: 0.48;
+}
+
+.settings-row.is-disabled .settings-select,
+.settings-row.is-disabled .settings-range,
+.settings-row.is-disabled .settings-toggle,
+.placeholder-setting .settings-select,
+.placeholder-setting .settings-range,
+.placeholder-setting .settings-toggle {
+    cursor: not-allowed;
+}
+
+.placeholder-setting .settings-label,
+.placeholder-setting .settings-note,
+.placeholder-setting .settings-value,
+.hotkeys-empty {
+    color: rgba(255, 167, 167, 0.74);
 }
 
 .settings-range {
@@ -604,8 +628,22 @@ button {
     padding: 0 9px;
     border: 1px solid rgba(255, 255, 255, 0.11);
     border-radius: 999px;
-    color: #c8cfdb;
-    background: rgba(255, 255, 255, 0.06);
+    color: rgba(255, 180, 180, 0.86);
+    background: rgba(255, 92, 92, 0.08);
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.settings-status-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-self: end;
+    min-height: 24px;
+    padding: 0 9px;
+    border: 1px solid rgba(46, 204, 113, 0.26);
+    border-radius: 999px;
+    color: rgba(174, 255, 209, 0.92);
+    background: rgba(46, 204, 113, 0.1);
     font-size: 11px;
     font-weight: 800;
 }
@@ -633,7 +671,7 @@ button {
 
 .settings-status {
     min-height: 18px;
-    color: var(--muted);
+    color: rgba(244, 246, 248, 0.72);
     font-size: 12px;
 }
 
@@ -676,6 +714,51 @@ button {
 .settings-meter-fill {
     height: 100%;
     background: rgba(45, 108, 255, 0.48);
+}
+
+.settings-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: rgba(4, 6, 10, 0.68);
+}
+
+.settings-modal-backdrop.visible {
+    display: flex;
+}
+
+.settings-modal {
+    width: min(440px, calc(100vw - 42px));
+    padding: 22px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 8px;
+    background: rgba(18, 21, 28, 0.96);
+    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.42);
+}
+
+.settings-modal-title {
+    margin: 0 0 8px;
+    color: var(--text);
+    font-size: 18px;
+    font-weight: 900;
+}
+
+.settings-modal-copy {
+    margin: 0;
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.settings-modal-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 18px;
 }
 
 .hotkeys-table {
@@ -1024,14 +1107,14 @@ body.settings-high-contrast .scene-copy {
                             <div class="settings-row">
                                 <span>
                                     <span class="settings-label">Local Server Mode</span>
-                                    <span class="settings-note">Desktop development uses the local Node server workflow.</span>
+                                    <span class="settings-note">Runs ZBroadcast from the local app on this PC.</span>
                                 </span>
-                                <span class="coming-soon">Active</span>
+                                <span class="settings-status-pill">Active</span>
                             </div>
-                            <div class="settings-row">
+                            <div class="settings-row placeholder-setting">
                                 <span>
                                     <span class="settings-label">Session Defaults</span>
-                                    <span class="settings-note">Default room and startup preferences will be configurable here later.</span>
+                                    <span class="settings-note">Choose startup rooms and session defaults when this feature is available.</span>
                                 </span>
                                 <span class="coming-soon">Coming soon</span>
                             </div>
@@ -1044,31 +1127,28 @@ body.settings-high-contrast .scene-copy {
                             <div class="settings-row">
                                 <span>
                                     <span class="settings-label">Window Mode</span>
-                                    <span class="settings-note">Saved locally. Desktop window behavior will be wired next.</span>
+                                    <span class="settings-note">Choose how ZBroadcast appears on your desktop.</span>
                                 </span>
                                 <select class="settings-select settings-control" data-setting="windowMode">
                                     <option value="windowed">Windowed</option>
-                                    <option value="borderless">Borderless</option>
-                                    <option value="fullscreen">Fullscreen</option>
+                                    <option value="fullscreen">Borderless Fullscreen</option>
                                 </select>
                             </div>
-                            <div class="settings-row">
+                            <div class="settings-row" id="monitorSettingsRow">
                                 <span>
                                     <span class="settings-label">Monitor</span>
-                                    <span class="settings-note">Monitor selection will use desktop display detection later.</span>
+                                    <span class="settings-note">Choose which display ZBroadcast uses for fullscreen mode.</span>
                                 </span>
                                 <select class="settings-select settings-control" data-setting="monitor">
-                                    <option value="default">Default Monitor</option>
-                                    <option value="monitor-1">Monitor 1 Placeholder</option>
-                                    <option value="monitor-2">Monitor 2 Placeholder</option>
+                                    <option value="">Detecting displays...</option>
                                 </select>
                             </div>
-                            <div class="settings-row">
+                            <div class="settings-row placeholder-setting">
                                 <span>
                                     <span class="settings-label">Resolution / Scaling</span>
-                                    <span class="settings-note">Saved locally for a future display pass.</span>
+                                    <span class="settings-note">Adjust app scaling options when this feature is available.</span>
                                 </span>
-                                <select class="settings-select settings-control" data-setting="scaling">
+                                <select class="settings-select settings-control" data-setting="scaling" disabled>
                                     <option value="auto">Auto</option>
                                     <option value="100">100%</option>
                                     <option value="125">125%</option>
@@ -1084,14 +1164,14 @@ body.settings-high-contrast .scene-copy {
                             <div class="settings-row">
                                 <span>
                                     <span class="settings-label">Low Resource Mode</span>
-                                    <span class="settings-note">Saved now; future modules can use it to reduce background work.</span>
+                                    <span class="settings-note">Prioritize responsiveness on modest PCs.</span>
                                 </span>
                                 <input class="settings-toggle" type="checkbox" data-setting="lowResourceMode">
                             </div>
                             <div class="settings-row">
                                 <span>
                                     <span class="settings-label">Live Overlay Monitor</span>
-                                    <span class="settings-note">Saved for future Control Room background preview behavior.</span>
+                                    <span class="settings-note">Enable the Control Room live preview option when supported.</span>
                                 </span>
                                 <input class="settings-toggle" type="checkbox" data-setting="liveOverlayMonitor">
                             </div>
@@ -1101,39 +1181,39 @@ body.settings-high-contrast .scene-copy {
                     <section class="settings-panel" data-settings-panel="audio">
                         <h3>Audio</h3>
                         <div class="settings-group">
-                            <div class="settings-row">
+                            <div class="settings-row placeholder-setting">
                                 <span>
                                     <span class="settings-label">Output Device</span>
-                                    <span class="settings-note">Real audio device selection will be added later.</span>
+                                    <span class="settings-note">Choose where app audio plays when audio routing is available.</span>
                                 </span>
-                                <select class="settings-select settings-control">
+                                <select class="settings-select settings-control" disabled>
                                     <option value="default">Default Output</option>
                                     <option value="placeholder">Device Placeholder</option>
                                 </select>
                             </div>
-                            <div class="settings-row">
+                            <div class="settings-row placeholder-setting">
                                 <span>
                                     <span class="settings-label">Monitoring Device</span>
-                                    <span class="settings-note">Saved placeholder only.</span>
+                                    <span class="settings-note">Choose a monitoring device when audio monitoring is available.</span>
                                 </span>
-                                <select class="settings-select settings-control">
+                                <select class="settings-select settings-control" disabled>
                                     <option value="default">Default Monitoring</option>
                                     <option value="placeholder">Device Placeholder</option>
                                 </select>
                             </div>
-                            <div class="settings-row">
+                            <div class="settings-row placeholder-setting">
                                 <span>
                                     <span class="settings-label">Master Volume</span>
-                                    <span class="settings-note">Saved locally; not wired to audio output yet.</span>
+                                    <span class="settings-note">Control overall app audio when audio routing is available.</span>
                                 </span>
-                                <input class="settings-range settings-control" type="range" min="0" max="100" value="80">
+                                <input class="settings-range settings-control" type="range" min="0" max="100" value="80" disabled>
                             </div>
-                            <div class="settings-row">
+                            <div class="settings-row placeholder-setting">
                                 <span>
                                     <span class="settings-label">Alert Volume</span>
-                                    <span class="settings-note">Saved locally for future alert modules.</span>
+                                    <span class="settings-note">Control alert volume when alert modules are available.</span>
                                 </span>
-                                <input class="settings-range settings-control" type="range" min="0" max="100" value="80">
+                                <input class="settings-range settings-control" type="range" min="0" max="100" value="80" disabled>
                             </div>
                         </div>
                     </section>
@@ -1141,35 +1221,35 @@ body.settings-high-contrast .scene-copy {
                     <section class="settings-panel" data-settings-panel="connections">
                         <h3>Connections</h3>
                         <div class="settings-group">
-                            <div class="connection-card"><span><span class="settings-label">Discord</span><span class="settings-note">Future community/control integration area.</span></span><span class="coming-soon">Coming soon</span></div>
-                            <div class="connection-card"><span><span class="settings-label">OBS</span><span class="settings-note">Future connect/disconnect area.</span></span><span class="coming-soon">Coming soon</span></div>
-                            <div class="connection-card"><span><span class="settings-label">TikTok</span><span class="settings-note">Future stream platform area.</span></span><span class="coming-soon">Coming soon</span></div>
-                            <div class="connection-card"><span><span class="settings-label">Twitch</span><span class="settings-note">Future login and EventSub area.</span></span><span class="coming-soon">Coming soon</span></div>
-                            <div class="connection-card"><span><span class="settings-label">YouTube</span><span class="settings-note">Future stream platform area.</span></span><span class="coming-soon">Coming soon</span></div>
+                            <div class="connection-card placeholder-setting"><span><span class="settings-label">Discord</span><span class="settings-note">Connect community tools when this integration is available.</span></span><span class="coming-soon">Coming soon</span></div>
+                            <div class="connection-card placeholder-setting"><span><span class="settings-label">OBS</span><span class="settings-note">Connect OBS controls when this integration is available.</span></span><span class="coming-soon">Coming soon</span></div>
+                            <div class="connection-card placeholder-setting"><span><span class="settings-label">TikTok</span><span class="settings-note">Connect TikTok stream tools when this integration is available.</span></span><span class="coming-soon">Coming soon</span></div>
+                            <div class="connection-card placeholder-setting"><span><span class="settings-label">Twitch</span><span class="settings-note">Connect Twitch chat and events when this integration is available.</span></span><span class="coming-soon">Coming soon</span></div>
+                            <div class="connection-card placeholder-setting"><span><span class="settings-label">YouTube</span><span class="settings-note">Connect YouTube stream tools when this integration is available.</span></span><span class="coming-soon">Coming soon</span></div>
                         </div>
                     </section>
 
                     <section class="settings-panel" data-settings-panel="appearance">
                         <h3>Appearance</h3>
                         <div class="settings-group">
-                            <div class="settings-row">
+                            <div class="settings-row placeholder-setting">
                                 <span>
                                     <span class="settings-label">Theme</span>
-                                    <span class="settings-note">Saved placeholder for future themes.</span>
+                                    <span class="settings-note">Choose an app theme when more themes are available.</span>
                                 </span>
-                                <select class="settings-select settings-control" data-setting="theme">
+                                <select class="settings-select settings-control" data-setting="theme" disabled>
                                     <option value="dark">Dark</option>
                                     <option value="system">System</option>
                                     <option value="broadcast">Broadcast</option>
                                 </select>
                             </div>
                             <div class="settings-row">
-                                <span><span class="settings-label">Compact UI</span><span class="settings-note">Saves and applies tighter shell spacing.</span></span>
+                                <span><span class="settings-label">Compact UI</span><span class="settings-note">Use tighter spacing in supported app shell areas.</span></span>
                                 <input class="settings-toggle" type="checkbox" data-setting="compactUi">
                             </div>
-                            <div class="settings-row">
-                                <span><span class="settings-label">Accent / Style</span><span class="settings-note">Saved placeholder for future visual styles.</span></span>
-                                <select class="settings-select settings-control" data-setting="accentStyle">
+                            <div class="settings-row placeholder-setting">
+                                <span><span class="settings-label">Accent / Style</span><span class="settings-note">Choose visual accents when style options are available.</span></span>
+                                <select class="settings-select settings-control" data-setting="accentStyle" disabled>
                                     <option value="blue">Blue</option>
                                     <option value="orange">Orange</option>
                                     <option value="neutral">Neutral</option>
@@ -1181,10 +1261,10 @@ body.settings-high-contrast .scene-copy {
                     <section class="settings-panel" data-settings-panel="accessibility">
                         <h3>Accessibility</h3>
                         <div class="settings-group">
-                            <div class="settings-row"><span><span class="settings-label">Reduce Motion</span><span class="settings-note">Minimizes shell animation and transition timing.</span></span><input class="settings-toggle" type="checkbox" data-setting="reduceMotion"></div>
-                            <div class="settings-row"><span><span class="settings-label">Larger Text</span><span class="settings-note">Saved placeholder for a future type scale.</span></span><input class="settings-toggle" type="checkbox" data-setting="largerText"></div>
-                            <div class="settings-row"><span><span class="settings-label">High Contrast</span><span class="settings-note">Saves and applies stronger shell contrast.</span></span><input class="settings-toggle" type="checkbox" data-setting="highContrast"></div>
-                            <div class="settings-row"><span><span class="settings-label">Colorblind-Friendly Overlay</span><span class="settings-note">Overlay style notes and presets will be added later.</span></span><span class="coming-soon">Placeholder</span></div>
+                            <div class="settings-row"><span><span class="settings-label">Reduce Motion</span><span class="settings-note">Limit motion effects in supported app shell areas.</span></span><input class="settings-toggle" type="checkbox" data-setting="reduceMotion"></div>
+                            <div class="settings-row placeholder-setting"><span><span class="settings-label">Larger Text</span><span class="settings-note">Use larger app text when this option is available.</span></span><input class="settings-toggle" type="checkbox" data-setting="largerText" disabled></div>
+                            <div class="settings-row"><span><span class="settings-label">High Contrast</span><span class="settings-note">Use stronger contrast in supported app shell areas.</span></span><input class="settings-toggle" type="checkbox" data-setting="highContrast"></div>
+                            <div class="settings-row placeholder-setting"><span><span class="settings-label">Colorblind-Friendly Overlay</span><span class="settings-note">Choose overlay palettes when overlay accessibility presets are available.</span></span><span class="coming-soon">Coming soon</span></div>
                         </div>
                     </section>
 
@@ -1201,19 +1281,19 @@ body.settings-high-contrast .scene-copy {
                             <div class="hotkeys-cell">Preview Overlay</div><div class="hotkeys-cell hotkeys-empty">Unassigned</div><div class="hotkeys-cell hotkeys-empty">Unassigned</div>
                             <div class="hotkeys-cell">Quit App</div><div class="hotkeys-cell hotkeys-empty">Unassigned</div><div class="hotkeys-cell hotkeys-empty">Unassigned</div>
                             <div class="hotkeys-section">ROCKET LEAGUE</div>
-                            <div class="hotkeys-cell">Blue Goal</div><div class="hotkeys-cell hotkeys-empty">Module later</div><div class="hotkeys-cell hotkeys-empty">Unassigned</div>
-                            <div class="hotkeys-cell">Orange Goal</div><div class="hotkeys-cell hotkeys-empty">Module later</div><div class="hotkeys-cell hotkeys-empty">Unassigned</div>
-                            <div class="hotkeys-cell">Reset Score</div><div class="hotkeys-cell hotkeys-empty">Module later</div><div class="hotkeys-cell hotkeys-empty">Unassigned</div>
-                            <div class="hotkeys-cell">Undo</div><div class="hotkeys-cell hotkeys-empty">Module later</div><div class="hotkeys-cell hotkeys-empty">Unassigned</div>
+                            <div class="hotkeys-cell">Blue Goal</div><div class="hotkeys-cell hotkeys-empty">Coming soon</div><div class="hotkeys-cell hotkeys-empty">Unassigned</div>
+                            <div class="hotkeys-cell">Orange Goal</div><div class="hotkeys-cell hotkeys-empty">Coming soon</div><div class="hotkeys-cell hotkeys-empty">Unassigned</div>
+                            <div class="hotkeys-cell">Reset Score</div><div class="hotkeys-cell hotkeys-empty">Coming soon</div><div class="hotkeys-cell hotkeys-empty">Unassigned</div>
+                            <div class="hotkeys-cell">Undo</div><div class="hotkeys-cell hotkeys-empty">Coming soon</div><div class="hotkeys-cell hotkeys-empty">Unassigned</div>
                         </div>
                     </section>
 
                     <section class="settings-panel" data-settings-panel="advanced">
                         <h3>Advanced</h3>
                         <div class="settings-group">
-                            <div class="settings-row"><span><span class="settings-label">Diagnostics Mode</span><span class="settings-note">Saved for future developer troubleshooting tools.</span></span><input class="settings-toggle" type="checkbox" data-setting="diagnosticsMode"></div>
-                            <div class="settings-row"><span><span class="settings-label">Local Admin / Auth</span><span class="settings-note">Local admin/auth settings will be configurable here later.</span></span></div>
-                            <div class="settings-row"><span><span class="settings-label">Local Server URL</span><span class="settings-value">http://localhost:3000</span></span></div>
+                            <div class="settings-row placeholder-setting"><span><span class="settings-label">Diagnostics Mode</span><span class="settings-note">Collect troubleshooting details when diagnostics tools are available.</span></span><input class="settings-toggle" type="checkbox" data-setting="diagnosticsMode" disabled></div>
+                            <div class="settings-row placeholder-setting"><span><span class="settings-label">Local Admin / Auth</span><span class="settings-note">Manage local admin access when this setting is available.</span></span><span class="coming-soon">Coming soon</span></div>
+                            <div class="settings-row"><span><span class="settings-label">Local Server URL</span><span class="settings-note">Use this local address for local browser-source workflows.</span><span class="settings-value">http://localhost:3000</span></span></div>
                             <div class="settings-actions">
                                 <button class="home-button" type="button" id="resetSettingsButton">Reset Settings</button>
                             </div>
@@ -1230,6 +1310,17 @@ body.settings-high-contrast .scene-copy {
                 <span class="settings-status" id="settingsStatus" aria-live="polite"></span>
                 <button class="home-button" type="button" id="cancelSettingsButton">Cancel</button>
                 <button class="home-button" type="button" id="applySettingsButton">Apply</button>
+            </div>
+            <div class="settings-modal-backdrop" id="settingsUnsavedModal" role="dialog" aria-modal="true" aria-labelledby="settingsUnsavedTitle">
+                <div class="settings-modal">
+                    <h3 class="settings-modal-title" id="settingsUnsavedTitle">Unsaved Settings</h3>
+                    <p class="settings-modal-copy">Settings have changed but have not been applied.</p>
+                    <div class="settings-modal-actions">
+                        <button class="home-button" type="button" id="settingsStayButton">Stay</button>
+                        <button class="home-button" type="button" id="settingsLeaveCancelButton">Leave &amp; Cancel</button>
+                        <button class="home-button" type="button" id="settingsLeaveApplyButton">Leave &amp; Apply</button>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
@@ -1297,6 +1388,10 @@ let selectedPreset = "";
 let rocketLeagueModuleConfig = null;
 let activeModule = null;
 const frameLoadTimers = new Map();
+let availableDesktopDisplays = [];
+let settingsStatusTimer = null;
+let pendingSettingsNavigation = null;
+let didApplySavedDisplaySettingsOnLaunch = false;
 const defaultAppSettings = {
     lowResourceMode: false,
     reduceMotion: false,
@@ -1314,6 +1409,13 @@ const defaultAppSettings = {
 let appSettings = { ...defaultAppSettings };
 let draftAppSettings = { ...defaultAppSettings };
 
+function normalizeAppSettings(settings) {
+    return {
+        ...settings,
+        windowMode: settings.windowMode === "borderless" ? "fullscreen" : settings.windowMode
+    };
+}
+
 function showSettingsStatus(message) {
     const status = document.getElementById("settingsStatus");
 
@@ -1322,36 +1424,54 @@ function showSettingsStatus(message) {
     }
 }
 
+function clearSettingsStatus(delayMs = 0) {
+    window.clearTimeout(settingsStatusTimer);
+
+    if (delayMs > 0) {
+        settingsStatusTimer = window.setTimeout(() => showSettingsStatus(""), delayMs);
+        return;
+    }
+
+    showSettingsStatus("");
+}
+
 function loadAppSettings() {
     try {
         const stored = localStorage.getItem(SETTINGS_STORAGE_KEY);
 
         if (!stored) {
-            appSettings = { ...defaultAppSettings };
+            appSettings = normalizeAppSettings({ ...defaultAppSettings });
             draftAppSettings = { ...appSettings };
             return;
         }
 
         const parsed = JSON.parse(stored);
-        appSettings = {
+        appSettings = normalizeAppSettings({
             ...defaultAppSettings,
             ...(parsed && typeof parsed === "object" ? parsed : {})
-        };
+        });
         draftAppSettings = { ...appSettings };
     } catch (error) {
         console.warn("Could not load ZBroadcast settings. Using defaults.", error);
-        appSettings = { ...defaultAppSettings };
+        appSettings = normalizeAppSettings({ ...defaultAppSettings });
         draftAppSettings = { ...appSettings };
     }
 }
 
 function saveAppSettings() {
     try {
-        localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(appSettings));
-        showSettingsStatus("Settings saved locally.");
+        const serializedSettings = JSON.stringify(appSettings);
+        localStorage.setItem(SETTINGS_STORAGE_KEY, serializedSettings);
+
+        if (localStorage.getItem(SETTINGS_STORAGE_KEY) !== serializedSettings) {
+            throw new Error("Saved settings verification failed.");
+        }
+
+        return true;
     } catch (error) {
         console.warn("Could not save ZBroadcast settings.", error);
         showSettingsStatus("Settings could not be saved.");
+        return false;
     }
 }
 
@@ -1359,6 +1479,181 @@ function applyAppSettings() {
     document.body.classList.toggle("settings-reduce-motion", !!appSettings.reduceMotion);
     document.body.classList.toggle("settings-compact-ui", !!appSettings.compactUi);
     document.body.classList.toggle("settings-high-contrast", !!appSettings.highContrast);
+}
+
+function getDesktopDisplayApi() {
+    return window.zbroadcastDesktop && window.zbroadcastDesktop.display
+        ? window.zbroadcastDesktop.display
+        : null;
+}
+
+function getDisplayLabel(display) {
+    if (!display) {
+        return "Display";
+    }
+
+    if (display.label) {
+        return display.primary ? `${display.label} (Primary)` : display.label;
+    }
+
+    const index = typeof display.index === "number" ? display.index + 1 : "";
+    const name = display.name ? ` - ${display.name}` : "";
+    const resolution = display.resolution || {};
+    const width = resolution.width || display?.bounds?.width || display?.workArea?.width || 0;
+    const height = resolution.height || display?.bounds?.height || display?.workArea?.height || 0;
+    const baseLabel = `Display ${index}${name} - ${width}x${height}`;
+    return display && display.primary ? `${baseLabel} (Primary)` : baseLabel;
+}
+
+function findPreferredDisplayId(displays, currentDisplayId) {
+    if (!displays.length) {
+        return "";
+    }
+
+    if (draftAppSettings.monitor && displays.some((display) => String(display.id) === String(draftAppSettings.monitor))) {
+        return String(draftAppSettings.monitor);
+    }
+
+    if (appSettings.monitor && displays.some((display) => String(display.id) === String(appSettings.monitor))) {
+        return String(appSettings.monitor);
+    }
+
+    if (currentDisplayId && displays.some((display) => String(display.id) === String(currentDisplayId))) {
+        return String(currentDisplayId);
+    }
+
+    const primaryDisplay = displays.find((display) => display.primary);
+    return String((primaryDisplay || displays[0]).id);
+}
+
+function getValidDisplayWindowMode(windowMode) {
+    return windowMode === "fullscreen" ? "fullscreen" : "windowed";
+}
+
+function populateMonitorSelect(displays, currentDisplayId = "") {
+    const monitorSelect = document.querySelector('[data-setting="monitor"]');
+
+    if (!monitorSelect) {
+        return;
+    }
+
+    monitorSelect.innerHTML = "";
+
+    if (!displays.length) {
+        const preservedMonitorValue = draftAppSettings.monitor || appSettings.monitor || "";
+        const unavailableOption = document.createElement("option");
+        unavailableOption.value = preservedMonitorValue;
+        unavailableOption.textContent = "Display detection unavailable";
+        monitorSelect.appendChild(unavailableOption);
+        syncSettingsControlsFromDraft();
+        updateDisplayControlState();
+        return;
+    }
+
+    displays.forEach((display) => {
+        const option = document.createElement("option");
+        option.value = String(display.id);
+        option.textContent = getDisplayLabel(display);
+        monitorSelect.appendChild(option);
+    });
+
+    const preferredDisplayId = findPreferredDisplayId(displays, currentDisplayId);
+    draftAppSettings.monitor = preferredDisplayId;
+
+    if (
+        !appSettings.monitor ||
+        appSettings.monitor === "default" ||
+        !displays.some((display) => String(display.id) === String(appSettings.monitor))
+    ) {
+        appSettings.monitor = preferredDisplayId;
+    }
+
+    syncSettingsControlsFromDraft();
+    updateDisplayControlState();
+}
+
+async function loadDesktopDisplays() {
+    const displayApi = getDesktopDisplayApi();
+
+    if (!displayApi || typeof displayApi.listDisplays !== "function") {
+        populateMonitorSelect([]);
+        return;
+    }
+
+    try {
+        const displays = await displayApi.listDisplays();
+        const current = typeof displayApi.getCurrentDisplay === "function"
+            ? await displayApi.getCurrentDisplay()
+            : null;
+        const currentDisplayId = current && current.display ? String(current.display.id) : "";
+        availableDesktopDisplays = Array.isArray(displays) ? displays : [];
+        populateMonitorSelect(availableDesktopDisplays, currentDisplayId);
+        applySavedDisplaySettingsOnLaunch(currentDisplayId);
+    } catch (error) {
+        console.warn("Could not load desktop display list. Using default display option.", error);
+        availableDesktopDisplays = [];
+        populateMonitorSelect([]);
+    }
+}
+
+async function applySavedDisplaySettingsOnLaunch(currentDisplayId = "") {
+    const displayApi = getDesktopDisplayApi();
+
+    if (
+        didApplySavedDisplaySettingsOnLaunch ||
+        !displayApi ||
+        typeof displayApi.applySettings !== "function"
+    ) {
+        return;
+    }
+
+    didApplySavedDisplaySettingsOnLaunch = true;
+
+    const savedWindowMode = getValidDisplayWindowMode(appSettings.windowMode);
+    const savedMonitorExists = availableDesktopDisplays.some((display) => {
+        return String(display.id) === String(appSettings.monitor);
+    });
+    const fallbackMonitor = findPreferredDisplayId(availableDesktopDisplays, currentDisplayId);
+    const displayId = savedMonitorExists ? appSettings.monitor : fallbackMonitor;
+
+    try {
+        const result = await displayApi.applySettings({
+            windowMode: savedWindowMode,
+            displayId
+        });
+
+        if (!result || result.success !== true) {
+            throw new Error(result && result.error ? result.error : "Display settings failed.");
+        }
+    } catch (error) {
+        console.warn("Could not apply saved display settings on launch.", error);
+    }
+}
+
+async function applyDisplaySettingsFromDraft() {
+    const displayApi = getDesktopDisplayApi();
+
+    if (!displayApi || typeof displayApi.applySettings !== "function") {
+        console.warn("Desktop display settings API is unavailable. Saving settings only.");
+        return true;
+    }
+
+    try {
+        const result = await displayApi.applySettings({
+            windowMode: draftAppSettings.windowMode,
+            displayId: draftAppSettings.monitor
+        });
+
+        if (!result || result.success !== true) {
+            throw new Error(result && result.error ? result.error : "Display settings failed.");
+        }
+
+        return true;
+    } catch (error) {
+        console.warn("Could not apply desktop display settings.", error);
+        showSettingsStatus("Display settings could not be applied.");
+        return false;
+    }
 }
 
 function syncSettingsControlsFromDraft() {
@@ -1371,6 +1666,22 @@ function syncSettingsControlsFromDraft() {
             control.value = value ?? "";
         }
     });
+
+    updateDisplayControlState();
+}
+
+function updateDisplayControlState() {
+    const monitorRow = document.getElementById("monitorSettingsRow");
+    const monitorSelect = document.querySelector('[data-setting="monitor"]');
+    const shouldEnableMonitor = draftAppSettings.windowMode === "fullscreen" && availableDesktopDisplays.length > 0;
+
+    if (monitorRow) {
+        monitorRow.classList.toggle("is-disabled", !shouldEnableMonitor);
+    }
+
+    if (monitorSelect) {
+        monitorSelect.disabled = !shouldEnableMonitor;
+    }
 }
 
 function setAppSettingFromControl(control) {
@@ -1392,21 +1703,49 @@ function setAppSettingFromControl(control) {
     appSettings[key] = value;
     draftAppSettings = { ...appSettings };
     applyAppSettings();
-    saveAppSettings();
+    const didSave = saveAppSettings();
     syncSettingsControlsFromDraft();
     updateSettingsActionState();
+
+    if (didSave) {
+        clearSettingsStatus();
+    }
 }
 
 function settingsHaveDraftChanges() {
     return JSON.stringify(appSettings) !== JSON.stringify(draftAppSettings);
 }
 
-function applyDraftSettings() {
+async function applyDraftSettings() {
+    const activeTab = getActiveSettingsTabName();
+    const applyButton = document.getElementById("applySettingsButton");
+
+    if (activeTab === "display") {
+        if (applyButton) {
+            applyButton.disabled = true;
+        }
+
+        const applied = await applyDisplaySettingsFromDraft();
+
+        if (!applied) {
+            updateSettingsActionState();
+            return false;
+        }
+    }
+
     appSettings = { ...draftAppSettings };
     applyAppSettings();
-    saveAppSettings();
+    const didSave = saveAppSettings();
     syncSettingsControlsFromDraft();
     updateSettingsActionState();
+
+    if (!didSave) {
+        return false;
+    }
+
+    showSettingsStatus("Settings applied.");
+    clearSettingsStatus(1800);
+    return true;
 }
 
 function cancelDraftSettings() {
@@ -1414,6 +1753,7 @@ function cancelDraftSettings() {
     syncSettingsControlsFromDraft();
     updateSettingsActionState();
     showSettingsStatus("Changes canceled.");
+    clearSettingsStatus(1600);
 }
 
 function resetAppSettings() {
@@ -1421,13 +1761,24 @@ function resetAppSettings() {
         return;
     }
 
-    appSettings = { ...defaultAppSettings };
+    appSettings = normalizeAppSettings({ ...defaultAppSettings });
     draftAppSettings = { ...appSettings };
+
+    if (availableDesktopDisplays.length > 0) {
+        const preferredDisplayId = findPreferredDisplayId(availableDesktopDisplays, "");
+        appSettings.monitor = preferredDisplayId;
+        draftAppSettings.monitor = preferredDisplayId;
+    }
+
     applyAppSettings();
-    saveAppSettings();
+    const didSave = saveAppSettings();
     syncSettingsControlsFromDraft();
     updateSettingsActionState();
-    showSettingsStatus("Settings reset to defaults.");
+
+    if (didSave) {
+        showSettingsStatus("Settings reset to defaults.");
+        clearSettingsStatus(1800);
+    }
 }
 
 function showSettingsTab(tabName) {
@@ -1440,6 +1791,48 @@ function showSettingsTab(tabName) {
     });
 
     updateSettingsActionState();
+}
+
+function isSettingsSceneActive() {
+    const settingsScene = document.getElementById("optionsScene");
+    return !!(settingsScene && settingsScene.classList.contains("active"));
+}
+
+function hideSettingsUnsavedModal() {
+    const modal = document.getElementById("settingsUnsavedModal");
+
+    if (modal) {
+        modal.classList.remove("visible");
+    }
+
+    pendingSettingsNavigation = null;
+}
+
+function showSettingsUnsavedModal(action) {
+    const modal = document.getElementById("settingsUnsavedModal");
+    pendingSettingsNavigation = action;
+
+    if (modal) {
+        modal.classList.add("visible");
+    }
+}
+
+function completePendingSettingsNavigation() {
+    const action = pendingSettingsNavigation;
+    hideSettingsUnsavedModal();
+
+    if (typeof action === "function") {
+        action();
+    }
+}
+
+function runWithSettingsGuard(action) {
+    if (isSettingsSceneActive() && settingsHaveDraftChanges()) {
+        showSettingsUnsavedModal(action);
+        return;
+    }
+
+    action();
 }
 
 function getActiveSettingsTabName() {
@@ -1699,12 +2092,12 @@ function showOverlayScene() {
 
 document.querySelectorAll("[data-submenu]").forEach((button) => {
     button.addEventListener("click", () => {
-        showSubmenu(button.dataset.submenu);
+        runWithSettingsGuard(() => showSubmenu(button.dataset.submenu));
     });
 });
 
 document.querySelectorAll("[data-home]").forEach((button) => {
-    button.addEventListener("click", showMainMenu);
+    button.addEventListener("click", () => runWithSettingsGuard(showMainMenu));
 });
 
 function clearPresetSelection() {
@@ -1809,17 +2202,36 @@ document.querySelectorAll("[data-setting]").forEach((input) => {
 
 document.querySelectorAll("[data-settings-tab]").forEach((tab) => {
     tab.addEventListener("click", () => {
-        showSettingsTab(tab.dataset.settingsTab);
+        const nextTab = tab.dataset.settingsTab;
+
+        if (nextTab === getActiveSettingsTabName()) {
+            return;
+        }
+
+        runWithSettingsGuard(() => showSettingsTab(nextTab));
     });
 });
 
 document.getElementById("resetSettingsButton").addEventListener("click", resetAppSettings);
 document.getElementById("applySettingsButton").addEventListener("click", applyDraftSettings);
 document.getElementById("cancelSettingsButton").addEventListener("click", cancelDraftSettings);
+document.getElementById("settingsStayButton").addEventListener("click", hideSettingsUnsavedModal);
+document.getElementById("settingsLeaveApplyButton").addEventListener("click", async () => {
+    const applied = await applyDraftSettings();
+
+    if (applied) {
+        completePendingSettingsNavigation();
+    }
+});
+document.getElementById("settingsLeaveCancelButton").addEventListener("click", () => {
+    cancelDraftSettings();
+    completePendingSettingsNavigation();
+});
 
 loadAppSettings();
 applyAppSettings();
 syncSettingsControlsFromDraft();
+loadDesktopDisplays();
 showSettingsTab("general");
 setDesktopAdminStorage();
 updateStartState();

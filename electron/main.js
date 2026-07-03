@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Menu, ipcMain } = require("electron");
+const { app, BrowserWindow, Menu, ipcMain, screen } = require("electron");
 const { spawn } = require("child_process");
 const http = require("http");
 const path = require("path");
@@ -13,6 +13,7 @@ const LOCAL_DESKTOP_ADMIN_KEY = process.env.ADMIN_PASSWORD || "CHANGE_ME_NOW";
 
 let mainWindow = null;
 let childServerProcess = null;
+let lastWindowedBounds = null;
 
 function loadAppUrl(url) {
     if (mainWindow && !mainWindow.isDestroyed()) {
@@ -26,6 +27,152 @@ function createApplicationMenu() {
 
 ipcMain.on("zbroadcast:quit", () => {
     app.quit();
+});
+
+function getDisplayResolution(display) {
+    const scaleFactor = typeof display.scaleFactor === "number" && display.scaleFactor > 0
+        ? display.scaleFactor
+        : 1;
+    const bounds = display.bounds || {};
+    const size = display.size || {};
+    const width = typeof bounds.width === "number"
+        ? Math.round(bounds.width * scaleFactor)
+        : size.width;
+    const height = typeof bounds.height === "number"
+        ? Math.round(bounds.height * scaleFactor)
+        : size.height;
+
+    return {
+        width: width || 0,
+        height: height || 0
+    };
+}
+
+function getDisplayLabel(display, index) {
+    const resolution = getDisplayResolution(display);
+    const displayName = typeof display.label === "string" && display.label.trim() !== ""
+        ? ` - ${display.label.trim()}`
+        : "";
+
+    return `Display ${index + 1}${displayName} - ${resolution.width}x${resolution.height}`;
+}
+
+function serializeDisplay(display, index) {
+    const resolution = getDisplayResolution(display);
+
+    return {
+        id: String(display.id),
+        index,
+        name: typeof display.label === "string" ? display.label : "",
+        label: getDisplayLabel(display, index),
+        resolution,
+        bounds: display.bounds,
+        workArea: display.workArea,
+        scaleFactor: display.scaleFactor,
+        primary: display.id === screen.getPrimaryDisplay().id
+    };
+}
+
+function getDisplays() {
+    return screen.getAllDisplays().map(serializeDisplay);
+}
+
+function findDisplay(displayId) {
+    const displays = screen.getAllDisplays();
+
+    if (displayId && displayId !== "default") {
+        const selectedDisplay = displays.find((display) => String(display.id) === String(displayId));
+
+        if (selectedDisplay) {
+            return selectedDisplay;
+        }
+    }
+
+    if (mainWindow && !mainWindow.isDestroyed()) {
+        return screen.getDisplayMatching(mainWindow.getBounds());
+    }
+
+    return screen.getPrimaryDisplay();
+}
+
+function getCurrentWindowDisplayInfo() {
+    if (!mainWindow || mainWindow.isDestroyed()) {
+        return null;
+    }
+
+    const display = screen.getDisplayMatching(mainWindow.getBounds());
+    const displays = screen.getAllDisplays();
+    const index = displays.findIndex((candidate) => candidate.id === display.id);
+
+    return {
+        display: serializeDisplay(display, index === -1 ? 0 : index),
+        bounds: mainWindow.getBounds(),
+        fullscreen: mainWindow.isFullScreen()
+    };
+}
+
+function rememberWindowedBounds() {
+    if (!mainWindow || mainWindow.isDestroyed() || mainWindow.isFullScreen() || !mainWindow.isResizable()) {
+        return;
+    }
+
+    lastWindowedBounds = mainWindow.getBounds();
+}
+
+async function applyWindowDisplaySettings(settings) {
+    if (!mainWindow || mainWindow.isDestroyed()) {
+        return { success: false, error: "Main window is not available." };
+    }
+
+    const windowMode = ["windowed", "fullscreen"].includes(settings?.windowMode)
+        ? settings.windowMode
+        : "windowed";
+    const targetDisplay = findDisplay(settings?.displayId);
+
+    try {
+        if (windowMode === "windowed") {
+            mainWindow.setFullScreen(false);
+            mainWindow.setResizable(true);
+
+            if (lastWindowedBounds) {
+                mainWindow.setBounds(lastWindowedBounds);
+            } else {
+                mainWindow.setBounds({
+                    x: targetDisplay.workArea.x + 60,
+                    y: targetDisplay.workArea.y + 60,
+                    width: 1180,
+                    height: 760
+                });
+            }
+
+            mainWindow.focus();
+            return { success: true, mode: windowMode, current: getCurrentWindowDisplayInfo() };
+        }
+
+        rememberWindowedBounds();
+
+        mainWindow.setResizable(true);
+        mainWindow.setBounds(targetDisplay.bounds);
+        mainWindow.setFullScreen(true);
+        mainWindow.focus();
+
+        return { success: true, mode: windowMode, current: getCurrentWindowDisplayInfo() };
+    } catch (error) {
+        console.warn("Could not apply ZBroadcast display settings.", error);
+        return { success: false, error: error.message || "Display settings failed." };
+    }
+}
+
+ipcMain.handle("zbroadcast:list-displays", () => {
+    return getDisplays();
+});
+
+ipcMain.handle("zbroadcast:get-current-display", () => {
+    return getCurrentWindowDisplayInfo();
+});
+
+ipcMain.handle("zbroadcast:apply-display-settings", (_event, settings) => {
+    return applyWindowDisplaySettings(settings);
 });
 
 function checkUrl(url) {
@@ -162,6 +309,8 @@ async function createWindow() {
         backgroundColor: "#111214",
         webPreferences: {
             preload: PRELOAD_ENTRY,
+            // ZBroadcast is a live broadcast control app, so test keeping the window responsive during focus/background changes.
+            backgroundThrottling: false,
             additionalArguments: [
                 `--zbroadcast-admin-key=${encodeURIComponent(LOCAL_DESKTOP_ADMIN_KEY)}`
             ]
