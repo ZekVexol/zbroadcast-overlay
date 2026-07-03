@@ -34,5 +34,13 @@ function getRoomIdFromPath(pathname) {
 
 contextBridge.exposeInMainWorld("zbroadcastDesktop", {
     getAdminKey: () => getLocalDesktopAdminKey(),
-    quit: () => ipcRenderer.send("zbroadcast:quit")
+    quit: () => ipcRenderer.send("zbroadcast:quit"),
+    display: {
+        listDisplays: () => ipcRenderer.invoke("zbroadcast:list-displays"),
+        getCurrentDisplay: () => ipcRenderer.invoke("zbroadcast:get-current-display"),
+        applySettings: (settings) => ipcRenderer.invoke("zbroadcast:apply-display-settings", {
+            windowMode: settings?.windowMode,
+            displayId: settings?.displayId
+        })
+    }
 });
