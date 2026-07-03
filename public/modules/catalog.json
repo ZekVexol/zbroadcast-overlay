@@ -39,6 +39,39 @@
         "OBS browser-source overlay output",
         "room-based URLs"
       ]
+    },
+    {
+      "id": "predictions",
+      "displayName": "Predictions",
+      "shortName": "Predictions",
+      "category": "stream",
+      "type": "interaction",
+      "status": "planned",
+      "runnable": false,
+      "description": "Local prediction controller and tug-of-war overlay module.",
+      "controlUrl": "",
+      "overlayUrl": "",
+      "tags": [
+        "Predictions",
+        "Stream Interaction",
+        "Overlay",
+        "Twitch Future"
+      ],
+      "compatibility": {
+        "desktop": true,
+        "web": true,
+        "obsBrowserSource": true,
+        "remoteRooms": false
+      },
+      "plannedBehavior": [
+        "start prediction",
+        "update prediction progress",
+        "complete prediction",
+        "cancel prediction",
+        "tug-of-war overlay",
+        "esports mode team-name autofill",
+        "future Twitch/EventSub integration"
+      ]
     }
   ]
 }
