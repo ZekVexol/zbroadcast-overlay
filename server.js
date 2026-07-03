@@ -11,6 +11,7 @@ const io = new Server(server);
 
 const PORT = process.env.PORT || 3000;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "CHANGE_ME_NOW";
+const IS_DESKTOP_MODE = process.env.ZBROADCAST_DESKTOP === "1";
 
 const publicPath = path.join(__dirname, "public");
 const overlayAssetsRootPath = path.join(publicPath, "overlay-assets");
@@ -20,7 +21,11 @@ if (!fs.existsSync(overlayAssetsRootPath)) {
 }
 
 if (ADMIN_PASSWORD === "CHANGE_ME_NOW") {
-    console.warn('WARNING: Using default ADMIN_PASSWORD value "CHANGE_ME_NOW". Change this before public deployment.');
+    if (IS_DESKTOP_MODE) {
+        console.log('Local desktop mode: using default local admin key "CHANGE_ME_NOW" for this development session.');
+    } else {
+        console.warn('WARNING: Using default ADMIN_PASSWORD value "CHANGE_ME_NOW". Change this before public deployment.');
+    }
 }
 
 app.use("/overlay-assets", express.static(overlayAssetsRootPath));

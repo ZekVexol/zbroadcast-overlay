@@ -224,7 +224,8 @@ function startServer() {
         cwd: PROJECT_ROOT,
         env: {
             ...process.env,
-            ADMIN_PASSWORD: LOCAL_DESKTOP_ADMIN_KEY
+            ADMIN_PASSWORD: LOCAL_DESKTOP_ADMIN_KEY,
+            ZBROADCAST_DESKTOP: "1"
         },
         stdio: "inherit",
         windowsHide: true
