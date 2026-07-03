@@ -378,6 +378,11 @@ button {
     font-weight: 700;
 }
 
+.module-card.planned.disabled::after {
+    content: "Coming soon";
+    color: rgba(255, 180, 180, 0.86);
+}
+
 .module-title {
     font-size: 14px;
     font-weight: 800;
@@ -1011,6 +1016,9 @@ body.settings-high-contrast .scene-copy {
                                 <button class="module-card disabled" type="button" disabled>
                                     <div class="module-title">Twitch Goal Bar</div>
                                 </button>
+                                <button class="module-card stream planned disabled" type="button" id="predictionsModule" disabled>
+                                    <div class="module-title">Predictions</div>
+                                </button>
                                 <button class="module-card disabled" type="button" disabled>
                                     <div class="module-title">Clip Button</div>
                                 </button>
@@ -1025,9 +1033,6 @@ body.settings-high-contrast .scene-copy {
                             <div class="module-list">
                                 <button class="module-card esports" type="button" id="rocketLeagueModule" data-module="rocketLeagueScoreboard">
                                     <div class="module-title">Rocket League</div>
-                                </button>
-                                <button class="module-card disabled" type="button" disabled>
-                                    <div class="module-title">Match Predictions</div>
                                 </button>
                             </div>
                         </div>
@@ -1912,6 +1917,7 @@ async function loadModuleCatalog() {
         const catalog = await response.json();
         const modules = Array.isArray(catalog.modules) ? catalog.modules : [];
         const rocketLeagueModule = modules.find((module) => module.id === ROCKET_LEAGUE_MODULE_ID);
+        const predictionsModule = modules.find((module) => module.id === "predictions");
 
         if (!rocketLeagueModule) {
             throw new Error(`Module not found: ${ROCKET_LEAGUE_MODULE_ID}`);
@@ -1927,6 +1933,11 @@ async function loadModuleCatalog() {
         const rocketLeagueLabel = document.querySelector("#rocketLeagueModule .module-title");
         if (rocketLeagueLabel) {
             rocketLeagueLabel.textContent = rocketLeagueModule.shortName || rocketLeagueModule.displayName || "Rocket League";
+        }
+
+        const predictionsLabel = document.querySelector("#predictionsModule .module-title");
+        if (predictionsLabel && predictionsModule) {
+            predictionsLabel.textContent = predictionsModule.shortName || predictionsModule.displayName || "Predictions";
         }
     } catch (error) {
         console.warn("Could not load module catalog. Using hardcoded Rocket League fallback.", error);
