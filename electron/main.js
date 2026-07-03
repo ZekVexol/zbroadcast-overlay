@@ -309,7 +309,7 @@ async function createWindow() {
         backgroundColor: "#111214",
         webPreferences: {
             preload: PRELOAD_ENTRY,
-            // ZBroadcast is a live broadcast control app, so test keeping the window responsive during focus/background changes.
+            // Responsiveness test: ZBroadcast is a live broadcast control app and should stay responsive during focus/background changes.
             backgroundThrottling: false,
             additionalArguments: [
                 `--zbroadcast-admin-key=${encodeURIComponent(LOCAL_DESKTOP_ADMIN_KEY)}`
