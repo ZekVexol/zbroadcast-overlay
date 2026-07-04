@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Predictions Overlay</title>
+    <link rel="stylesheet" href="/modules/predictions/styles.css">
+</head>
+<body>
+    <main class="pred-overlay-root" id="overlayRoot"></main>
+    <script src="/modules/predictions/state.js"></script>
+    <script>
+        const store = window.ZBroadcastPredictions;
+        const overlayRoot = document.getElementById("overlayRoot");
+
+        function escapeHtml(value) {
+            return String(value).replace(/[&<>"']/g, (character) => ({
+                "&": "&amp;",
+                "<": "&lt;",
+                ">": "&gt;",
+                "\"": "&quot;",
+                "'": "&#039;"
+            }[character]));
+        }
+
+        function renderTugbar(options, state) {
+            const isCompleted = state.status === "completed" && state.winnerOptionId;
+            const visibleOptions = options
+                .map((option, index) => ({
+                    ...option,
+                    optionIndex: index,
+                    displayPercent: Math.max(0, Number(option.rawPercent ?? option.percent) || 0)
+                }))
+                .filter((option) => option.displayPercent > 0);
+
+            return `
+                <div class="pred-tugbar${visibleOptions.length === 0 ? " empty" : ""}">
+                    ${visibleOptions.map((option) => {
+                        const isWinner = isCompleted && option.id === state.winnerOptionId;
+                        const isMuted = isCompleted && !isWinner;
+                        const width = option.displayPercent;
+                        const label = `${option.label} ${option.percent}%`;
+                        return `<div class="pred-segment option-${option.optionIndex === 0 ? "a" : "b"}${isWinner ? " winner" : ""}${isMuted ? " muted" : ""}" style="width: ${width}%">${escapeHtml(label)}</div>`;
+                    }).join("")}
+                </div>
+            `;
+        }
+
+        function getPieColor(index) {
+            const colors = [
+                "#2d6cff",
+                "#ff7b2d",
+                "#2ecc71",
+                "#b06cff",
+                "#ffcf4d",
+                "#30cfd0"
+            ];
+            return colors[index % colors.length];
+        }
+
+        function polarToCartesian(cx, cy, radius, angleDegrees) {
+            const angleRadians = (angleDegrees - 90) * Math.PI / 180;
+            return {
+                x: cx + radius * Math.cos(angleRadians),
+                y: cy + radius * Math.sin(angleRadians)
+            };
+        }
+
+        function describeSlice(cx, cy, radius, startAngle, endAngle) {
+            const start = polarToCartesian(cx, cy, radius, endAngle);
+            const end = polarToCartesian(cx, cy, radius, startAngle);
+            const largeArcFlag = endAngle - startAngle <= 180 ? "0" : "1";
+
+            return [
+                `M ${cx} ${cy}`,
+                `L ${start.x.toFixed(3)} ${start.y.toFixed(3)}`,
+                `A ${radius} ${radius} 0 ${largeArcFlag} 0 ${end.x.toFixed(3)} ${end.y.toFixed(3)}`,
+                "Z"
+            ].join(" ");
+        }
+
+        function renderPieChart(options, state) {
+            let cursor = 0;
+            const cx = 100;
+            const cy = 100;
+            const radius = 92;
+            const hasPoints = options.some((option) => Math.max(0, Number(option.rawPercent ?? option.percent) || 0) > 0);
+
+            if (!hasPoints) {
+                return `
+                    <svg class="pred-pie-svg" viewBox="0 0 200 200" role="img" aria-label="Prediction results pie chart">
+                        <circle class="pred-pie-empty" cx="100" cy="100" r="92"></circle>
+                    </svg>
+                `;
+            }
+
+            const slices = options.map((option, index) => {
+                const slicePercent = Math.max(0, Number(option.rawPercent ?? option.percent) || 0);
+                const sweep = slicePercent * 3.6;
+                const startAngle = cursor;
+                const endAngle = cursor + sweep;
+                const midAngle = startAngle + sweep / 2;
+                const labelRadius = slicePercent < 9 ? 62 : 55;
+                const labelPoint = polarToCartesian(cx, cy, labelRadius, midAngle);
+                const isWinner = state.status === "completed" && option.id === state.winnerOptionId;
+                const isMuted = state.status === "completed" && state.winnerOptionId && !isWinner;
+                cursor = endAngle;
+
+                return {
+                    option,
+                    color: getPieColor(index),
+                    path: describeSlice(cx, cy, radius, startAngle, endAngle),
+                    labelX: labelPoint.x,
+                    labelY: labelPoint.y,
+                    showLabel: option.percent >= 5,
+                    isFullCircle: slicePercent >= 99.999,
+                    isWinner,
+                    isMuted
+                };
+            });
+
+            return `
+                <svg class="pred-pie-svg" viewBox="0 0 200 200" role="img" aria-label="Prediction results pie chart">
+                    ${slices.map((slice) => `
+                        ${slice.isFullCircle
+                            ? `<circle class="pred-pie-slice${slice.isWinner ? " winner" : ""}${slice.isMuted ? " muted" : ""}" cx="100" cy="100" r="92" fill="${slice.color}"></circle>`
+                            : `<path class="pred-pie-slice${slice.isWinner ? " winner" : ""}${slice.isMuted ? " muted" : ""}" d="${slice.path}" fill="${slice.color}"></path>`}
+                    `).join("")}
+                    ${slices.filter((slice) => slice.showLabel).map((slice) => `
+                        <text class="pred-pie-text${slice.isWinner ? " winner" : ""}${slice.isMuted ? " muted" : ""}" x="${slice.labelX.toFixed(2)}" y="${slice.labelY.toFixed(2)}">
+                            <tspan x="${slice.labelX.toFixed(2)}" dy="-0.15em">${escapeHtml(slice.option.label)}</tspan>
+                            <tspan x="${slice.labelX.toFixed(2)}" dy="1.25em">${slice.option.percent}%</tspan>
+                        </text>
+                    `).join("")}
+                </svg>
+            `;
+        }
+
+        function renderOverlayBody(totals, state) {
+            if (totals.length === 2) {
+                return renderTugbar(totals, state);
+            }
+
+            return renderPieChart(totals, state);
+        }
+
+        function renderWinnerAnnouncement(state) {
+            if (state.status !== "completed" || !state.winnerOptionId) {
+                return "";
+            }
+
+            const winner = state.options.find((option) => option.id === state.winnerOptionId);
+            if (!winner) {
+                return "";
+            }
+
+            const winnerLength = String(winner.label || "").length;
+            const lengthTier = winnerLength > 28 ? "max" : winnerLength > 22 ? "long" : winnerLength > 14 ? "medium" : "short";
+
+            return `
+                <div class="pred-winner-announcement">
+                    <span>WINNER</span>
+                    <strong data-length="${lengthTier}">${escapeHtml(winner.label)}</strong>
+                </div>
+            `;
+        }
+
+        function getTitleLengthClass(title) {
+            const length = String(title || "").length;
+            if (length > 52) return " long";
+            if (length > 34) return " medium";
+            return "";
+        }
+
+        function render(state) {
+            if (state.status !== "active" && state.status !== "completed") {
+                overlayRoot.innerHTML = "";
+                return;
+            }
+
+            const totals = store.getTotals(state);
+            if (totals.length < 2) {
+                overlayRoot.innerHTML = "";
+                return;
+            }
+            const titleText = state.title || "Prediction";
+            const titleClass = getTitleLengthClass(titleText);
+
+            overlayRoot.innerHTML = `
+                <section class="pred-overlay-card${totals.length >= 3 ? " pie-mode" : ""}">
+                    <h1 class="pred-overlay-title${titleClass}">${escapeHtml(titleText)}</h1>
+                    <div class="pred-visual">
+                        ${renderOverlayBody(totals, state)}
+                        ${renderWinnerAnnouncement(state)}
+                    </div>
+                </section>
+            `;
+        }
+
+        store.subscribe(render);
+</script>
+</body>
+</html>
