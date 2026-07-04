@@ -721,49 +721,154 @@ button {
     background: rgba(45, 108, 255, 0.48);
 }
 
-.settings-modal-backdrop {
+.app-modal-backdrop {
     position: fixed;
     inset: 0;
-    z-index: 60;
+    z-index: 70;
     display: none;
     align-items: center;
     justify-content: center;
-    background: rgba(4, 6, 10, 0.68);
+    padding: 22px;
+    background: rgba(4, 6, 10, 0.72);
 }
 
-.settings-modal-backdrop.visible {
+.app-modal-backdrop.visible {
     display: flex;
 }
 
-.settings-modal {
+.app-modal {
     width: min(440px, calc(100vw - 42px));
+    max-height: calc(100vh - 44px);
+    overflow: auto;
+    overflow-x: hidden;
     padding: 22px;
     border: 1px solid rgba(255, 255, 255, 0.14);
     border-radius: 8px;
-    background: rgba(18, 21, 28, 0.96);
+    background: rgba(18, 21, 28, 0.97);
     box-shadow: 0 24px 70px rgba(0, 0, 0, 0.42);
 }
 
-.settings-modal-title {
+.app-modal-title {
+    max-width: 100%;
     margin: 0 0 8px;
     color: var(--text);
     font-size: 18px;
     font-weight: 900;
+    line-height: 1.18;
+    overflow-wrap: anywhere;
+    word-break: break-word;
 }
 
-.settings-modal-copy {
+.app-modal-copy {
     margin: 0;
     color: var(--muted);
     font-size: 13px;
     line-height: 1.5;
 }
 
-.settings-modal-actions {
+.app-modal-copy:empty {
+    display: none;
+}
+
+.app-modal-body {
+    display: grid;
+    gap: 12px;
+    min-width: 0;
+}
+
+.app-modal-actions {
     display: flex;
     flex-wrap: wrap;
     justify-content: flex-end;
     gap: 10px;
     margin-top: 18px;
+}
+
+.app-modal.prediction-setup-modal {
+    width: min(420px, calc(100vw - 42px));
+}
+
+.prediction-modal-input,
+.prediction-modal-select {
+    width: 100%;
+    min-height: 38px;
+    min-width: 0;
+    padding: 0 10px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 5px;
+    background: rgba(12, 16, 24, 0.78);
+    color: var(--text);
+    font-size: 13px;
+    font-weight: 800;
+}
+
+.prediction-modal-options {
+    display: grid;
+    gap: 8px;
+    max-height: 190px;
+    overflow: auto;
+    padding-right: 4px;
+}
+
+.prediction-modal-option-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 34px;
+    gap: 8px;
+}
+
+.prediction-modal-option-row.no-remove {
+    grid-template-columns: minmax(0, 1fr);
+}
+
+.prediction-modal-option-row button,
+.prediction-modal-add-option {
+    min-height: 38px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 5px;
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text);
+    cursor: pointer;
+    font-size: 18px;
+    font-weight: 900;
+}
+
+.prediction-modal-add-option {
+    width: 100%;
+}
+
+.prediction-modal-footer {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 12px;
+    align-items: flex-end;
+}
+
+.prediction-modal-left {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+}
+
+.prediction-modal-duration {
+    width: 92px;
+}
+
+.prediction-modal-checkbox {
+    display: inline-flex;
+    gap: 7px;
+    align-items: center;
+    color: rgba(244, 247, 251, 0.82);
+    font-size: 12px;
+    font-weight: 900;
+}
+
+.prediction-modal-error {
+    min-height: 16px;
+    color: #ff8a8a;
+    font-size: 12px;
+    font-weight: 800;
 }
 
 .hotkeys-table {
@@ -881,6 +986,7 @@ body.settings-high-contrast .scene-copy {
     right: var(--scene-control-x);
 }
 
+.control-background-frame,
 .embedded-frame {
     position: absolute;
     left: 0;
@@ -894,10 +1000,70 @@ body.settings-high-contrast .scene-copy {
     background: #121212;
 }
 
-.frame-status {
+.control-background-frame {
+    z-index: 0;
+    opacity: 0.12;
+    filter: saturate(0.78) contrast(0.92);
+    pointer-events: none;
+}
+
+.module-grid {
     position: absolute;
     inset: 0;
     z-index: 1;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-auto-rows: minmax(0, 1fr);
+    place-items: center;
+    gap: 14px;
+    min-width: 0;
+    min-height: 0;
+}
+
+.module-grid.module-count-2 {
+    grid-template-columns: repeat(2, minmax(260px, min(44vw, 560px)));
+}
+
+.module-grid.module-count-3 {
+    grid-template-columns: repeat(3, minmax(220px, min(30vw, 420px)));
+}
+
+.module-grid.module-count-4 {
+    grid-template-columns: repeat(2, minmax(260px, min(40vw, 520px)));
+    grid-template-rows: repeat(2, minmax(220px, min(40vh, 420px)));
+}
+
+.module-slot {
+    position: relative;
+    min-width: 0;
+    min-height: 0;
+}
+
+.module-slot.major {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.module-slot.minor {
+    width: min(520px, calc(100vw - 48px));
+    height: min(520px, calc(100vh - 96px));
+}
+
+.module-slot .embedded-frame {
+    z-index: 0;
+}
+
+.module-slot.minor .embedded-frame {
+    background: transparent;
+    background-color: transparent;
+}
+
+.frame-status {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
     display: none;
     align-items: center;
     justify-content: center;
@@ -982,7 +1148,8 @@ body.settings-high-contrast .scene-copy {
     gap: 5px;
 }
 
-.global-devtools-control-room {
+.global-devtools-control-room,
+.global-devtools-predictions {
     padding-bottom: 8px;
     margin-bottom: 8px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
@@ -1066,6 +1233,81 @@ body.settings-high-contrast .scene-copy {
     border-color: rgba(45, 108, 255, 0.36);
 }
 
+.global-devtools-field {
+    display: grid;
+    gap: 4px;
+    margin-bottom: 6px;
+}
+
+.global-devtools-field span {
+    color: rgba(244, 246, 248, 0.62);
+    font-size: 10px;
+    font-weight: 900;
+    text-align: right;
+}
+
+.global-devtools-field.no-label span {
+    display: none;
+}
+
+.global-devtools-inline {
+    display: grid;
+    grid-template-columns: 52px 52px;
+    justify-content: end;
+    gap: 6px;
+}
+
+.global-devtools-input,
+.global-devtools-select,
+.global-devtools-range {
+    width: 100%;
+    min-height: 28px;
+    min-width: 0;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 4px;
+    background: rgba(31, 36, 48, 0.78);
+    color: var(--text);
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.global-devtools-input,
+.global-devtools-select {
+    padding: 0 8px;
+}
+
+.global-devtools-plus-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 32px;
+    align-items: center;
+    gap: 8px;
+    min-height: 30px;
+    margin-bottom: 5px;
+}
+
+.global-devtools-plus-row span {
+    overflow: hidden;
+    color: rgba(244, 246, 248, 0.82);
+    font-size: 11px;
+    font-weight: 900;
+    text-align: right;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.global-devtools-plus-button {
+    min-width: 32px;
+    min-height: 28px;
+    padding: 0;
+    border: 1px solid rgba(45, 108, 255, 0.34);
+    border-radius: 4px;
+    background: rgba(45, 108, 255, 0.18);
+    color: var(--text);
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 900;
+}
+
 .global-devtools-submenu {
     position: absolute;
     right: calc(100% + 8px);
@@ -1084,11 +1326,13 @@ body.settings-high-contrast .scene-copy {
     display: block;
 }
 
-.global-devtools-control-room {
+.global-devtools-control-room,
+.global-devtools-predictions {
     display: none;
 }
 
-.global-devtools.show-control-room-tools .global-devtools-control-room {
+.global-devtools.show-control-room-tools .global-devtools-control-room,
+.global-devtools.show-predictions-tools .global-devtools-predictions {
     display: block;
 }
 
@@ -1189,7 +1433,7 @@ body.settings-high-contrast .scene-copy {
                                 <button class="module-card disabled" type="button" disabled>
                                     <div class="module-title">Twitch Goal Bar</div>
                                 </button>
-                                <button class="module-card stream planned disabled" type="button" id="predictionsModule" disabled>
+                                <button class="module-card stream" type="button" id="predictionsModule" data-module="predictions">
                                     <div class="module-title">Predictions</div>
                                 </button>
                                 <button class="module-card disabled" type="button" disabled>
@@ -1489,17 +1733,6 @@ body.settings-high-contrast .scene-copy {
                 <button class="home-button" type="button" id="cancelSettingsButton">Cancel</button>
                 <button class="home-button" type="button" id="applySettingsButton">Apply</button>
             </div>
-            <div class="settings-modal-backdrop" id="settingsUnsavedModal" role="dialog" aria-modal="true" aria-labelledby="settingsUnsavedTitle">
-                <div class="settings-modal">
-                    <h3 class="settings-modal-title" id="settingsUnsavedTitle">Unsaved Settings</h3>
-                    <p class="settings-modal-copy">Settings have changed but have not been applied.</p>
-                    <div class="settings-modal-actions">
-                        <button class="home-button" type="button" id="settingsStayButton">Stay</button>
-                        <button class="home-button" type="button" id="settingsLeaveCancelButton">Leave &amp; Cancel</button>
-                        <button class="home-button" type="button" id="settingsLeaveApplyButton">Leave &amp; Apply</button>
-                    </div>
-                </div>
-            </div>
         </div>
     </section>
 
@@ -1520,6 +1753,7 @@ body.settings-high-contrast .scene-copy {
     </section>
 
     <section class="app-scene" id="controlAppScene">
+        <iframe class="control-background-frame" id="controlBackgroundFrame" title="Live Overlay Monitor" aria-hidden="true"></iframe>
         <div class="top-app-bar">
             <div class="top-left-controls">
                 <button class="home-button" type="button" data-home>⌂ Home</button>
@@ -1529,8 +1763,12 @@ body.settings-high-contrast .scene-copy {
                 <button class="home-button" type="button" id="openOverlayPreviewButton">Preview Overlay</button>
             </div>
         </div>
-        <div class="frame-status" id="controlFrameStatus" aria-live="polite"></div>
-        <iframe class="embedded-frame" id="controlFrame" title="Rocket League Scoreboard Control"></iframe>
+        <div class="module-grid" id="controlModuleGrid">
+            <div class="module-slot" data-module-slot="primary">
+                <div class="frame-status" id="controlFrameStatus" aria-live="polite"></div>
+                <iframe class="embedded-frame" id="controlFrame" title="Control Room Module" allowtransparency="true"></iframe>
+            </div>
+        </div>
     </section>
 
     <section class="app-scene" id="overlayAppScene">
@@ -1550,6 +1788,14 @@ body.settings-high-contrast .scene-copy {
         <button class="global-devtools-toggle" type="button" id="globalDevToolsToggle" aria-expanded="false" aria-controls="globalDevToolsMenu">Dev Tools</button>
         <div class="global-devtools-menu" id="globalDevToolsMenu">
             <div class="global-devtools-list">
+                <div class="global-devtools-group global-devtools-predictions">
+                    <div class="global-devtools-branch">
+                        <button class="global-devtools-branch-label" type="button">Predictions</button>
+                        <div class="global-devtools-submenu">
+                            <div class="global-devtools-list" id="devPredictionsTools"></div>
+                        </div>
+                    </div>
+                </div>
                 <div class="global-devtools-group global-devtools-control-room">
                     <div class="global-devtools-branch">
                         <button class="global-devtools-branch-label" type="button">Modules</button>
@@ -1581,6 +1827,7 @@ body.settings-high-contrast .scene-copy {
                         <button class="global-devtools-branch-label" type="button">Other Commands</button>
                         <div class="global-devtools-submenu">
                             <div class="global-devtools-list">
+                                <button class="global-devtools-action" type="button" id="devResetLocalModuleStateButton">Reset Local Module State</button>
                                 <button class="global-devtools-action" type="button" id="devReloadUiButton">Reload UI</button>
                             </div>
                         </div>
@@ -1589,12 +1836,23 @@ body.settings-high-contrast .scene-copy {
             </div>
         </div>
     </div>
+
+    <div class="app-modal-backdrop" id="appModalBackdrop" aria-hidden="true">
+        <div class="app-modal" id="appModal" role="dialog" aria-modal="true" aria-labelledby="appModalTitle">
+            <h3 class="app-modal-title" id="appModalTitle"></h3>
+            <p class="app-modal-copy" id="appModalCopy"></p>
+            <div class="app-modal-body" id="appModalBody"></div>
+            <div class="app-modal-actions" id="appModalActions"></div>
+        </div>
+    </div>
 </main>
 
+<script src="/modules/predictions/state.js"></script>
 <script>
 const FALLBACK_CONTROL_URL = "http://localhost:3000/room/default-room/control";
 const FALLBACK_OVERLAY_URL = "http://localhost:3000/room/default-room/overlay";
 const ROCKET_LEAGUE_MODULE_ID = "rocket-league-scoreboard";
+const PREDICTIONS_MODULE_ID = "predictions";
 const EMBEDDED_CONTROL_INSET_PX = 56;
 const FRAME_LOAD_TIMEOUT_MS = 15000;
 const SETTINGS_STORAGE_KEY = "zbroadcast:settings";
@@ -1651,11 +1909,18 @@ let rocketLeagueModuleConfig = null;
 let catalogModules = [FALLBACK_ROCKET_LEAGUE_MODULE];
 let activeModule = null;
 let controlRoomModule = null;
+let predictionsModuleConfig = null;
 const frameLoadTimers = new Map();
 let availableDesktopDisplays = [];
 let settingsStatusTimer = null;
 let pendingSettingsNavigation = null;
 let didApplySavedDisplaySettingsOnLaunch = false;
+let predictionsHoldTimer = 0;
+let predictionsHoldDelayTimer = 0;
+let predictionsHoldActive = false;
+let currentAppModal = null;
+let predictionsModalSetupOptions = [];
+let predictionsPendingWinnerId = "";
 const defaultAppSettings = {
     lowResourceMode: false,
     reduceMotion: false,
@@ -2062,23 +2327,109 @@ function isSettingsSceneActive() {
     return !!(settingsScene && settingsScene.classList.contains("active"));
 }
 
-function hideSettingsUnsavedModal() {
-    const modal = document.getElementById("settingsUnsavedModal");
+function closeGlobalAppModal() {
+    const backdrop = document.getElementById("appModalBackdrop");
+    const modal = document.getElementById("appModal");
+    const copy = document.getElementById("appModalCopy");
+    const body = document.getElementById("appModalBody");
+    const actions = document.getElementById("appModalActions");
 
-    if (modal) {
-        modal.classList.remove("visible");
+    if (backdrop) {
+        backdrop.classList.remove("visible");
+        backdrop.setAttribute("aria-hidden", "true");
     }
 
+    if (actions) {
+        actions.textContent = "";
+    }
+
+    if (body) {
+        body.textContent = "";
+    }
+
+    if (copy) {
+        copy.textContent = "";
+    }
+
+    if (modal) {
+        modal.className = "app-modal";
+    }
+
+    currentAppModal = null;
+}
+
+function showGlobalAppModal(config) {
+    const backdrop = document.getElementById("appModalBackdrop");
+    const modal = document.getElementById("appModal");
+    const title = document.getElementById("appModalTitle");
+    const copy = document.getElementById("appModalCopy");
+    const body = document.getElementById("appModalBody");
+    const actions = document.getElementById("appModalActions");
+
+    if (!backdrop || !modal || !title || !copy || !body || !actions) {
+        return;
+    }
+
+    currentAppModal = config || {};
+    modal.className = `app-modal${currentAppModal.modalClass ? ` ${currentAppModal.modalClass}` : ""}`;
+    title.textContent = currentAppModal.title || "";
+    copy.textContent = currentAppModal.copy || "";
+    body.textContent = "";
+    actions.textContent = "";
+
+    if (typeof currentAppModal.renderBody === "function") {
+        currentAppModal.renderBody(body);
+    }
+
+    (currentAppModal.actions || []).forEach((action) => {
+        const button = document.createElement("button");
+        button.className = action.className || "home-button";
+        button.type = "button";
+        button.textContent = action.label;
+        button.addEventListener("click", () => {
+            if (typeof action.onClick === "function") {
+                action.onClick();
+            }
+        });
+        actions.appendChild(button);
+    });
+
+    backdrop.classList.add("visible");
+    backdrop.setAttribute("aria-hidden", "false");
+}
+
+function hideSettingsUnsavedModal() {
+    closeGlobalAppModal();
     pendingSettingsNavigation = null;
 }
 
 function showSettingsUnsavedModal(action) {
-    const modal = document.getElementById("settingsUnsavedModal");
     pendingSettingsNavigation = action;
 
-    if (modal) {
-        modal.classList.add("visible");
-    }
+    showGlobalAppModal({
+        title: "Unsaved Settings",
+        copy: "Settings have changed but have not been applied.",
+        onCancel: hideSettingsUnsavedModal,
+        actions: [
+            { label: "Stay", onClick: hideSettingsUnsavedModal },
+            {
+                label: "Leave & Cancel",
+                onClick: () => {
+                    cancelDraftSettings();
+                    completePendingSettingsNavigation();
+                }
+            },
+            {
+                label: "Leave & Apply",
+                onClick: async () => {
+                    const applied = await applyDraftSettings();
+                    if (applied) {
+                        completePendingSettingsNavigation();
+                    }
+                }
+            }
+        ]
+    });
 }
 
 function completePendingSettingsNavigation() {
@@ -2150,6 +2501,10 @@ function getRocketLeagueModule() {
     return rocketLeagueModuleConfig || FALLBACK_ROCKET_LEAGUE_MODULE;
 }
 
+function getPredictionsModule() {
+    return predictionsModuleConfig;
+}
+
 function getActiveControlUrl(moduleConfig = activeModule) {
     if (!moduleConfig) {
         return "";
@@ -2163,12 +2518,24 @@ function getActiveOverlayUrl() {
         return "";
     }
 
-    return resolveAppUrl(controlRoomModule.overlayUrl, "");
+    return resolveAppUrl(controlRoomModule.overlayUrl, FALLBACK_OVERLAY_URL);
+}
+
+function getControlRoomBackgroundOverlayUrl(moduleConfig = controlRoomModule) {
+    if (!moduleConfig) {
+        return "";
+    }
+
+    return resolveAppUrl(moduleConfig.overlayUrl, FALLBACK_OVERLAY_URL);
 }
 
 function getActiveModuleName(moduleConfig = activeModule) {
     moduleConfig = moduleConfig || getRocketLeagueModule();
     return moduleConfig.shortName || moduleConfig.displayName || "Control Room";
+}
+
+function getModuleSizeClass(moduleConfig) {
+    return moduleConfig && moduleConfig.moduleSize === "minor" ? "minor" : "major";
 }
 
 async function loadModuleCatalog() {
@@ -2182,7 +2549,7 @@ async function loadModuleCatalog() {
         const catalog = await response.json();
         const modules = Array.isArray(catalog.modules) ? catalog.modules : [];
         const rocketLeagueModule = modules.find((module) => module.id === ROCKET_LEAGUE_MODULE_ID);
-        const predictionsModule = modules.find((module) => module.id === "predictions");
+        const predictionsModule = modules.find((module) => module.id === PREDICTIONS_MODULE_ID);
 
         if (!rocketLeagueModule) {
             throw new Error(`Module not found: ${ROCKET_LEAGUE_MODULE_ID}`);
@@ -2190,9 +2557,15 @@ async function loadModuleCatalog() {
 
         catalogModules = modules;
         rocketLeagueModuleConfig = rocketLeagueModule;
+        predictionsModuleConfig = predictionsModule || null;
 
         if (selectedModules.has("rocketLeagueScoreboard") || selectedPreset === "rocketLeagueCast") {
             activeModule = getRocketLeagueModule();
+            updateStartState();
+        }
+
+        if (selectedModules.has(PREDICTIONS_MODULE_ID) && predictionsModuleConfig) {
+            activeModule = getPredictionsModule();
             updateStartState();
         }
 
@@ -2296,9 +2669,37 @@ function hasRocketLeagueModule() {
     return selectedModules.has("rocketLeagueScoreboard") || selectedPreset === "rocketLeagueCast";
 }
 
+function getModuleConfigForSelection(moduleId) {
+    if (moduleId === "rocketLeagueScoreboard") {
+        return getRocketLeagueModule();
+    }
+
+    if (moduleId === PREDICTIONS_MODULE_ID) {
+        return getPredictionsModule();
+    }
+
+    return null;
+}
+
+function getSelectedRunnableModule() {
+    const selectedModuleIds = [PREDICTIONS_MODULE_ID, "rocketLeagueScoreboard"];
+
+    for (const moduleId of selectedModuleIds) {
+        if (selectedModules.has(moduleId) || (moduleId === "rocketLeagueScoreboard" && selectedPreset === "rocketLeagueCast")) {
+            const moduleConfig = getModuleConfigForSelection(moduleId);
+
+            if (moduleConfig && moduleConfig.runnable) {
+                return moduleConfig;
+            }
+        }
+    }
+
+    return null;
+}
+
 function updateStartState() {
     const startButton = document.getElementById("startControlRoomButton");
-    const canStart = !!(activeModule && activeModule.runnable && hasRocketLeagueModule());
+    const canStart = !!(activeModule && activeModule.runnable);
 
     startButton.disabled = !canStart;
 }
@@ -2362,6 +2763,469 @@ function renderDevControlRoomModules() {
     });
 }
 
+function addDevPredictionsField(container, label, control) {
+    const field = document.createElement("label");
+    const labelText = document.createElement("span");
+    labelText.textContent = label;
+    field.className = "global-devtools-field";
+    field.appendChild(labelText);
+    field.appendChild(control);
+    container.appendChild(field);
+}
+
+function addDevPredictionsUnlabeledControl(container, control) {
+    const field = document.createElement("label");
+    const labelText = document.createElement("span");
+    field.className = "global-devtools-field no-label";
+    field.appendChild(labelText);
+    field.appendChild(control);
+    container.appendChild(field);
+}
+
+function createDevTextInput(value, placeholder, onChange, maxLength) {
+    const input = document.createElement("input");
+    input.className = "global-devtools-input";
+    input.type = "text";
+    input.placeholder = placeholder;
+    input.value = value;
+    if (maxLength) {
+        input.maxLength = maxLength;
+    }
+    input.addEventListener("input", () => onChange(input.value));
+    return input;
+}
+
+function createDevNumberInput(value, onChange) {
+    const input = document.createElement("input");
+    input.className = "global-devtools-input";
+    input.type = "number";
+    input.min = "1";
+    input.value = value;
+    input.addEventListener("change", () => onChange(input.value));
+    return input;
+}
+
+function createDevTitleBehaviorSelect(value, onChange) {
+    const select = document.createElement("select");
+    select.className = "global-devtools-select";
+    [
+        ["game", "Games"],
+        ["series", "Series"]
+    ].forEach(([optionValue, label]) => {
+        const option = document.createElement("option");
+        option.value = optionValue;
+        option.textContent = label;
+        select.appendChild(option);
+    });
+    select.value = value;
+    select.addEventListener("change", () => onChange(select.value));
+    return select;
+}
+
+function createDevGameSeriesControl(mockConfig, onChange) {
+    const wrapper = document.createElement("div");
+    const gameInput = createDevNumberInput(mockConfig.currentGameNumber, (value) => {
+        onChange({ currentGameNumber: value });
+    });
+    const seriesInput = createDevNumberInput(mockConfig.seriesLength, (value) => {
+        onChange({ seriesLength: value });
+    });
+    wrapper.className = "global-devtools-inline";
+    gameInput.setAttribute("aria-label", "Current game number");
+    seriesInput.setAttribute("aria-label", "Series length");
+    wrapper.appendChild(gameInput);
+    wrapper.appendChild(seriesInput);
+    return wrapper;
+}
+
+function stopPredictionsHold() {
+    window.clearTimeout(predictionsHoldDelayTimer);
+    window.clearInterval(predictionsHoldTimer);
+    predictionsHoldDelayTimer = 0;
+    predictionsHoldTimer = 0;
+    predictionsHoldActive = false;
+}
+
+function incrementPredictionOption(optionId) {
+    const predictionsStore = window.ZBroadcastPredictions;
+    predictionsStore.addMockVotes(optionId, 1);
+}
+
+function addDevPredictionsPlusControl(container, option) {
+    const row = document.createElement("div");
+    const name = document.createElement("span");
+    const button = document.createElement("button");
+
+    row.className = "global-devtools-plus-row";
+    name.textContent = option.label;
+    button.className = "global-devtools-plus-button";
+    button.type = "button";
+    button.textContent = "+";
+    button.setAttribute("aria-label", `Add mock value to ${option.label}`);
+
+    const startHold = (event) => {
+        event.preventDefault();
+        if (predictionsHoldActive) {
+            return;
+        }
+        predictionsHoldActive = true;
+        stopPredictionsHold();
+        predictionsHoldActive = true;
+        if (event.pointerId && typeof button.setPointerCapture === "function") {
+            try {
+                button.setPointerCapture(event.pointerId);
+            } catch (error) {
+                // Pointer capture is best-effort for stopping hold state cleanly.
+            }
+        }
+        incrementPredictionOption(option.id);
+        predictionsHoldDelayTimer = window.setTimeout(() => {
+            predictionsHoldTimer = window.setInterval(() => incrementPredictionOption(option.id), 90);
+        }, 240);
+    };
+
+    button.addEventListener("pointerdown", startHold);
+    button.addEventListener("mousedown", startHold);
+    button.addEventListener("click", (event) => event.preventDefault());
+    ["pointerup", "pointercancel", "pointerleave", "mouseup", "mouseleave", "blur"].forEach((eventName) => {
+        button.addEventListener(eventName, stopPredictionsHold);
+    });
+
+    row.appendChild(name);
+    row.appendChild(button);
+    container.appendChild(row);
+}
+
+function renderDevPredictionsTools() {
+    const toolsContainer = document.getElementById("devPredictionsTools");
+    const predictionsStore = window.ZBroadcastPredictions;
+
+    if (!toolsContainer) {
+        return;
+    }
+
+    toolsContainer.textContent = "";
+
+    if (!predictionsStore || !controlRoomModule || controlRoomModule.id !== PREDICTIONS_MODULE_ID) {
+        return;
+    }
+
+    const mockConfig = predictionsStore.loadMockConfig();
+    const optionNameMaxLength = predictionsStore.OPTION_NAME_MAX_LENGTH || 32;
+    addDevPredictionsUnlabeledControl(toolsContainer, createDevTextInput(mockConfig.team1Name, "Team 1", (value) => {
+        predictionsStore.saveMockConfig({ ...predictionsStore.loadMockConfig(), team1Name: value });
+    }, optionNameMaxLength));
+    addDevPredictionsUnlabeledControl(toolsContainer, createDevTextInput(mockConfig.team2Name, "Team 2", (value) => {
+        predictionsStore.saveMockConfig({ ...predictionsStore.loadMockConfig(), team2Name: value });
+    }, optionNameMaxLength));
+    addDevPredictionsField(toolsContainer, "Game / Series", createDevGameSeriesControl(mockConfig, (changes) => {
+        predictionsStore.saveMockConfig({ ...predictionsStore.loadMockConfig(), ...changes });
+    }));
+    addDevPredictionsUnlabeledControl(toolsContainer, createDevTitleBehaviorSelect(mockConfig.titleBehavior, (value) => {
+        predictionsStore.saveMockConfig({ ...predictionsStore.loadMockConfig(), titleBehavior: value });
+    }));
+
+    const predictionState = predictionsStore.load();
+    const totals = predictionState.status === "active" ? predictionsStore.getTotals(predictionState) : [];
+
+    if (totals.length > 0) {
+        const divider = document.createElement("div");
+        divider.className = "global-devtools-category";
+        toolsContainer.appendChild(divider);
+    }
+
+    totals.forEach((option) => addDevPredictionsPlusControl(toolsContainer, option));
+}
+
+function getPredictionsStore() {
+    return window.ZBroadcastPredictions;
+}
+
+function makePredictionsSetupOption(label = "") {
+    return {
+        id: `setup-${Date.now()}-${Math.random().toString(16).slice(2)}`,
+        label,
+        mockVotes: 0
+    };
+}
+
+function normalizePredictionDisplayText(value) {
+    const store = getPredictionsStore();
+    const normalized = store && store.toDisplayTitle ? store.toDisplayTitle(value) : String(value || "").trim();
+    return store && store.clampText ? store.clampText(normalized, store.OPTION_NAME_MAX_LENGTH || 32) : normalized.slice(0, 32);
+}
+
+function normalizePredictionEsportsText(value, fallback) {
+    const store = getPredictionsStore();
+    const normalized = store && store.toDisplayUpper ? store.toDisplayUpper(value) : String(value || "").trim().toUpperCase();
+    const displayText = normalized || fallback;
+    return store && store.clampText ? store.clampText(displayText, store.OPTION_NAME_MAX_LENGTH || 32) : displayText.slice(0, 32);
+}
+
+function normalizePredictionTitleText(value, fallback) {
+    const store = getPredictionsStore();
+    const normalized = store && store.toDisplayTitle ? store.toDisplayTitle(value) : String(value || "").trim();
+    const displayText = normalized || fallback;
+    return store && store.clampText ? store.clampText(displayText, store.TITLE_MAX_LENGTH || 72) : displayText.slice(0, 72);
+}
+
+function normalizePredictionEsportsTitleText(value, fallback) {
+    const store = getPredictionsStore();
+    const normalized = store && store.toDisplayUpper ? store.toDisplayUpper(value) : String(value || "").trim().toUpperCase();
+    const displayText = normalized || fallback;
+    return store && store.clampText ? store.clampText(displayText, store.TITLE_MAX_LENGTH || 72) : displayText.slice(0, 72);
+}
+
+function getPredictionsEsportsTitle(mockConfig) {
+    if (mockConfig.titleBehavior === "series" || mockConfig.seriesLength <= 1) {
+        return "Who will win the series?";
+    }
+
+    return `Who will win Game ${mockConfig.currentGameNumber}?`;
+}
+
+function escapeHtml(value) {
+    return String(value).replace(/[&<>"']/g, (character) => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        "\"": "&quot;",
+        "'": "&#039;"
+    }[character]));
+}
+
+function renderPredictionsGlobalOptionEditor() {
+    const store = getPredictionsStore();
+    const optionEditor = document.getElementById("predictionGlobalOptionEditor");
+    const addOptionButton = document.getElementById("predictionGlobalAddOptionButton");
+    const esportsModeToggle = document.getElementById("predictionGlobalEsportsMode");
+
+    if (!store || !optionEditor || !addOptionButton || !esportsModeToggle) {
+        return;
+    }
+
+    const isEsportsMode = esportsModeToggle.checked;
+    optionEditor.innerHTML = predictionsModalSetupOptions.map((option, index) => `
+        <div class="prediction-modal-option-row${predictionsModalSetupOptions.length <= 2 || isEsportsMode ? " no-remove" : ""}">
+            <input class="prediction-modal-input" type="text" maxlength="${store.OPTION_NAME_MAX_LENGTH || 32}" value="${escapeHtml(option.label)}" data-prediction-option-edit="${escapeHtml(option.id)}" placeholder="Option ${index + 1}" ${isEsportsMode ? "readonly" : ""}>
+            ${predictionsModalSetupOptions.length > 2 && !isEsportsMode ? `<button type="button" data-prediction-remove-option="${escapeHtml(option.id)}" aria-label="Remove option">-</button>` : ""}
+        </div>
+    `).join("");
+
+    optionEditor.querySelectorAll("[data-prediction-option-edit]").forEach((input) => {
+        input.addEventListener("input", () => {
+            const option = predictionsModalSetupOptions.find((entry) => entry.id === input.dataset.predictionOptionEdit);
+            if (option) {
+                option.label = normalizePredictionDisplayText(input.value);
+            }
+        });
+    });
+
+    optionEditor.querySelectorAll("[data-prediction-remove-option]").forEach((button) => {
+        button.addEventListener("click", () => {
+            predictionsModalSetupOptions = predictionsModalSetupOptions.filter((option) => option.id !== button.dataset.predictionRemoveOption);
+            renderPredictionsGlobalOptionEditor();
+        });
+    });
+
+    addOptionButton.hidden = isEsportsMode;
+    addOptionButton.disabled = !isEsportsMode && predictionsModalSetupOptions.length >= 8;
+    addOptionButton.title = addOptionButton.disabled ? "Maximum 8 options" : "";
+}
+
+function applyPredictionsGlobalEsportsModeValues() {
+    const store = getPredictionsStore();
+    const titleInput = document.getElementById("predictionGlobalTitle");
+    const esportsModeToggle = document.getElementById("predictionGlobalEsportsMode");
+
+    if (!store || !titleInput || !esportsModeToggle) {
+        return;
+    }
+
+    if (esportsModeToggle.checked) {
+        const mockConfig = store.loadMockConfig();
+        titleInput.value = normalizePredictionEsportsTitleText(getPredictionsEsportsTitle(mockConfig), "WHO WILL WIN THE SERIES?");
+        predictionsModalSetupOptions = [
+            makePredictionsSetupOption(normalizePredictionEsportsText(mockConfig.team1Name, "TEAM 1")),
+            makePredictionsSetupOption(normalizePredictionEsportsText(mockConfig.team2Name, "TEAM 2"))
+        ];
+    } else {
+        titleInput.value = "";
+        predictionsModalSetupOptions = [makePredictionsSetupOption(), makePredictionsSetupOption()];
+    }
+
+    renderPredictionsGlobalOptionEditor();
+}
+
+function renderPredictionsStartModalBody(container) {
+    const store = getPredictionsStore();
+    const titleMaxLength = store ? store.TITLE_MAX_LENGTH || 72 : 72;
+
+    container.innerHTML = `
+        <input class="prediction-modal-input" id="predictionGlobalTitle" type="text" autocomplete="off" maxlength="${titleMaxLength}" placeholder="Title">
+        <div class="prediction-modal-options" id="predictionGlobalOptionEditor"></div>
+        <button class="prediction-modal-add-option" type="button" id="predictionGlobalAddOptionButton">+</button>
+        <div class="prediction-modal-error" id="predictionGlobalError" aria-live="polite"></div>
+        <div class="prediction-modal-footer">
+            <div class="prediction-modal-left">
+                <select class="prediction-modal-select prediction-modal-duration" id="predictionGlobalDuration" aria-label="Duration">
+                    <option value="30">30s</option>
+                    <option value="60">1m</option>
+                    <option value="120">2m</option>
+                    <option value="300">5m</option>
+                    <option value="600">10m</option>
+                    <option value="900">15m</option>
+                    <option value="1200">20m</option>
+                    <option value="1800">30m</option>
+                </select>
+                <label class="prediction-modal-checkbox">
+                    <input type="checkbox" id="predictionGlobalEsportsMode">
+                    <span>Esports Mode</span>
+                </label>
+            </div>
+        </div>
+    `;
+
+    document.getElementById("predictionGlobalDuration").value = "120";
+    document.getElementById("predictionGlobalEsportsMode").checked = store ? store.loadMockConfig().esportsMode : false;
+    document.getElementById("predictionGlobalAddOptionButton").addEventListener("click", () => {
+        const error = document.getElementById("predictionGlobalError");
+        const esportsModeToggle = document.getElementById("predictionGlobalEsportsMode");
+
+        if (!esportsModeToggle.checked && predictionsModalSetupOptions.length >= 8) {
+            error.textContent = "Maximum 8 options.";
+            renderPredictionsGlobalOptionEditor();
+            return;
+        }
+
+        error.textContent = "";
+        predictionsModalSetupOptions.push(makePredictionsSetupOption());
+        renderPredictionsGlobalOptionEditor();
+    });
+    document.getElementById("predictionGlobalEsportsMode").addEventListener("change", () => {
+        if (store) {
+            const mockConfig = store.loadMockConfig();
+            store.saveMockConfig({ ...mockConfig, esportsMode: document.getElementById("predictionGlobalEsportsMode").checked });
+        }
+        applyPredictionsGlobalEsportsModeValues();
+    });
+
+    renderPredictionsGlobalOptionEditor();
+    applyPredictionsGlobalEsportsModeValues();
+}
+
+function startPredictionFromGlobalModal() {
+    const store = getPredictionsStore();
+    const titleInput = document.getElementById("predictionGlobalTitle");
+    const durationSelect = document.getElementById("predictionGlobalDuration");
+    const esportsModeToggle = document.getElementById("predictionGlobalEsportsMode");
+    const error = document.getElementById("predictionGlobalError");
+
+    if (!store || !titleInput || !durationSelect || !esportsModeToggle || !error) {
+        return;
+    }
+
+    if (esportsModeToggle.checked) {
+        applyPredictionsGlobalEsportsModeValues();
+    }
+
+    const options = predictionsModalSetupOptions
+        .map((option) => ({
+            ...option,
+            label: esportsModeToggle.checked
+                ? normalizePredictionEsportsText(option.label, "")
+                : normalizePredictionDisplayText(option.label)
+        }))
+        .filter((option) => option.label);
+
+    if (options.length < 2) {
+        error.textContent = "Add at least two options.";
+        return;
+    }
+
+    if (!esportsModeToggle.checked && options.length > 8) {
+        error.textContent = "Use 8 options or fewer.";
+        return;
+    }
+
+    store.save({
+        status: "active",
+        title: esportsModeToggle.checked
+            ? normalizePredictionEsportsTitleText(titleInput.value, "WHO WILL WIN THE SERIES?")
+            : normalizePredictionTitleText(titleInput.value, "Untitled Prediction"),
+        durationSeconds: Number(durationSelect.value) || 120,
+        startedAt: Date.now(),
+        options,
+        submissionsOpen: true,
+        winnerOptionId: "",
+        cancelledAt: 0,
+        completedAt: 0
+    });
+    closeGlobalAppModal();
+}
+
+function showPredictionsStartGlobalModal() {
+    predictionsModalSetupOptions = [makePredictionsSetupOption(), makePredictionsSetupOption()];
+    showGlobalAppModal({
+        title: "Start Prediction",
+        modalClass: "prediction-setup-modal",
+        onCancel: closeGlobalAppModal,
+        renderBody: renderPredictionsStartModalBody,
+        actions: [
+            { label: "Cancel", onClick: closeGlobalAppModal },
+            { label: "Start", className: "action-button primary", onClick: startPredictionFromGlobalModal }
+        ]
+    });
+}
+
+function showPredictionsWinnerGlobalModal(optionId) {
+    const store = getPredictionsStore();
+    const state = store ? store.load() : null;
+    const option = state && Array.isArray(state.options) ? state.options.find((entry) => entry.id === optionId) : null;
+
+    if (!store || !option) {
+        return;
+    }
+
+    predictionsPendingWinnerId = optionId;
+    showGlobalAppModal({
+        title: `${normalizePredictionDisplayText(option.label)} Wins?`,
+        onCancel: closeGlobalAppModal,
+        actions: [
+            { label: "Cancel", onClick: closeGlobalAppModal },
+            {
+                label: "Confirm",
+                className: "action-button primary",
+                onClick: () => {
+                    store.completePrediction(predictionsPendingWinnerId);
+                    predictionsPendingWinnerId = "";
+                    closeGlobalAppModal();
+                }
+            }
+        ]
+    });
+}
+
+function handlePredictionsPanelMessage(event) {
+    const controlFrame = document.getElementById("controlFrame");
+
+    if (!controlFrame || event.source !== controlFrame.contentWindow) {
+        return;
+    }
+
+    const data = event.data || {};
+
+    if (data.source !== "zbroadcast-predictions-panel") {
+        return;
+    }
+
+    if (data.type === "open-start-modal") {
+        showPredictionsStartGlobalModal();
+    } else if (data.type === "open-winner-modal") {
+        showPredictionsWinnerGlobalModal(data.optionId);
+    }
+}
+
 function toggleDevControlRoomModule(moduleId) {
     const moduleConfig = getRunnableDevModules().find((module) => module.id === moduleId);
 
@@ -2380,6 +3244,8 @@ function toggleDevControlRoomModule(moduleId) {
         if (moduleId === ROCKET_LEAGUE_MODULE_ID) {
             clearPresetSelection();
             setModuleSelection("rocketLeagueScoreboard", false);
+        } else if (moduleId === PREDICTIONS_MODULE_ID) {
+            setModuleSelection(PREDICTIONS_MODULE_ID, false);
         }
     } else {
         activeModule = moduleConfig;
@@ -2387,6 +3253,9 @@ function toggleDevControlRoomModule(moduleId) {
         if (moduleId === ROCKET_LEAGUE_MODULE_ID) {
             clearPresetSelection();
             setModuleSelection("rocketLeagueScoreboard", true);
+        } else if (moduleId === PREDICTIONS_MODULE_ID) {
+            clearPresetSelection();
+            setModuleSelection(PREDICTIONS_MODULE_ID, true);
         }
     }
 
@@ -2396,6 +3265,7 @@ function toggleDevControlRoomModule(moduleId) {
 }
 
 function closeGlobalDevTools() {
+    stopPredictionsHold();
     const devTools = document.getElementById("globalDevTools");
     const toggle = document.getElementById("globalDevToolsToggle");
 
@@ -2418,6 +3288,9 @@ function toggleGlobalDevTools() {
 
     updateGlobalDevToolsContext();
     const isOpen = devTools.classList.toggle("open");
+    if (!isOpen) {
+        stopPredictionsHold();
+    }
     toggle.setAttribute("aria-expanded", String(isOpen));
 }
 
@@ -2458,15 +3331,18 @@ function updateGlobalDevToolsContext() {
     }
 
     const isControlRoomContext = document.getElementById("controlAppScene").classList.contains("active");
+    const isPredictionsContext = isControlRoomContext && controlRoomModule && controlRoomModule.id === PREDICTIONS_MODULE_ID;
     const currentScene = getCurrentDevScene();
 
     devTools.classList.toggle("show-control-room-tools", isControlRoomContext);
+    devTools.classList.toggle("show-predictions-tools", !!isPredictionsContext);
     document.querySelectorAll("[data-dev-scene]").forEach((button) => {
         const isCurrentScene = button.dataset.devScene === currentScene;
         button.hidden = isCurrentScene;
         button.setAttribute("aria-hidden", String(isCurrentScene));
     });
     renderDevControlRoomModules();
+    renderDevPredictionsTools();
 }
 
 function hideAllScenes() {
@@ -2489,6 +3365,25 @@ function showSubmenu(sceneId) {
     updateGlobalDevToolsContext();
 }
 
+function syncControlRoomBackground(moduleConfig) {
+    const backgroundFrame = document.getElementById("controlBackgroundFrame");
+
+    if (!backgroundFrame) {
+        return;
+    }
+
+    const overlayUrl = getControlRoomBackgroundOverlayUrl(moduleConfig);
+
+    if (!overlayUrl) {
+        backgroundFrame.removeAttribute("src");
+        return;
+    }
+
+    if (backgroundFrame.src !== overlayUrl) {
+        backgroundFrame.src = overlayUrl;
+    }
+}
+
 function showControlScene(options = {}) {
     const moduleForControlRoom = options.useLoadedOnly ? controlRoomModule : (activeModule || controlRoomModule);
 
@@ -2503,6 +3398,7 @@ function showControlScene(options = {}) {
             }
 
             controlRoomModule = null;
+            syncControlRoomBackground(null);
             setFrameStatus("controlFrameStatus", "No modules loaded. Choose a module from Control Room setup.");
             if (!options.keepDevToolsOpen) {
                 closeGlobalDevTools();
@@ -2520,8 +3416,14 @@ function showControlScene(options = {}) {
     }
     setDesktopAdminStorage();
     const controlFrame = document.getElementById("controlFrame");
+    const moduleSlot = document.querySelector("[data-module-slot='primary']");
     controlFrame.dataset.zbroadcastEmpty = "false";
     controlRoomModule = moduleForControlRoom;
+    if (moduleSlot) {
+        moduleSlot.classList.toggle("minor", getModuleSizeClass(moduleForControlRoom) === "minor");
+        moduleSlot.classList.toggle("major", getModuleSizeClass(moduleForControlRoom) !== "minor");
+    }
+    syncControlRoomBackground(moduleForControlRoom);
     const controlUrl = getActiveControlUrl(moduleForControlRoom);
     const didChangeUrl = controlFrame.src !== controlUrl;
 
@@ -2538,7 +3440,9 @@ function showControlScene(options = {}) {
     hideAllScenes();
     document.getElementById("controlAppScene").classList.add("active");
     updateGlobalDevToolsContext();
-    window.setTimeout(() => applyEmbeddedFrameInset(controlFrame, EMBEDDED_CONTROL_INSET_PX, "control"), 0);
+    if (moduleForControlRoom.id === ROCKET_LEAGUE_MODULE_ID) {
+        window.setTimeout(() => applyEmbeddedFrameInset(controlFrame, EMBEDDED_CONTROL_INSET_PX, "control"), 0);
+    }
 
     if (!didChangeUrl) {
         finishFrameLoad(controlFrame, "controlFrameStatus");
@@ -2619,10 +3523,14 @@ function setModuleSelection(moduleId, isSelected) {
         selectedModules.delete(moduleId);
     }
 
-    if (moduleId === "rocketLeagueScoreboard") {
-        activeModule = isSelected ? getRocketLeagueModule() : null;
-    } else if (activeModule && activeModule.id !== ROCKET_LEAGUE_MODULE_ID) {
-        activeModule = null;
+    const selectedModuleConfig = getModuleConfigForSelection(moduleId);
+
+    if (isSelected && selectedModuleConfig) {
+        activeModule = selectedModuleConfig;
+    } else if (activeModule && selectedModuleConfig && activeModule.id === selectedModuleConfig.id) {
+        activeModule = getSelectedRunnableModule();
+    } else if (activeModule && !selectedModuleConfig && activeModule.id !== ROCKET_LEAGUE_MODULE_ID) {
+        activeModule = getSelectedRunnableModule();
     }
 
     renderDevControlRoomModules();
@@ -2688,13 +3596,42 @@ document.getElementById("devReloadUiButton").addEventListener("click", () => {
     closeGlobalDevTools();
     window.location.reload();
 });
+document.getElementById("devResetLocalModuleStateButton").addEventListener("click", () => {
+    showGlobalAppModal({
+        title: "Reset Local Module State",
+        copy: "Clear local module/session data? App settings and display settings will be kept.",
+        onCancel: closeGlobalAppModal,
+        actions: [
+            { label: "Cancel", onClick: closeGlobalAppModal },
+            {
+                label: "Reset",
+                onClick: () => {
+                    const keysToRemove = [];
+                    for (let index = 0; index < window.localStorage.length; index += 1) {
+                        const key = window.localStorage.key(index);
+                        if (key && key.startsWith("zbroadcast:module:")) {
+                            keysToRemove.push(key);
+                        }
+                    }
+
+                    keysToRemove.forEach((key) => window.localStorage.removeItem(key));
+                    closeGlobalDevTools();
+                    closeGlobalAppModal();
+                    window.location.reload();
+                }
+            }
+        ]
+    });
+});
 document.getElementById("controlFrame").addEventListener("load", (event) => {
     if (event.currentTarget.dataset.zbroadcastEmpty === "true") {
         setFrameStatus("controlFrameStatus", "No modules loaded. Choose a module from Control Room setup.");
         return;
     }
 
-    applyEmbeddedFrameInset(event.currentTarget, EMBEDDED_CONTROL_INSET_PX, "control");
+    if (controlRoomModule && controlRoomModule.id === ROCKET_LEAGUE_MODULE_ID) {
+        applyEmbeddedFrameInset(event.currentTarget, EMBEDDED_CONTROL_INSET_PX, "control");
+    }
     finishFrameLoad(event.currentTarget, "controlFrameStatus");
 });
 document.getElementById("controlFrame").addEventListener("error", (event) => {
@@ -2705,6 +3642,9 @@ document.getElementById("overlayFrame").addEventListener("load", (event) => {
 });
 document.getElementById("overlayFrame").addEventListener("error", (event) => {
     failFrameLoad(event.currentTarget, "overlayFrameStatus", "Could not load overlay preview. Make sure the local server is running.");
+});
+document.getElementById("controlBackgroundFrame").addEventListener("error", () => {
+    console.warn("Could not load Control Room background overlay preview.");
 });
 
 document.getElementById("quitButton").addEventListener("click", () => {
@@ -2739,17 +3679,20 @@ document.querySelectorAll("[data-settings-tab]").forEach((tab) => {
 document.getElementById("resetSettingsButton").addEventListener("click", resetAppSettings);
 document.getElementById("applySettingsButton").addEventListener("click", applyDraftSettings);
 document.getElementById("cancelSettingsButton").addEventListener("click", cancelDraftSettings);
-document.getElementById("settingsStayButton").addEventListener("click", hideSettingsUnsavedModal);
-document.getElementById("settingsLeaveApplyButton").addEventListener("click", async () => {
-    const applied = await applyDraftSettings();
-
-    if (applied) {
-        completePendingSettingsNavigation();
+document.getElementById("appModalBackdrop").addEventListener("click", () => {
+    if (currentAppModal && typeof currentAppModal.onCancel === "function") {
+        currentAppModal.onCancel();
+        return;
     }
+
+    closeGlobalAppModal();
 });
-document.getElementById("settingsLeaveCancelButton").addEventListener("click", () => {
-    cancelDraftSettings();
-    completePendingSettingsNavigation();
+document.getElementById("appModal").addEventListener("click", (event) => {
+    event.stopPropagation();
+});
+window.addEventListener("message", handlePredictionsPanelMessage);
+["mouseup", "pointerup", "pointercancel", "blur"].forEach((eventName) => {
+    window.addEventListener(eventName, stopPredictionsHold);
 });
 
 loadAppSettings();
@@ -2761,6 +3704,14 @@ setDesktopAdminStorage();
 updateStartState();
 loadModuleCatalog();
 updateGlobalDevToolsContext();
+
+if (window.ZBroadcastPredictions && typeof window.ZBroadcastPredictions.subscribe === "function") {
+    window.ZBroadcastPredictions.subscribe(() => {
+        if (!predictionsHoldActive) {
+            renderDevPredictionsTools();
+        }
+    });
+}
 </script>
 </body>
 </html>

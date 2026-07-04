@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Predictions Panel</title>
+    <link rel="stylesheet" href="/modules/predictions/styles.css">
+</head>
+<body>
+    <main class="pred-panel-shell">
+        <section class="pred-card" id="panelRoot"></section>
+    </main>
+
+    <script src="/modules/predictions/state.js"></script>
+    <script>
+        const store = window.ZBroadcastPredictions;
+        const panelRoot = document.getElementById("panelRoot");
+        let latestState = store.load();
+        let timerId = null;
+
+        function formatDuration(seconds) {
+            const minutes = Math.floor(seconds / 60);
+            const remaining = seconds % 60;
+            return `${minutes}:${String(remaining).padStart(2, "0")}`;
+        }
+
+        function getRemainingSeconds(state) {
+            if (state.status !== "active" || !state.submissionsOpen || !state.startedAt) {
+                return 0;
+            }
+
+            return Math.max(0, Math.ceil((state.startedAt + state.durationSeconds * 1000 - Date.now()) / 1000));
+        }
+
+        function ensureTimer(state) {
+            window.clearInterval(timerId);
+            timerId = null;
+
+            if (state.status === "active" && state.submissionsOpen) {
+                timerId = window.setInterval(() => {
+                    if (getRemainingSeconds(latestState) <= 0) {
+                        store.closeSubmissions();
+                        return;
+                    }
+
+                    render(store.load());
+                }, 1000);
+            }
+        }
+
+        function escapeHtml(value) {
+            return String(value).replace(/[&<>"']/g, (character) => ({
+                "&": "&amp;",
+                "<": "&lt;",
+                ">": "&gt;",
+                "\"": "&quot;",
+                "'": "&#039;"
+            }[character]));
+        }
+
+        function renderOption(option, canResolve, isWinner, stateStatus) {
+            const winnerClass = isWinner && stateStatus === "completed" ? " winner" : "";
+            const mutedClass = !isWinner && stateStatus === "completed" ? " muted" : "";
+            const content = `
+                <div class="pred-option-fill" style="--fill: ${option.percent}%;"></div>
+                <div class="pred-option-content">
+                    <span>${escapeHtml(option.label)}</span>
+                    <span>${option.percent}%</span>
+                </div>
+            `;
+
+            return canResolve
+                ? `<button class="pred-option-row${winnerClass}${mutedClass}" type="button" data-winner-option="${escapeHtml(option.id)}">${content}</button>`
+                : `<div class="pred-option-row${winnerClass}${mutedClass}">${content}</div>`;
+        }
+
+        function renderStartButton() {
+            return '<button class="pred-primary pred-start-corner" type="button" id="openSetupButton">Start Prediction</button>';
+        }
+
+        function getTitleLengthClass(title) {
+            const length = String(title || "").length;
+            if (length > 52) return " long";
+            if (length > 34) return " medium";
+            return "";
+        }
+
+        function render(state) {
+            latestState = state;
+            ensureTimer(state);
+
+            if (state.status === "inactive" || state.status === "cancelled") {
+                panelRoot.className = "pred-card";
+                panelRoot.innerHTML = `
+                    <div class="pred-empty">
+                        <h1>No Active Prediction</h1>
+                        ${renderStartButton()}
+                    </div>
+                `;
+                document.getElementById("openSetupButton").addEventListener("click", openSetup);
+                return;
+            }
+
+            const totals = store.getTotals(state);
+            const canResolve = state.status === "active" && !state.submissionsOpen;
+            const statusTag = state.status === "active" && !state.submissionsOpen
+                ? '<span class="pred-status-tag pred-closed">Submissions Closed</span>'
+                : "";
+            const timerMarkup = state.status === "active" && state.submissionsOpen
+                ? `<span class="pred-timer">${formatDuration(getRemainingSeconds(state))}</span>`
+                : "";
+            const titleText = state.title || "Untitled Prediction";
+            const titleClass = getTitleLengthClass(titleText);
+
+            panelRoot.className = "pred-card is-active";
+            panelRoot.innerHTML = `
+                <div class="pred-active">
+                    <div class="pred-header">
+                        <div class="pred-title-wrap">
+                            <h1 class="pred-title${titleClass}">${escapeHtml(titleText)}</h1>
+                        </div>
+                        ${timerMarkup || statusTag}
+                    </div>
+                    <div class="pred-panel-visual">
+                        <div class="pred-options">
+                            ${totals.map((option) => renderOption(option, canResolve, option.id === state.winnerOptionId, state.status)).join("")}
+                        </div>
+                    </div>
+                    <div class="pred-actions">
+                        ${state.status === "active" && state.submissionsOpen ? '<button class="pred-warning" type="button" id="endSubmissionsButton">End Submissions</button>' : ""}
+                        ${state.status === "active" ? '<button class="pred-danger" type="button" id="cancelPredictionButton">Cancel Prediction</button>' : ""}
+                        ${state.status === "completed" ? renderStartButton() : ""}
+                    </div>
+                </div>
+            `;
+
+            panelRoot.querySelectorAll("[data-winner-option]").forEach((button) => {
+                button.addEventListener("click", () => openWinner(button.dataset.winnerOption));
+            });
+
+            const endButton = document.getElementById("endSubmissionsButton");
+            if (endButton) endButton.addEventListener("click", store.closeSubmissions);
+
+            const cancelButton = document.getElementById("cancelPredictionButton");
+            if (cancelButton) cancelButton.addEventListener("click", store.cancelPrediction);
+
+            const setupButton = document.getElementById("openSetupButton");
+            if (setupButton) setupButton.addEventListener("click", openSetup);
+        }
+
+        function openSetup() {
+            window.parent.postMessage({ source: "zbroadcast-predictions-panel", type: "open-start-modal" }, window.location.origin);
+        }
+
+        function openWinner(optionId) {
+            window.parent.postMessage({ source: "zbroadcast-predictions-panel", type: "open-winner-modal", optionId }, window.location.origin);
+        }
+
+        store.subscribe(render);
+    </script>
+</body>
+</html>
