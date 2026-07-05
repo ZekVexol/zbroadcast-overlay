@@ -226,6 +226,8 @@ Future Rocket League cleanup should gradually move it toward:
 
 Rocket League cleanup should not block new modules that already follow this contract.
 
+For the preserve-first rebuild path, see `docs/ROCKET_LEAGUE_MODULE_PLAN.md`.
+
 ## Module Checklist
 
 Before treating a module as first-class, confirm:
