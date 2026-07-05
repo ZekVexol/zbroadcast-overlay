@@ -157,6 +157,8 @@ A module should not provide:
 
 Modules should ask the app shell for app-level services instead of recreating them.
 
+For the detailed checklist, see `docs/MODULE_CONTRACT.md`.
+
 ## Control Room Rules
 
 There is one Control Room scene.
