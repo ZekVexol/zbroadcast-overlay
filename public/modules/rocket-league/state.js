@@ -7,6 +7,7 @@
     const CHANNEL_NAME = "zbroadcast:module:rocket-league:sync";
     const TEAM_SIDES = ["blue", "orange"];
     const BEST_OF_OPTIONS = [1, 2, 3, 5, 7];
+    const TEAM_NAME_MAX_LENGTH = 18;
     const defaultPlayerStats = {
         goals: 0,
         assists: 0,
@@ -19,6 +20,9 @@
         updatedAt: 0,
         isMatchActive: false,
         match: {
+            tournamentName: "",
+            seriesInfo: "",
+            weekRound: "",
             eventTitle: "",
             matchTitle: "",
             seriesMode: "best-of",
@@ -39,7 +43,8 @@
         history: [],
         undo: {
             undoDepth: 0,
-            lastActionId: ""
+            lastActionId: "",
+            scoreSnapshots: []
         },
         dev: {
             mockMode: false,
@@ -73,7 +78,13 @@
             seriesScore: 0,
             logoPath: "",
             accentColor: isBlue ? "#2f80ff" : "#ff8a24",
-            players: createDefaultPlayers(side)
+            players: createDefaultPlayers(side),
+            subs: [1, 2].map((slot) => ({
+                id: `${side}-sub-${slot}`,
+                name: "",
+                role: "",
+                stats: clone(defaultPlayerStats)
+            }))
         };
     }
 
@@ -89,6 +100,10 @@
 
     function normalizeText(value) {
         return String(value || "").trim();
+    }
+
+    function limitText(value, maxLength) {
+        return normalizeText(value).slice(0, maxLength);
     }
 
     function normalizeStats(stats) {
@@ -129,12 +144,55 @@
         return {
             id: side,
             side,
-            name: normalizeText(sourceTeam.name) || fallback.name,
+            name: limitText(sourceTeam.name, TEAM_NAME_MAX_LENGTH) || fallback.name,
             score: clampNumber(sourceTeam.score, 0, 999, fallback.score),
             seriesScore: clampNumber(sourceTeam.seriesScore, 0, 99, fallback.seriesScore),
             logoPath: normalizeText(sourceTeam.logoPath),
             accentColor: normalizeText(sourceTeam.accentColor) || fallback.accentColor,
-            players: normalizePlayers(sourceTeam.players, side)
+            players: normalizePlayers(sourceTeam.players, side),
+            subs: normalizePlayers(sourceTeam.subs, `${side}-sub`).slice(0, 2)
+        };
+    }
+
+    function getWinCondition(bestOf) {
+        return Math.floor(bestOf / 2) + 1;
+    }
+
+    function getDerivedGameNumber(bestOf, blueSeriesScore, orangeSeriesScore) {
+        const completedGames = blueSeriesScore + orangeSeriesScore;
+        const winCondition = getWinCondition(bestOf);
+        const isComplete = blueSeriesScore >= winCondition || orangeSeriesScore >= winCondition || completedGames >= bestOf;
+
+        return isComplete ? bestOf : Math.min(bestOf, completedGames + 1);
+    }
+
+    function clampSeriesScores(teams, bestOf) {
+        const winCondition = getWinCondition(bestOf);
+        let blueSeriesScore = clampNumber(teams.blue.seriesScore, 0, winCondition, 0);
+        let orangeSeriesScore = clampNumber(teams.orange.seriesScore, 0, winCondition, 0);
+
+        if (blueSeriesScore >= winCondition) {
+            orangeSeriesScore = Math.min(orangeSeriesScore, winCondition - 1, bestOf - blueSeriesScore);
+        } else if (orangeSeriesScore >= winCondition) {
+            blueSeriesScore = Math.min(blueSeriesScore, winCondition - 1, bestOf - orangeSeriesScore);
+        } else if (blueSeriesScore + orangeSeriesScore > bestOf) {
+            const overflow = blueSeriesScore + orangeSeriesScore - bestOf;
+            if (orangeSeriesScore >= blueSeriesScore) {
+                orangeSeriesScore = Math.max(0, orangeSeriesScore - overflow);
+            } else {
+                blueSeriesScore = Math.max(0, blueSeriesScore - overflow);
+            }
+        }
+
+        return {
+            blue: {
+                ...teams.blue,
+                seriesScore: blueSeriesScore
+            },
+            orange: {
+                ...teams.orange,
+                seriesScore: orangeSeriesScore
+            }
         };
     }
 
@@ -143,6 +201,9 @@
         const bestOf = clampNumber(sourceMatch.bestOf, 1, 99, defaultState.match.bestOf);
 
         return {
+            tournamentName: normalizeText(sourceMatch.tournamentName || sourceMatch.eventTitle),
+            seriesInfo: normalizeText(sourceMatch.seriesInfo || sourceMatch.matchTitle),
+            weekRound: normalizeText(sourceMatch.weekRound),
             eventTitle: normalizeText(sourceMatch.eventTitle),
             matchTitle: normalizeText(sourceMatch.matchTitle),
             seriesMode: normalizeText(sourceMatch.seriesMode) || "best-of",
@@ -175,24 +236,40 @@
             : [];
     }
 
+    function normalizeScoreSnapshots(snapshots) {
+        return Array.isArray(snapshots)
+            ? snapshots.slice(-20).map((snapshot) => ({
+                blueScore: clampNumber(snapshot && snapshot.blueScore, 0, 999, 0),
+                orangeScore: clampNumber(snapshot && snapshot.orangeScore, 0, 999, 0),
+                blueSeriesScore: clampNumber(snapshot && snapshot.blueSeriesScore, 0, 99, 0),
+                orangeSeriesScore: clampNumber(snapshot && snapshot.orangeSeriesScore, 0, 99, 0)
+            }))
+            : [];
+    }
+
     function normalizeState(state) {
         const sourceState = state && typeof state === "object" ? state : {};
+        const match = normalizeMatch(sourceState.match);
+        const teams = clampSeriesScores({
+            blue: normalizeTeam(sourceState.teams && sourceState.teams.blue, "blue"),
+            orange: normalizeTeam(sourceState.teams && sourceState.teams.orange, "orange")
+        }, match.bestOf);
+
+        match.gameNumber = getDerivedGameNumber(match.bestOf, teams.blue.seriesScore, teams.orange.seriesScore);
 
         return {
             moduleId: MODULE_ID,
             schemaVersion: SCHEMA_VERSION,
             updatedAt: Number.isFinite(Number(sourceState.updatedAt)) ? Number(sourceState.updatedAt) : 0,
             isMatchActive: Boolean(sourceState.isMatchActive),
-            match: normalizeMatch(sourceState.match),
-            teams: {
-                blue: normalizeTeam(sourceState.teams && sourceState.teams.blue, "blue"),
-                orange: normalizeTeam(sourceState.teams && sourceState.teams.orange, "orange")
-            },
+            match,
+            teams,
             overlay: normalizeOverlay(sourceState.overlay),
             history: normalizeHistory(sourceState.history),
             undo: {
                 undoDepth: clampNumber(sourceState.undo && sourceState.undo.undoDepth, 0, 100, 0),
-                lastActionId: normalizeText(sourceState.undo && sourceState.undo.lastActionId)
+                lastActionId: normalizeText(sourceState.undo && sourceState.undo.lastActionId),
+                scoreSnapshots: normalizeScoreSnapshots(sourceState.undo && sourceState.undo.scoreSnapshots)
             },
             dev: {
                 mockMode: Boolean(sourceState.dev && sourceState.dev.mockMode),

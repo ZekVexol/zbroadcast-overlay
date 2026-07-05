@@ -143,7 +143,7 @@ Panel rules:
 
 Keep the old controller available during this phase.
 
-Status: first panel foundation exists. It can edit local module state for match title, active state, best-of, game number, blue/orange names, scores, series scores, roster placeholders, and overlay delay placeholder. It is not wired into Control Room and does not affect the legacy live Rocket League flow.
+Status: first panel foundation exists and has a cleaner major-module layout. The main panel now focuses on local score/series controls and a scoreboard-style local preview. Match setup moved into a Global Modal Layer flow using Event Name, Division / Season / Etc, Week / Round, and Series Length. Team setup moved into a Teams modal that owns team names, rosters, logos, and team colors, with an 18-character team-name safety limit for the current preview layout. The current game number is derived from series score instead of being entered manually. It is not wired into normal Control Room selection and does not affect the legacy live Rocket League flow.
 
 Dev preview status: the panel can be toggled from Control Room > Dev Tools > Modules > Rocket League Proper Preview. This uses the real Control Room module content layer, not a hidden workbench or test scene. It is not available in the normal Control Room module selector and does not replace the legacy Rocket League launch path.
 
@@ -152,6 +152,8 @@ Next panel steps:
 - render the same local state in the proper module overlay shell.
 - add Dev Tools hooks for test state once the read-only panel/overlay loop is stable.
 - add real operator controls only after the state schema and overlay rendering are proven.
+- move instant/queued mode and overlay delay into module settings or a compact panel dropdown.
+- consider no-dependency logo color extraction later; current team color selection is manual.
 
 ### Phase D: Build New Overlay Output
 
@@ -247,11 +249,14 @@ Current top-level shape:
   - `updatedAt`
 - match state:
   - `isMatchActive`
+  - `match.tournamentName`
+  - `match.seriesInfo`
+  - `match.weekRound`
   - `match.eventTitle`
   - `match.matchTitle`
   - `match.seriesMode`
   - `match.bestOf`
-  - `match.gameNumber`
+  - `match.gameNumber` derived from series score
 - teams:
   - `teams.blue`
   - `teams.orange`
@@ -266,6 +271,7 @@ Current top-level shape:
   - `history`
   - `undo.undoDepth`
   - `undo.lastActionId`
+  - `undo.scoreSnapshots` for local score/series undo
 - development/testing fields:
   - `dev.mockMode`
   - `dev.mockScenario`

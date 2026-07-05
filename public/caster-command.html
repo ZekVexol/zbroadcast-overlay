@@ -215,6 +215,10 @@ button {
     font-size: 14px;
 }
 
+.app-modal-actions .action-button {
+    font-size: 13px;
+}
+
 .action-button.primary {
     min-height: 46px;
     border-color: var(--blue);
@@ -231,6 +235,12 @@ button {
 .action-button.orange {
     border-color: var(--orange);
     background: rgba(255, 123, 45, 0.15);
+}
+
+.action-button.danger {
+    border-color: rgba(255, 92, 92, 0.58);
+    color: #ffdada;
+    background: rgba(181, 33, 33, 0.24);
 }
 
 .home-button:hover,
@@ -759,6 +769,10 @@ button {
     word-break: break-word;
 }
 
+.app-modal-title:empty {
+    display: none;
+}
+
 .app-modal-copy {
     margin: 0;
     color: var(--muted);
@@ -869,6 +883,204 @@ button {
     color: #ff8a8a;
     font-size: 12px;
     font-weight: 800;
+}
+
+.app-modal.rocket-league-setup-modal {
+    width: min(500px, calc(100vw - 42px));
+}
+
+.app-modal.rocket-league-match-modal {
+    width: min(490px, calc(100vw - 42px));
+}
+
+.app-modal.rocket-league-match-modal .app-modal-actions:empty {
+    display: none;
+}
+
+.rocket-league-modal-grid,
+.rocket-league-modal-team-grid {
+    display: grid;
+    gap: 8px;
+}
+
+.rocket-league-match-modal-layout {
+    display: grid;
+    gap: 10px;
+}
+
+.rocket-league-match-field-stack {
+    display: grid;
+    gap: 8px;
+}
+
+.rocket-league-match-modal-footer {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 2px;
+}
+
+.rocket-league-match-modal-actions {
+    display: flex;
+    flex: 0 0 auto;
+    flex-wrap: nowrap;
+    justify-content: flex-end;
+    gap: 7px;
+}
+
+.rocket-league-match-modal-actions .action-button {
+    min-height: 34px;
+    padding: 0 12px;
+    font-size: 13px;
+    white-space: nowrap;
+}
+
+.rocket-league-modal-team-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.rocket-league-modal-input,
+.rocket-league-modal-select {
+    width: 100%;
+    min-height: 34px;
+    min-width: 0;
+    padding: 0 10px;
+    box-sizing: border-box;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 5px;
+    background: rgba(12, 16, 24, 0.78);
+    color: var(--text);
+    font: inherit;
+}
+
+.rocket-league-modal-series-row,
+.rocket-league-modal-color-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.rocket-league-modal-series-row {
+    align-items: flex-start;
+    justify-self: start;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.rocket-league-modal-series-row strong {
+    color: var(--text);
+    font-size: 12px;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.rocket-league-modal-series-row .rocket-league-modal-select {
+    width: 82px;
+}
+
+.rocket-league-modal-team {
+    display: grid;
+    gap: 8px;
+    min-width: 0;
+    padding: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 7px;
+    background: rgba(255, 255, 255, 0.045);
+}
+
+.rocket-league-modal-team.is-blue {
+    border-color: rgba(117, 168, 255, 0.36);
+    background: linear-gradient(135deg, rgba(47, 128, 255, 0.14), rgba(255, 255, 255, 0.04));
+}
+
+.rocket-league-modal-team.is-orange {
+    border-color: rgba(255, 151, 57, 0.36);
+    background: linear-gradient(135deg, rgba(255, 138, 36, 0.14), rgba(255, 255, 255, 0.04));
+}
+
+.rocket-league-modal-roster-group,
+.rocket-league-modal-sub-group {
+    display: grid;
+    gap: 7px;
+}
+
+.rocket-league-modal-roster-group {
+    margin-top: 4px;
+    padding-top: 12px;
+    border-top: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.rocket-league-modal-sub-group {
+    margin-top: 3px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.rocket-league-modal-logo-row {
+    display: grid;
+    grid-template-columns: 64px minmax(0, 1fr);
+    align-items: center;
+    gap: 10px;
+}
+
+.rocket-league-modal-logo-preview {
+    display: grid;
+    width: 56px;
+    height: 56px;
+    place-items: center;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 7px;
+    background: rgba(0, 0, 0, 0.28);
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: contain;
+    color: rgba(244, 247, 251, 0.52);
+    font-size: 10px;
+    font-weight: 900;
+}
+
+.rocket-league-modal-logo-button {
+    display: inline-grid;
+    min-height: 36px;
+    align-items: center;
+    justify-content: center;
+    padding: 0 12px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 5px;
+    color: var(--text);
+    background: rgba(12, 16, 24, 0.78);
+    font-size: 13px;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.rocket-league-modal-file-input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+}
+
+.rocket-league-modal-color-row input[type="color"] {
+    width: 44px;
+    height: 36px;
+    padding: 0;
+}
+
+.rocket-league-modal-color-row .rocket-league-modal-input {
+    flex: 1;
+}
+
+@media (max-width: 720px) {
+    .rocket-league-modal-team-grid {
+        grid-template-columns: 1fr;
+    }
 }
 
 .hotkeys-table {
@@ -3344,6 +3556,261 @@ function showPredictionsWinnerGlobalModal(optionId) {
     });
 }
 
+function getRocketLeagueControlFrameWindow() {
+    const controlFrame = document.getElementById("controlFrame");
+    return controlFrame ? controlFrame.contentWindow : null;
+}
+
+function cloneRocketLeagueModalState(state) {
+    return JSON.parse(JSON.stringify(state || {}));
+}
+
+function sendRocketLeaguePanelState(state) {
+    const frameWindow = getRocketLeagueControlFrameWindow();
+
+    if (!frameWindow) {
+        return;
+    }
+
+    frameWindow.postMessage({
+        source: "zbroadcast-caster-command",
+        target: "zbroadcast-rocket-league-panel",
+        type: "apply-state",
+        state
+    }, window.location.origin);
+}
+
+function collectRocketLeagueMatchState(baseState) {
+    const nextState = cloneRocketLeagueModalState(baseState);
+    nextState.match = nextState.match || {};
+    nextState.match.tournamentName = document.getElementById("rocketLeagueMatchTournamentName").value;
+    nextState.match.seriesInfo = document.getElementById("rocketLeagueMatchSeriesInfo").value;
+    nextState.match.weekRound = document.getElementById("rocketLeagueMatchWeekRound").value;
+    nextState.match.eventTitle = nextState.match.tournamentName;
+    nextState.match.matchTitle = nextState.match.seriesInfo;
+    nextState.match.bestOf = Number(document.getElementById("rocketLeagueMatchBestOf").value) || 5;
+    return nextState;
+}
+
+function getRocketLeagueTeamModalValue(side, fieldName) {
+    const input = document.querySelector(`[data-rocket-league-team="${side}"][data-rocket-league-field="${fieldName}"]`);
+    return input ? input.value : "";
+}
+
+function collectRocketLeagueTeamsState(baseState) {
+    const nextState = cloneRocketLeagueModalState(baseState);
+    nextState.teams = nextState.teams || {};
+
+    ["blue", "orange"].forEach((side) => {
+        const currentTeam = nextState.teams[side] || {};
+        currentTeam.name = getRocketLeagueTeamModalValue(side, "name");
+        currentTeam.logoPath = getRocketLeagueTeamModalValue(side, "logoPath");
+        currentTeam.accentColor = getRocketLeagueTeamModalValue(side, "accentColor") || (side === "blue" ? "#2f80ff" : "#ff8a24");
+        currentTeam.players = [1, 2, 3].map((slot, index) => ({
+            ...(currentTeam.players && currentTeam.players[index] ? currentTeam.players[index] : {}),
+            id: `${side}-player-${slot}`,
+            name: getRocketLeagueTeamModalValue(side, `player${slot}`)
+        }));
+        currentTeam.subs = [1, 2].map((slot, index) => ({
+            ...(currentTeam.subs && currentTeam.subs[index] ? currentTeam.subs[index] : {}),
+            id: `${side}-sub-${slot}`,
+            name: getRocketLeagueTeamModalValue(side, `sub${slot}`)
+        }));
+        nextState.teams[side] = currentTeam;
+    });
+
+    return nextState;
+}
+
+function updateRocketLeagueLogoPreview(side, logoPath) {
+    const preview = document.querySelector(`[data-rocket-league-logo-preview="${side}"]`);
+
+    if (!preview) {
+        return;
+    }
+
+    preview.textContent = logoPath ? "" : "Logo";
+    preview.style.backgroundImage = logoPath ? `url("${logoPath}")` : "";
+}
+
+function bindRocketLeagueLogoInput(side) {
+    const fileInput = document.querySelector(`[data-rocket-league-team="${side}"][data-rocket-league-field="logoFile"]`);
+    const logoPathInput = document.querySelector(`[data-rocket-league-team="${side}"][data-rocket-league-field="logoPath"]`);
+
+    if (!fileInput || !logoPathInput) {
+        return;
+    }
+
+    fileInput.addEventListener("change", () => {
+        const file = fileInput.files && fileInput.files[0];
+
+        if (!file) {
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.addEventListener("load", () => {
+            logoPathInput.value = typeof reader.result === "string" ? reader.result : "";
+            updateRocketLeagueLogoPreview(side, logoPathInput.value);
+            if (fileInput.parentElement && fileInput.parentElement.firstChild) {
+                fileInput.parentElement.firstChild.nodeValue = "Change Logo";
+            }
+        });
+        reader.readAsDataURL(file);
+    });
+}
+
+function bindRocketLeagueColorControls(side) {
+    const colorInput = document.querySelector(`[data-rocket-league-team="${side}"][data-rocket-league-field="accentColor"]`);
+    const hexInput = document.querySelector(`[data-rocket-league-team="${side}"][data-rocket-league-field="accentHex"]`);
+
+    if (!colorInput || !hexInput) {
+        return;
+    }
+
+    colorInput.addEventListener("input", () => {
+        hexInput.value = colorInput.value;
+    });
+    hexInput.addEventListener("input", () => {
+        if (/^#[0-9a-fA-F]{6}$/.test(hexInput.value)) {
+            colorInput.value = hexInput.value;
+        }
+    });
+}
+
+function renderRocketLeagueTeamModalFields(state, side) {
+    const team = state.teams && state.teams[side] ? state.teams[side] : {};
+    const players = Array.isArray(team.players) ? team.players : [];
+    const subs = Array.isArray(team.subs) ? team.subs : [];
+    const accentColor = team.accentColor || (side === "blue" ? "#2f80ff" : "#ff8a24");
+    const title = side === "blue" ? "Blue" : "Orange";
+
+    return `
+        <section class="rocket-league-modal-team is-${side}">
+            <input class="rocket-league-modal-input" type="text" maxlength="18" placeholder="${title} Team" value="${escapeHtml(team.name || "")}" data-rocket-league-team="${side}" data-rocket-league-field="name">
+            <div class="rocket-league-modal-roster-group">
+                ${[1, 2, 3].map((slot, index) => `<input class="rocket-league-modal-input" type="text" maxlength="40" placeholder="Player ${slot}" value="${escapeHtml(players[index] && players[index].name ? players[index].name : "")}" data-rocket-league-team="${side}" data-rocket-league-field="player${slot}">`).join("")}
+            </div>
+            <div class="rocket-league-modal-sub-group">
+                ${[1, 2].map((slot, index) => `<input class="rocket-league-modal-input" type="text" maxlength="40" placeholder="Sub ${slot}" value="${escapeHtml(subs[index] && subs[index].name ? subs[index].name : "")}" data-rocket-league-team="${side}" data-rocket-league-field="sub${slot}">`).join("")}
+            </div>
+            <div class="rocket-league-modal-logo-row">
+                <div class="rocket-league-modal-logo-preview" data-rocket-league-logo-preview="${side}">Logo</div>
+                <label class="rocket-league-modal-logo-button">
+                    ${team.logoPath ? "Change Logo" : "Choose Logo"}
+                    <input class="rocket-league-modal-file-input" type="file" accept="image/*" data-rocket-league-team="${side}" data-rocket-league-field="logoFile">
+                </label>
+            </div>
+            <input type="hidden" value="${escapeHtml(team.logoPath || "")}" data-rocket-league-team="${side}" data-rocket-league-field="logoPath">
+            <div class="rocket-league-modal-color-row">
+                <input class="rocket-league-modal-input" type="color" value="${escapeHtml(accentColor)}" data-rocket-league-team="${side}" data-rocket-league-field="accentColor" aria-label="${title} team color">
+                <input class="rocket-league-modal-input" type="text" maxlength="7" value="${escapeHtml(accentColor)}" data-rocket-league-team="${side}" data-rocket-league-field="accentHex" aria-label="${title} color hex">
+            </div>
+        </section>
+    `;
+}
+
+function showRocketLeagueTeamsModal(state) {
+    const baseState = cloneRocketLeagueModalState(state);
+
+    showGlobalAppModal({
+        title: "",
+        modalClass: "rocket-league-setup-modal",
+        onCancel: closeGlobalAppModal,
+        renderBody: (container) => {
+            container.innerHTML = `
+                <div class="rocket-league-modal-team-grid">
+                    ${renderRocketLeagueTeamModalFields(baseState, "blue")}
+                    ${renderRocketLeagueTeamModalFields(baseState, "orange")}
+                </div>
+            `;
+            ["blue", "orange"].forEach((side) => {
+                updateRocketLeagueLogoPreview(side, getRocketLeagueTeamModalValue(side, "logoPath"));
+                bindRocketLeagueLogoInput(side);
+                bindRocketLeagueColorControls(side);
+            });
+        },
+        actions: [
+            { label: "Cancel", className: "action-button danger", onClick: closeGlobalAppModal },
+            {
+                label: "Apply",
+                className: "action-button primary",
+                onClick: () => {
+                    sendRocketLeaguePanelState(collectRocketLeagueTeamsState(baseState));
+                    closeGlobalAppModal();
+                }
+            }
+        ]
+    });
+}
+
+function showRocketLeagueMatchSetupModal(state) {
+    const baseState = cloneRocketLeagueModalState(state);
+    const match = baseState.match || {};
+    const tournamentName = match.tournamentName || match.eventTitle || "";
+    const seriesInfo = match.seriesInfo || match.matchTitle || "";
+
+    showGlobalAppModal({
+        title: "",
+        modalClass: "rocket-league-setup-modal rocket-league-match-modal",
+        onCancel: closeGlobalAppModal,
+        renderBody: (container) => {
+            container.innerHTML = `
+                <div class="rocket-league-match-modal-layout">
+                    <div class="rocket-league-match-field-stack">
+                        <input class="rocket-league-modal-input" id="rocketLeagueMatchTournamentName" type="text" maxlength="80" placeholder="Event Name" value="${escapeHtml(tournamentName)}">
+                        <input class="rocket-league-modal-input" id="rocketLeagueMatchSeriesInfo" type="text" maxlength="80" placeholder="Division / Season / Etc" value="${escapeHtml(seriesInfo)}">
+                        <input class="rocket-league-modal-input" id="rocketLeagueMatchWeekRound" type="text" maxlength="80" placeholder="Week / Round" value="${escapeHtml(match.weekRound || "")}">
+                    </div>
+                    <div class="rocket-league-match-modal-footer">
+                        <div class="rocket-league-modal-series-row">
+                            <strong>Series Length</strong>
+                            <select class="rocket-league-modal-select" id="rocketLeagueMatchBestOf">
+                                ${[1, 2, 3, 5, 7].map((bestOf) => `<option value="${bestOf}" ${Number(match.bestOf) === bestOf ? "selected" : ""}>Bo${bestOf}</option>`).join("")}
+                            </select>
+                        </div>
+                        <div class="rocket-league-match-modal-actions">
+                            <button type="button" class="action-button danger" data-rocket-league-match-cancel>Cancel</button>
+                            <button type="button" class="action-button" data-rocket-league-match-teams>Teams →</button>
+                            <button type="button" class="action-button primary" data-rocket-league-match-apply>Apply</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            container.querySelector("[data-rocket-league-match-cancel]").addEventListener("click", closeGlobalAppModal);
+            container.querySelector("[data-rocket-league-match-teams]").addEventListener("click", () => {
+                    const matchState = collectRocketLeagueMatchState(baseState);
+                    sendRocketLeaguePanelState(matchState);
+                    showRocketLeagueTeamsModal(matchState);
+            });
+            container.querySelector("[data-rocket-league-match-apply]").addEventListener("click", () => {
+                sendRocketLeaguePanelState(collectRocketLeagueMatchState(baseState));
+                closeGlobalAppModal();
+            });
+        }
+    });
+}
+
+function handleRocketLeaguePanelMessage(event) {
+    const controlFrame = document.getElementById("controlFrame");
+
+    if (!controlFrame || event.source !== controlFrame.contentWindow) {
+        return;
+    }
+
+    const data = event.data || {};
+
+    if (data.source !== "zbroadcast-rocket-league-panel") {
+        return;
+    }
+
+    if (data.type === "open-match-setup") {
+        showRocketLeagueMatchSetupModal(data.state || {});
+    } else if (data.type === "open-teams") {
+        showRocketLeagueTeamsModal(data.state || {});
+    }
+}
+
 function handlePredictionsPanelMessage(event) {
     const controlFrame = document.getElementById("controlFrame");
 
@@ -3832,6 +4299,7 @@ document.getElementById("appModal").addEventListener("click", (event) => {
     event.stopPropagation();
 });
 window.addEventListener("message", handlePredictionsPanelMessage);
+window.addEventListener("message", handleRocketLeaguePanelMessage);
 ["mouseup", "pointerup", "pointercancel", "blur"].forEach((eventName) => {
     window.addEventListener(eventName, stopPredictionsHold);
 });
