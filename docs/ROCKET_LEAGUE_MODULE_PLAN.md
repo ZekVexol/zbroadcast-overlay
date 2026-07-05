@@ -77,6 +77,10 @@ Keep the current legacy-major behavior until the rebuilt panel and overlay are r
 
 Document the current Rocket League feature set and state shape.
 
+Detailed inventory:
+
+- `docs/ROCKET_LEAGUE_FEATURE_INVENTORY.md`
+
 Tasks:
 
 - List current controller features.
