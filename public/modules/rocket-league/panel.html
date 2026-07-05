@@ -3,21 +3,258 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Rocket League Module Shell</title>
+    <title>Rocket League Module Panel</title>
     <link rel="stylesheet" href="./styles.css">
 </head>
 <body class="rocket-league-shell-page">
-    <main class="rocket-league-panel-shell" aria-labelledby="rocket-league-shell-title">
-        <section class="rocket-league-shell-card">
-            <p class="rocket-league-shell-kicker">Future major module</p>
-            <h1 id="rocket-league-shell-title">Rocket League Module Shell</h1>
-            <p>
-                This is the future proper Rocket League Control Room panel.
-                Current live Rocket League controls still use the preserved legacy controller.
-            </p>
-            <p class="rocket-league-shell-note">No live scoreboard controls are implemented here yet.</p>
+    <main class="rocket-league-panel" aria-labelledby="rocket-league-panel-title">
+        <section class="rocket-league-panel-card">
+            <header class="rocket-league-panel-header">
+                <div>
+                    <p class="rocket-league-shell-kicker">Local module prototype</p>
+                    <h1 id="rocket-league-panel-title">Rocket League Module Panel</h1>
+                </div>
+                <div class="rocket-league-status-pill" data-match-status>Inactive</div>
+            </header>
+
+            <div class="rocket-league-notice">
+                Future proper Rocket League panel. Current live Rocket League still uses the preserved legacy controller.
+            </div>
+
+            <form class="rocket-league-form" data-rocket-league-form>
+                <section class="rocket-league-section rocket-league-match-section" aria-labelledby="rocket-league-match-heading">
+                    <div class="rocket-league-section-heading">
+                        <h2 id="rocket-league-match-heading">Match</h2>
+                        <label class="rocket-league-toggle">
+                            <input type="checkbox" name="isMatchActive">
+                            <span>Match Active</span>
+                        </label>
+                    </div>
+                    <div class="rocket-league-field-grid">
+                        <label class="rocket-league-field rocket-league-field-wide">
+                            <span>Event Title</span>
+                            <input type="text" name="eventTitle" maxlength="80" placeholder="Event title">
+                        </label>
+                        <label class="rocket-league-field rocket-league-field-wide">
+                            <span>Match Title</span>
+                            <input type="text" name="matchTitle" maxlength="80" placeholder="Match title">
+                        </label>
+                        <label class="rocket-league-field">
+                            <span>Best Of</span>
+                            <select name="bestOf">
+                                <option value="1">Bo1</option>
+                                <option value="2">Bo2</option>
+                                <option value="3">Bo3</option>
+                                <option value="5">Bo5</option>
+                                <option value="7">Bo7</option>
+                            </select>
+                        </label>
+                        <label class="rocket-league-field">
+                            <span>Game Number</span>
+                            <input type="number" name="gameNumber" min="1" max="99" step="1">
+                        </label>
+                    </div>
+                </section>
+
+                <div class="rocket-league-team-grid">
+                    <section class="rocket-league-section rocket-league-team-section rocket-league-team-blue" aria-labelledby="rocket-league-blue-heading">
+                        <div class="rocket-league-section-heading">
+                            <h2 id="rocket-league-blue-heading">Blue Team</h2>
+                            <div class="rocket-league-logo-placeholder" aria-hidden="true">Logo</div>
+                        </div>
+                        <div class="rocket-league-field-grid">
+                            <label class="rocket-league-field rocket-league-field-wide">
+                                <span>Team Name</span>
+                                <input type="text" name="blueName" maxlength="40" placeholder="Blue">
+                            </label>
+                            <label class="rocket-league-field">
+                                <span>Game Score</span>
+                                <input type="number" name="blueScore" min="0" max="999" step="1">
+                            </label>
+                            <label class="rocket-league-field">
+                                <span>Series Score</span>
+                                <input type="number" name="blueSeriesScore" min="0" max="99" step="1">
+                            </label>
+                        </div>
+                        <div class="rocket-league-roster" data-roster="blue"></div>
+                    </section>
+
+                    <section class="rocket-league-section rocket-league-team-section rocket-league-team-orange" aria-labelledby="rocket-league-orange-heading">
+                        <div class="rocket-league-section-heading">
+                            <h2 id="rocket-league-orange-heading">Orange Team</h2>
+                            <div class="rocket-league-logo-placeholder" aria-hidden="true">Logo</div>
+                        </div>
+                        <div class="rocket-league-field-grid">
+                            <label class="rocket-league-field rocket-league-field-wide">
+                                <span>Team Name</span>
+                                <input type="text" name="orangeName" maxlength="40" placeholder="Orange">
+                            </label>
+                            <label class="rocket-league-field">
+                                <span>Game Score</span>
+                                <input type="number" name="orangeScore" min="0" max="999" step="1">
+                            </label>
+                            <label class="rocket-league-field">
+                                <span>Series Score</span>
+                                <input type="number" name="orangeSeriesScore" min="0" max="99" step="1">
+                            </label>
+                        </div>
+                        <div class="rocket-league-roster" data-roster="orange"></div>
+                    </section>
+                </div>
+
+                <section class="rocket-league-section" aria-labelledby="rocket-league-update-heading">
+                    <div class="rocket-league-section-heading">
+                        <h2 id="rocket-league-update-heading">Update Mode</h2>
+                    </div>
+                    <div class="rocket-league-field-grid">
+                        <label class="rocket-league-field">
+                            <span>Mode Placeholder</span>
+                            <select name="overlayPreset">
+                                <option value="standard">Instant / queued later</option>
+                            </select>
+                        </label>
+                        <label class="rocket-league-field">
+                            <span>Overlay Delay</span>
+                            <input type="number" name="delaySeconds" min="0" max="120" step="1">
+                        </label>
+                    </div>
+                </section>
+
+                <footer class="rocket-league-panel-footer">
+                    <div>
+                        <strong data-save-status>Local module state ready</strong>
+                        <span>Stored separately from legacy room state.</span>
+                    </div>
+                    <div class="rocket-league-footer-actions">
+                        <button type="button" class="rocket-league-secondary-button" data-reset-state>Reset Local State</button>
+                        <button type="submit" class="rocket-league-primary-button">Save Local State</button>
+                    </div>
+                </footer>
+            </form>
         </section>
     </main>
+
     <script src="./state.js"></script>
+    <script>
+        (function () {
+            "use strict";
+
+            const stateApi = window.ZBroadcastRocketLeague;
+            const form = document.querySelector("[data-rocket-league-form]");
+            const saveStatus = document.querySelector("[data-save-status]");
+            const matchStatus = document.querySelector("[data-match-status]");
+            const resetButton = document.querySelector("[data-reset-state]");
+            const rosterContainers = {
+                blue: document.querySelector('[data-roster="blue"]'),
+                orange: document.querySelector('[data-roster="orange"]')
+            };
+            let currentState = stateApi.loadState();
+
+            function setField(name, value) {
+                const field = form.elements[name];
+
+                if (!field) {
+                    return;
+                }
+
+                if (field.type === "checkbox") {
+                    field.checked = Boolean(value);
+                    return;
+                }
+
+                field.value = value;
+            }
+
+            function getNumberField(name, fallback) {
+                const field = form.elements[name];
+                const value = Number(field && field.value);
+
+                return Number.isFinite(value) ? value : fallback;
+            }
+
+            function buildRosterFields(side, players) {
+                rosterContainers[side].innerHTML = "";
+
+                players.slice(0, 3).forEach((player, index) => {
+                    const label = document.createElement("label");
+                    label.className = "rocket-league-field rocket-league-player-field";
+                    label.innerHTML = `
+                        <span>Player ${index + 1}</span>
+                        <input type="text" name="${side}Player${index + 1}" maxlength="40" placeholder="Player ${index + 1}">
+                    `;
+                    rosterContainers[side].appendChild(label);
+                    form.elements[`${side}Player${index + 1}`].value = player.name || "";
+                });
+            }
+
+            function render(state) {
+                currentState = stateApi.normalizeState(state);
+
+                setField("isMatchActive", currentState.isMatchActive);
+                setField("eventTitle", currentState.match.eventTitle);
+                setField("matchTitle", currentState.match.matchTitle);
+                setField("bestOf", currentState.match.bestOf);
+                setField("gameNumber", currentState.match.gameNumber);
+                setField("blueName", currentState.teams.blue.name);
+                setField("blueScore", currentState.teams.blue.score);
+                setField("blueSeriesScore", currentState.teams.blue.seriesScore);
+                setField("orangeName", currentState.teams.orange.name);
+                setField("orangeScore", currentState.teams.orange.score);
+                setField("orangeSeriesScore", currentState.teams.orange.seriesScore);
+                setField("overlayPreset", currentState.overlay.overlayPreset);
+                setField("delaySeconds", currentState.overlay.delaySeconds);
+                buildRosterFields("blue", currentState.teams.blue.players);
+                buildRosterFields("orange", currentState.teams.orange.players);
+
+                matchStatus.textContent = currentState.isMatchActive ? "Active" : "Inactive";
+                matchStatus.classList.toggle("is-active", currentState.isMatchActive);
+            }
+
+            function readStateFromForm() {
+                const nextState = stateApi.normalizeState(currentState);
+
+                nextState.isMatchActive = Boolean(form.elements.isMatchActive.checked);
+                nextState.match.eventTitle = form.elements.eventTitle.value;
+                nextState.match.matchTitle = form.elements.matchTitle.value;
+                nextState.match.bestOf = getNumberField("bestOf", nextState.match.bestOf);
+                nextState.match.gameNumber = getNumberField("gameNumber", nextState.match.gameNumber);
+                nextState.teams.blue.name = form.elements.blueName.value;
+                nextState.teams.blue.score = getNumberField("blueScore", nextState.teams.blue.score);
+                nextState.teams.blue.seriesScore = getNumberField("blueSeriesScore", nextState.teams.blue.seriesScore);
+                nextState.teams.orange.name = form.elements.orangeName.value;
+                nextState.teams.orange.score = getNumberField("orangeScore", nextState.teams.orange.score);
+                nextState.teams.orange.seriesScore = getNumberField("orangeSeriesScore", nextState.teams.orange.seriesScore);
+                nextState.overlay.overlayPreset = form.elements.overlayPreset.value;
+                nextState.overlay.delaySeconds = getNumberField("delaySeconds", nextState.overlay.delaySeconds);
+                nextState.teams.blue.players = nextState.teams.blue.players.map((player, index) => ({
+                    ...player,
+                    name: form.elements[`bluePlayer${index + 1}`] ? form.elements[`bluePlayer${index + 1}`].value : player.name
+                }));
+                nextState.teams.orange.players = nextState.teams.orange.players.map((player, index) => ({
+                    ...player,
+                    name: form.elements[`orangePlayer${index + 1}`] ? form.elements[`orangePlayer${index + 1}`].value : player.name
+                }));
+
+                return nextState;
+            }
+
+            form.addEventListener("submit", (event) => {
+                event.preventDefault();
+                const savedState = stateApi.saveState(readStateFromForm());
+                render(savedState);
+                saveStatus.textContent = "Local module state saved";
+            });
+
+            resetButton.addEventListener("click", () => {
+                const resetState = stateApi.resetState();
+                render(resetState);
+                saveStatus.textContent = "Local module state reset";
+            });
+
+            stateApi.subscribe((state) => {
+                render(state);
+            });
+        }());
+    </script>
 </body>
 </html>
