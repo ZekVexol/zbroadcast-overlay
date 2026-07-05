@@ -43,12 +43,13 @@ The new module should coexist with the legacy flow until the replacement is prov
 
 Current shell status:
 
-- `public/modules/rocket-league/panel.html` exists as a placeholder future Control Room panel.
+- `public/modules/rocket-league/panel.html` exists as a first local-only Control Room panel foundation.
 - `public/modules/rocket-league/overlay.html` exists as a placeholder future overlay output.
 - `public/modules/rocket-league/state.js` defines the first local-first state schema using `zbroadcast:module:rocket-league`.
 - `public/modules/rocket-league/styles.css` exists for scoped module shell styles.
 - The shell is not wired into the Control Room selector or module catalog launch path yet.
 - Legacy Rocket League remains the live behavior.
+- The panel reads and writes only the local proper-module state namespace; it does not control the legacy overlay.
 
 ## Layer Mapping
 
@@ -140,6 +141,14 @@ Panel rules:
 - Does not duplicate Home, Preview Overlay, or Change Module.
 
 Keep the old controller available during this phase.
+
+Status: first panel foundation exists. It can edit local module state for match title, active state, best-of, game number, blue/orange names, scores, series scores, roster placeholders, and overlay delay placeholder. It is not wired into Control Room and does not affect the legacy live Rocket League flow.
+
+Next panel steps:
+
+- render the same local state in the proper module overlay shell.
+- add Dev Tools hooks for test state once the read-only panel/overlay loop is stable.
+- add real operator controls only after the state schema and overlay rendering are proven.
 
 ### Phase D: Build New Overlay Output
 

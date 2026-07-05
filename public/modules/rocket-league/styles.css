@@ -92,3 +92,297 @@ body {
     text-align: center;
     background: rgba(6, 10, 18, 0.62);
 }
+
+.rocket-league-panel {
+    display: grid;
+    min-height: 100vh;
+    padding: 20px;
+    box-sizing: border-box;
+    place-items: center;
+    background:
+        radial-gradient(circle at 20% 12%, rgba(47, 128, 255, 0.14), transparent 32%),
+        radial-gradient(circle at 84% 72%, rgba(255, 138, 36, 0.12), transparent 30%);
+}
+
+.rocket-league-panel-card {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    width: min(1180px, 100%);
+    max-height: calc(100vh - 40px);
+    box-sizing: border-box;
+    overflow: hidden;
+    border: 1px solid rgba(154, 190, 255, 0.24);
+    border-radius: 8px;
+    background: rgba(8, 14, 26, 0.9);
+    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.34);
+}
+
+.rocket-league-panel-header,
+.rocket-league-panel-footer,
+.rocket-league-section-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.rocket-league-panel-header {
+    padding: 20px 22px 0;
+}
+
+.rocket-league-panel-header h1 {
+    margin: 0;
+    color: #ffffff;
+    font-size: 1.55rem;
+    line-height: 1.1;
+}
+
+.rocket-league-status-pill {
+    min-width: 86px;
+    padding: 7px 12px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 999px;
+    color: rgba(235, 241, 255, 0.76);
+    background: rgba(255, 255, 255, 0.06);
+    font-size: 0.78rem;
+    font-weight: 800;
+    text-align: center;
+    text-transform: uppercase;
+}
+
+.rocket-league-status-pill.is-active {
+    border-color: rgba(95, 255, 175, 0.34);
+    color: #8dffc9;
+    background: rgba(26, 173, 106, 0.14);
+}
+
+.rocket-league-notice {
+    margin: 0 22px;
+    padding: 10px 12px;
+    border: 1px solid rgba(255, 199, 117, 0.18);
+    border-radius: 6px;
+    color: rgba(255, 226, 184, 0.88);
+    background: rgba(255, 176, 57, 0.08);
+    font-size: 0.88rem;
+}
+
+.rocket-league-form {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+    flex-direction: column;
+    gap: 14px;
+    padding: 0 22px 22px;
+    overflow: auto;
+}
+
+.rocket-league-section {
+    padding: 14px;
+    border: 1px solid rgba(154, 190, 255, 0.16);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.045);
+}
+
+.rocket-league-section-heading {
+    margin-bottom: 12px;
+}
+
+.rocket-league-section-heading h2 {
+    margin: 0;
+    color: #ffffff;
+    font-size: 0.9rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.rocket-league-field-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.rocket-league-field-wide {
+    grid-column: span 2;
+}
+
+.rocket-league-field {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.rocket-league-field span,
+.rocket-league-toggle span {
+    color: rgba(224, 235, 255, 0.72);
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.rocket-league-field input,
+.rocket-league-field select {
+    width: 100%;
+    min-width: 0;
+    height: 38px;
+    box-sizing: border-box;
+    border: 1px solid rgba(154, 190, 255, 0.22);
+    border-radius: 6px;
+    padding: 0 10px;
+    color: #f6f9ff;
+    background: rgba(2, 7, 16, 0.64);
+    font: inherit;
+    outline: none;
+}
+
+.rocket-league-field input:focus,
+.rocket-league-field select:focus {
+    border-color: rgba(117, 168, 255, 0.74);
+    box-shadow: 0 0 0 2px rgba(117, 168, 255, 0.16);
+}
+
+.rocket-league-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.rocket-league-toggle input {
+    width: 18px;
+    height: 18px;
+    accent-color: #75a8ff;
+}
+
+.rocket-league-team-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.rocket-league-team-section {
+    position: relative;
+    overflow: hidden;
+}
+
+.rocket-league-team-section::before {
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 4px;
+    content: "";
+}
+
+.rocket-league-team-blue::before {
+    background: #2f80ff;
+}
+
+.rocket-league-team-orange::before {
+    background: #ff8a24;
+}
+
+.rocket-league-logo-placeholder {
+    display: grid;
+    width: 52px;
+    height: 36px;
+    place-items: center;
+    border: 1px dashed rgba(235, 241, 255, 0.28);
+    border-radius: 6px;
+    color: rgba(235, 241, 255, 0.55);
+    background: rgba(255, 255, 255, 0.04);
+    font-size: 0.68rem;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.rocket-league-roster {
+    display: grid;
+    margin-top: 12px;
+    gap: 8px;
+}
+
+.rocket-league-player-field input {
+    height: 34px;
+}
+
+.rocket-league-panel-footer {
+    position: sticky;
+    bottom: -22px;
+    margin-top: auto;
+    padding: 14px 0 0;
+    border-top: 1px solid rgba(154, 190, 255, 0.16);
+    background: linear-gradient(to bottom, rgba(8, 14, 26, 0), rgba(8, 14, 26, 0.94) 20%);
+}
+
+.rocket-league-panel-footer strong,
+.rocket-league-panel-footer span {
+    display: block;
+}
+
+.rocket-league-panel-footer strong {
+    color: #ffffff;
+    font-size: 0.9rem;
+}
+
+.rocket-league-panel-footer span {
+    margin-top: 3px;
+    color: rgba(224, 235, 255, 0.62);
+    font-size: 0.8rem;
+}
+
+.rocket-league-footer-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.rocket-league-primary-button,
+.rocket-league-secondary-button {
+    min-height: 36px;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    padding: 0 14px;
+    font: inherit;
+    font-size: 0.82rem;
+    font-weight: 900;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    cursor: pointer;
+}
+
+.rocket-league-primary-button {
+    color: #06111f;
+    background: #8dffc9;
+}
+
+.rocket-league-secondary-button {
+    color: rgba(238, 244, 255, 0.86);
+    border-color: rgba(154, 190, 255, 0.22);
+    background: rgba(255, 255, 255, 0.07);
+}
+
+@media (max-width: 860px) {
+    .rocket-league-team-grid,
+    .rocket-league-field-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .rocket-league-field-wide {
+        grid-column: auto;
+    }
+
+    .rocket-league-panel-footer {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .rocket-league-footer-actions {
+        justify-content: stretch;
+    }
+
+    .rocket-league-primary-button,
+    .rocket-league-secondary-button {
+        flex: 1;
+    }
+}
