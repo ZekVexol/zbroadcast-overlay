@@ -575,6 +575,17 @@ Potential namespace:
 zbroadcast:module:rocket-league
 ```
 
+Current proper-module schema shell:
+
+- exists under `public/modules/rocket-league/state.js`.
+- uses the `zbroadcast:module:rocket-league` namespace.
+- defines module metadata, match state, blue/orange teams, rosters, overlay behavior, history/undo placeholders, and dev/test placeholders.
+- exposes local helpers such as `loadState`, `saveState`, `updateState`, `resetState`, and `subscribe`.
+- is not connected to the legacy `server.js` room state yet.
+- is not connected to Socket.IO yet.
+
+Migration rule: keep the legacy server room state preserved until the proper Rocket League module reaches parity and the remote/operator phase is intentionally revisited.
+
 ### `public/modules/rocket-league/styles.css`
 
 Future responsibilities:
