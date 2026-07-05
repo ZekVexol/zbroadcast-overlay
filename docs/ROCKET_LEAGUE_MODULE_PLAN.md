@@ -45,7 +45,7 @@ Current shell status:
 
 - `public/modules/rocket-league/panel.html` exists as a placeholder future Control Room panel.
 - `public/modules/rocket-league/overlay.html` exists as a placeholder future overlay output.
-- `public/modules/rocket-league/state.js` exists as a local-first state shell using `zbroadcast:module:rocket-league`.
+- `public/modules/rocket-league/state.js` defines the first local-first state schema using `zbroadcast:module:rocket-league`.
 - `public/modules/rocket-league/styles.css` exists for scoped module shell styles.
 - The shell is not wired into the Control Room selector or module catalog launch path yet.
 - Legacy Rocket League remains the live behavior.
@@ -124,7 +124,7 @@ Early prototype rules:
 
 Goal: build a safe sandbox for the proper module.
 
-Status: initial shell files exist. Next, define the Rocket League state schema before adding live controls.
+Status: initial shell files exist and the first local-first state schema is defined. Next, build read-only panel/overlay rendering against that schema before adding live controls.
 
 ### Phase C: Build New Control Room Panel
 
@@ -214,6 +214,62 @@ Recommended direction:
 - Add server-backed state only when the local module behavior is clear.
 
 Remote rooms and remote operators are future architecture, not the immediate foundation.
+
+### First Local-First Schema
+
+The proper module state boundary now exists in `public/modules/rocket-league/state.js`.
+
+Storage namespace:
+
+```text
+zbroadcast:module:rocket-league
+```
+
+The schema is intentionally local-only and is not connected to `server.js`, Socket.IO, or the legacy room state.
+
+Current top-level shape:
+
+- module metadata:
+  - `moduleId`
+  - `schemaVersion`
+  - `updatedAt`
+- match state:
+  - `isMatchActive`
+  - `match.eventTitle`
+  - `match.matchTitle`
+  - `match.seriesMode`
+  - `match.bestOf`
+  - `match.gameNumber`
+- teams:
+  - `teams.blue`
+  - `teams.orange`
+  - each team has name, score, series score, logo path, accent color, and lightweight players
+- overlay behavior:
+  - `overlay.overlayVisible`
+  - `overlay.overlayTheme`
+  - `overlay.overlayPreset`
+  - `overlay.delaySeconds`
+  - `overlay.queuedUpdates`
+- history and undo placeholders:
+  - `history`
+  - `undo.undoDepth`
+  - `undo.lastActionId`
+- development/testing fields:
+  - `dev.mockMode`
+  - `dev.mockScenario`
+
+State helpers currently exposed on `window.ZBroadcastRocketLeague`:
+
+- `getStorageKey()`
+- `getDefaultState()`
+- `normalizeState(state)`
+- `loadState()`
+- `saveState(nextState)`
+- `updateState(updaterOrPatch)`
+- `resetState()`
+- `subscribe(listener)`
+
+The schema is a first-pass boundary, not a complete Rocket League feature model. The next implementation step should read from this state and render placeholder module UI before adding operator controls.
 
 ## Dev Tools Direction
 
