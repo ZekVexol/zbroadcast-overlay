@@ -41,6 +41,15 @@ Optional later pieces:
 
 The new module should coexist with the legacy flow until the replacement is proven.
 
+Current shell status:
+
+- `public/modules/rocket-league/panel.html` exists as a placeholder future Control Room panel.
+- `public/modules/rocket-league/overlay.html` exists as a placeholder future overlay output.
+- `public/modules/rocket-league/state.js` exists as a local-first state shell using `zbroadcast:module:rocket-league`.
+- `public/modules/rocket-league/styles.css` exists for scoped module shell styles.
+- The shell is not wired into the Control Room selector or module catalog launch path yet.
+- Legacy Rocket League remains the live behavior.
+
 ## Layer Mapping
 
 Future Rocket League should follow the official app layer model.
@@ -114,6 +123,8 @@ Early prototype rules:
 - Do not change the current Rocket League launch path yet.
 
 Goal: build a safe sandbox for the proper module.
+
+Status: initial shell files exist. Next, define the Rocket League state schema before adding live controls.
 
 ### Phase C: Build New Control Room Panel
 
