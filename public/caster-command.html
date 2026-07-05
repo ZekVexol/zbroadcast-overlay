@@ -897,6 +897,10 @@ button {
     display: none;
 }
 
+.app-modal.rocket-league-setup-modal .app-modal-actions:empty {
+    display: none;
+}
+
 .rocket-league-modal-grid,
 .rocket-league-modal-team-grid {
     display: grid;
@@ -929,9 +933,23 @@ button {
     gap: 7px;
 }
 
+.rocket-league-teams-modal-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 10px;
+}
+
+.rocket-league-teams-modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 7px;
+}
+
 .rocket-league-match-modal-actions .action-button {
     min-height: 34px;
-    padding: 0 12px;
+    padding: 0 10px;
     font-size: 13px;
     white-space: nowrap;
 }
@@ -1017,6 +1035,38 @@ button {
     margin-top: 3px;
     padding-top: 8px;
     border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.rocket-league-modal-player-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 32px;
+    align-items: center;
+    gap: 6px;
+}
+
+.rocket-league-modal-swap-button {
+    display: grid;
+    width: 32px;
+    min-width: 0;
+    min-height: 34px;
+    padding: 0;
+    place-items: center;
+    border: 1px solid rgba(154, 190, 255, 0.2);
+    border-radius: 5px;
+    color: rgba(238, 244, 255, 0.82);
+    background: rgba(255, 255, 255, 0.055);
+    font: inherit;
+    font-family: "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif;
+    font-size: 22px;
+    line-height: 1;
+    text-align: center;
+    cursor: pointer;
+}
+
+.rocket-league-modal-swap-button.is-armed {
+    border-color: rgba(141, 255, 201, 0.72);
+    color: #8dffc9;
+    background: rgba(141, 255, 201, 0.14);
 }
 
 .rocket-league-modal-logo-row {
@@ -3580,6 +3630,25 @@ function sendRocketLeaguePanelState(state) {
     }, window.location.origin);
 }
 
+function swapRocketLeagueTeamsInState(state) {
+    const nextState = cloneRocketLeagueModalState(state);
+    nextState.teams = nextState.teams || {};
+    const blueTeam = nextState.teams.blue || {};
+    const orangeTeam = nextState.teams.orange || {};
+
+    nextState.teams.blue = {
+        ...orangeTeam,
+        id: "blue",
+        side: "blue"
+    };
+    nextState.teams.orange = {
+        ...blueTeam,
+        id: "orange",
+        side: "orange"
+    };
+    return nextState;
+}
+
 function collectRocketLeagueMatchState(baseState) {
     const nextState = cloneRocketLeagueModalState(baseState);
     nextState.match = nextState.match || {};
@@ -3678,21 +3747,70 @@ function bindRocketLeagueColorControls(side) {
     });
 }
 
+function bindRocketLeagueRosterSwapControls() {
+    let armedButton = null;
+
+    document.querySelectorAll("[data-rocket-league-player-swap]").forEach((button) => {
+        button.addEventListener("click", () => {
+            const side = button.dataset.rocketLeagueTeam;
+            const fieldName = button.dataset.rocketLeaguePlayerSwap;
+            const input = document.querySelector(`[data-rocket-league-team="${side}"][data-rocket-league-field="${fieldName}"]`);
+
+            if (!input || !input.value.trim()) {
+                return;
+            }
+
+            if (armedButton === button) {
+                button.classList.remove("is-armed");
+                armedButton = null;
+                return;
+            }
+
+            if (!armedButton || armedButton.dataset.rocketLeagueTeam !== side) {
+                if (armedButton) {
+                    armedButton.classList.remove("is-armed");
+                }
+                armedButton = button;
+                armedButton.classList.add("is-armed");
+                return;
+            }
+
+            const armedFieldName = armedButton.dataset.rocketLeaguePlayerSwap;
+            const armedInput = document.querySelector(`[data-rocket-league-team="${side}"][data-rocket-league-field="${armedFieldName}"]`);
+
+            if (armedInput && input !== armedInput) {
+                const nextValue = input.value;
+                input.value = armedInput.value;
+                armedInput.value = nextValue;
+            }
+
+            armedButton.classList.remove("is-armed");
+            armedButton = null;
+        });
+    });
+}
+
 function renderRocketLeagueTeamModalFields(state, side) {
     const team = state.teams && state.teams[side] ? state.teams[side] : {};
     const players = Array.isArray(team.players) ? team.players : [];
     const subs = Array.isArray(team.subs) ? team.subs : [];
     const accentColor = team.accentColor || (side === "blue" ? "#2f80ff" : "#ff8a24");
     const title = side === "blue" ? "Blue" : "Orange";
+    const renderPlayerRow = (fieldName, placeholder, value) => `
+        <div class="rocket-league-modal-player-row">
+            <input class="rocket-league-modal-input" type="text" maxlength="40" placeholder="${placeholder}" value="${escapeHtml(value || "")}" data-rocket-league-team="${side}" data-rocket-league-field="${fieldName}">
+            <button type="button" class="rocket-league-modal-swap-button" aria-label="Arm ${placeholder} swap" data-rocket-league-player-swap="${fieldName}" data-rocket-league-team="${side}">&#x1F500;</button>
+        </div>
+    `;
 
     return `
         <section class="rocket-league-modal-team is-${side}">
             <input class="rocket-league-modal-input" type="text" maxlength="18" placeholder="${title} Team" value="${escapeHtml(team.name || "")}" data-rocket-league-team="${side}" data-rocket-league-field="name">
             <div class="rocket-league-modal-roster-group">
-                ${[1, 2, 3].map((slot, index) => `<input class="rocket-league-modal-input" type="text" maxlength="40" placeholder="Player ${slot}" value="${escapeHtml(players[index] && players[index].name ? players[index].name : "")}" data-rocket-league-team="${side}" data-rocket-league-field="player${slot}">`).join("")}
+                ${[1, 2, 3].map((slot, index) => renderPlayerRow(`player${slot}`, `Player ${slot}`, players[index] && players[index].name ? players[index].name : "")).join("")}
             </div>
             <div class="rocket-league-modal-sub-group">
-                ${[1, 2].map((slot, index) => `<input class="rocket-league-modal-input" type="text" maxlength="40" placeholder="Sub ${slot}" value="${escapeHtml(subs[index] && subs[index].name ? subs[index].name : "")}" data-rocket-league-team="${side}" data-rocket-league-field="sub${slot}">`).join("")}
+                ${[1, 2].map((slot, index) => renderPlayerRow(`sub${slot}`, `Sub ${slot}`, subs[index] && subs[index].name ? subs[index].name : "")).join("")}
             </div>
             <div class="rocket-league-modal-logo-row">
                 <div class="rocket-league-modal-logo-preview" data-rocket-league-logo-preview="${side}">Logo</div>
@@ -3723,24 +3841,33 @@ function showRocketLeagueTeamsModal(state) {
                     ${renderRocketLeagueTeamModalFields(baseState, "blue")}
                     ${renderRocketLeagueTeamModalFields(baseState, "orange")}
                 </div>
+                <div class="rocket-league-teams-modal-footer">
+                    <button type="button" class="action-button" data-rocket-league-teams-swap>Swap Teams</button>
+                    <div class="rocket-league-teams-modal-actions">
+                        <button type="button" class="action-button danger" data-rocket-league-teams-cancel>Cancel</button>
+                        <button type="button" class="action-button primary" data-rocket-league-teams-apply>Apply</button>
+                    </div>
+                </div>
             `;
             ["blue", "orange"].forEach((side) => {
                 updateRocketLeagueLogoPreview(side, getRocketLeagueTeamModalValue(side, "logoPath"));
                 bindRocketLeagueLogoInput(side);
                 bindRocketLeagueColorControls(side);
             });
+            bindRocketLeagueRosterSwapControls();
+            container.querySelector("[data-rocket-league-teams-swap]").addEventListener("click", () => {
+                const swappedState = swapRocketLeagueTeamsInState(baseState);
+                baseState.teams = swappedState.teams;
+                sendRocketLeaguePanelState(swappedState);
+                showRocketLeagueTeamsModal(swappedState);
+            });
+            container.querySelector("[data-rocket-league-teams-cancel]").addEventListener("click", closeGlobalAppModal);
+            container.querySelector("[data-rocket-league-teams-apply]").addEventListener("click", () => {
+                sendRocketLeaguePanelState(collectRocketLeagueTeamsState(baseState));
+                closeGlobalAppModal();
+            });
         },
-        actions: [
-            { label: "Cancel", className: "action-button danger", onClick: closeGlobalAppModal },
-            {
-                label: "Apply",
-                className: "action-button primary",
-                onClick: () => {
-                    sendRocketLeaguePanelState(collectRocketLeagueTeamsState(baseState));
-                    closeGlobalAppModal();
-                }
-            }
-        ]
+        actions: []
     });
 }
 
@@ -3771,7 +3898,7 @@ function showRocketLeagueMatchSetupModal(state) {
                         </div>
                         <div class="rocket-league-match-modal-actions">
                             <button type="button" class="action-button danger" data-rocket-league-match-cancel>Cancel</button>
-                            <button type="button" class="action-button" data-rocket-league-match-teams>Teams →</button>
+                            <button type="button" class="action-button" data-rocket-league-match-teams>Teams &rarr;</button>
                             <button type="button" class="action-button primary" data-rocket-league-match-apply>Apply</button>
                         </div>
                     </div>
