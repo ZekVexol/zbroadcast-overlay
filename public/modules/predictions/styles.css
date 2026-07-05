@@ -130,13 +130,6 @@ button:disabled {
     font-size: clamp(18px, 2.6vw, 23px);
 }
 
-.pred-note,
-.pred-meta {
-    color: var(--pred-muted);
-    font-size: 13px;
-    line-height: 1.45;
-}
-
 .pred-status-tag {
     display: inline-flex;
     min-height: 28px;
@@ -454,15 +447,15 @@ button.pred-option-row {
     gap: 3px;
     width: min(86%, 360px);
     max-width: calc(100% - 28px);
-    height: 104px;
-    max-height: 104px;
-    padding: 12px 20px;
+    height: 112px;
+    max-height: 112px;
+    padding: 13px 20px 15px;
     border: 1px solid rgba(46, 204, 113, 0.36);
     border-radius: 6px;
     background: rgba(5, 10, 8, 0.82);
     color: #72f0a3;
     font-weight: 900;
-    line-height: 1.08;
+    line-height: 1.16;
     overflow: hidden;
     text-align: center;
     text-shadow:
@@ -478,18 +471,18 @@ button.pred-option-row {
 .pred-winner-announcement span {
     color: rgba(114, 240, 163, 0.82);
     font-size: clamp(12px, 1.8vw, 18px);
-    line-height: 1;
+    line-height: 1.12;
     letter-spacing: 0.08em;
 }
 
 .pred-winner-announcement strong {
+    display: block;
     max-width: 100%;
-    overflow: hidden;
+    overflow: visible;
     color: #72f0a3;
     font-size: clamp(22px, 4.4vw, 42px);
-    line-height: 1.04;
+    line-height: 1.18;
     overflow-wrap: anywhere;
-    text-overflow: ellipsis;
     white-space: normal;
 }
 
@@ -503,5 +496,5 @@ button.pred-option-row {
 
 .pred-winner-announcement strong[data-length="max"] {
     font-size: clamp(15px, 2.5vw, 23px);
-    line-height: 1.02;
+    line-height: 1.2;
 }
