@@ -1897,6 +1897,7 @@ body.settings-high-contrast .scene-copy {
 const FALLBACK_CONTROL_URL = "http://localhost:3000/room/default-room/control";
 const FALLBACK_OVERLAY_URL = "http://localhost:3000/room/default-room/overlay";
 const ROCKET_LEAGUE_MODULE_ID = "rocket-league-scoreboard";
+const ROCKET_LEAGUE_PROPER_PREVIEW_MODULE_ID = "rocket-league-proper-preview";
 const PREDICTIONS_MODULE_ID = "predictions";
 const EMBEDDED_CONTROL_INSET_PX = 56;
 const FRAME_LOAD_TIMEOUT_MS = 15000;
@@ -1947,6 +1948,22 @@ const FALLBACK_ROCKET_LEAGUE_MODULE = {
     controlUrl: "/room/default-room/control",
     overlayUrl: "/room/default-room/overlay",
     runnable: true
+};
+const ROCKET_LEAGUE_PROPER_PREVIEW_MODULE = {
+    id: ROCKET_LEAGUE_PROPER_PREVIEW_MODULE_ID,
+    displayName: "Rocket League Proper Preview",
+    shortName: "Rocket League Proper Preview",
+    category: "esports",
+    type: "scoreboard",
+    moduleSize: "major",
+    layoutSize: "major",
+    status: "dev-preview",
+    runnable: true,
+    devOnly: true,
+    previewOnly: true,
+    controlUrl: "/modules/rocket-league/panel.html",
+    overlayUrl: "",
+    description: "Dev Tools-only preview of the future proper Rocket League module panel."
 };
 const selectedModules = new Set();
 let selectedPreset = "";
@@ -2816,7 +2833,7 @@ function getSelectedRunnableModule() {
 
 function updateStartState() {
     const startButton = document.getElementById("startControlRoomButton");
-    const canStart = !!(activeModule && activeModule.runnable);
+    const canStart = !!(activeModule && activeModule.runnable && !activeModule.devOnly);
 
     startButton.disabled = !canStart;
 }
@@ -2829,6 +2846,10 @@ function getRunnableDevModules() {
 
     if (!runnableModules.some((module) => module.id === ROCKET_LEAGUE_MODULE_ID)) {
         runnableModules.unshift(getRocketLeagueModule());
+    }
+
+    if (!runnableModules.some((module) => module.id === ROCKET_LEAGUE_PROPER_PREVIEW_MODULE_ID)) {
+        runnableModules.push(ROCKET_LEAGUE_PROPER_PREVIEW_MODULE);
     }
 
     return runnableModules;
@@ -2869,7 +2890,7 @@ function renderDevControlRoomModules() {
             .map((module) => {
                 const moduleName = module.shortName || module.displayName || module.id;
                 const activeClass = isDevModuleActive(module.id) ? " active" : "";
-                return `<button class="global-devtools-action${activeClass}" type="button" data-dev-module="${module.id}">${moduleName}</button>`;
+                return `<button class="global-devtools-action${activeClass}" type="button" data-dev-module="${module.id}">${activeClass ? "[x] " : ""}${moduleName}</button>`;
             }).join("");
 
         return `${index > 0 ? '<div class="global-devtools-category"></div>' : ""}${moduleButtons}`;
@@ -3373,6 +3394,8 @@ function toggleDevControlRoomModule(moduleId) {
         } else if (moduleId === PREDICTIONS_MODULE_ID) {
             clearPresetSelection();
             setModuleSelection(PREDICTIONS_MODULE_ID, true);
+        } else if (moduleId === ROCKET_LEAGUE_PROPER_PREVIEW_MODULE_ID) {
+            clearPresetSelection();
         }
     }
 

@@ -50,6 +50,7 @@ Current shell status:
 - The shell is not wired into the Control Room selector or module catalog launch path yet.
 - Legacy Rocket League remains the live behavior.
 - The panel reads and writes only the local proper-module state namespace; it does not control the legacy overlay.
+- The proper panel can be previewed in the real Control Room module grid through Dev Tools only as `Rocket League Proper Preview`.
 
 ## Layer Mapping
 
@@ -143,6 +144,8 @@ Panel rules:
 Keep the old controller available during this phase.
 
 Status: first panel foundation exists. It can edit local module state for match title, active state, best-of, game number, blue/orange names, scores, series scores, roster placeholders, and overlay delay placeholder. It is not wired into Control Room and does not affect the legacy live Rocket League flow.
+
+Dev preview status: the panel can be toggled from Control Room > Dev Tools > Modules > Rocket League Proper Preview. This uses the real Control Room module content layer, not a hidden workbench or test scene. It is not available in the normal Control Room module selector and does not replace the legacy Rocket League launch path.
 
 Next panel steps:
 
