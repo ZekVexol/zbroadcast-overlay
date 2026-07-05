@@ -1,0 +1,94 @@
+:root {
+    color-scheme: dark;
+    font-family: Inter, "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+html,
+body {
+    width: 100%;
+    min-width: 0;
+    margin: 0;
+    color: #f3f7ff;
+}
+
+.rocket-league-shell-page {
+    min-height: 100vh;
+    background: transparent;
+}
+
+.rocket-league-panel-shell {
+    display: grid;
+    min-height: 100vh;
+    padding: 24px;
+    box-sizing: border-box;
+    place-items: center;
+    background:
+        radial-gradient(circle at 22% 18%, rgba(46, 132, 255, 0.18), transparent 34%),
+        radial-gradient(circle at 78% 70%, rgba(255, 125, 42, 0.16), transparent 32%);
+}
+
+.rocket-league-shell-card,
+.rocket-league-overlay-card {
+    box-sizing: border-box;
+    width: min(680px, 100%);
+    border: 1px solid rgba(154, 190, 255, 0.24);
+    border-radius: 8px;
+    background: rgba(8, 14, 26, 0.86);
+    box-shadow: 0 24px 70px rgba(0, 0, 0, 0.32);
+}
+
+.rocket-league-shell-card {
+    padding: 26px 28px;
+}
+
+.rocket-league-shell-kicker {
+    margin: 0 0 10px;
+    color: #75a8ff;
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.rocket-league-shell-card h1,
+.rocket-league-overlay-card h1 {
+    margin: 0;
+    color: #ffffff;
+    font-size: clamp(1.55rem, 3vw, 2.2rem);
+    line-height: 1.08;
+}
+
+.rocket-league-shell-card p,
+.rocket-league-overlay-card p {
+    max-width: 58ch;
+    margin: 14px 0 0;
+    color: rgba(230, 238, 255, 0.82);
+    font-size: 0.98rem;
+    line-height: 1.55;
+}
+
+.rocket-league-shell-note {
+    color: rgba(255, 199, 117, 0.9);
+}
+
+.rocket-league-overlay-page {
+    overflow: hidden;
+    background: transparent;
+}
+
+.rocket-league-overlay-shell {
+    display: grid;
+    width: 100vw;
+    height: 100vh;
+    box-sizing: border-box;
+    padding: 48px;
+    place-items: center;
+    background: transparent;
+}
+
+.rocket-league-overlay-card {
+    max-width: 760px;
+    padding: 30px 34px;
+    text-align: center;
+    background: rgba(6, 10, 18, 0.62);
+}
