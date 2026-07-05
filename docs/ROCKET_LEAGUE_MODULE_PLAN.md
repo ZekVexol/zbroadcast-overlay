@@ -143,7 +143,7 @@ Panel rules:
 
 Keep the old controller available during this phase.
 
-Status: first panel foundation exists and has a cleaner major-module layout. The main panel now focuses on local score/series controls and a scoreboard-style local preview. Match setup moved into a Global Modal Layer flow using Event Name, Division / Season / Etc, Week / Round, and Series Length. Team setup moved into a Teams modal that owns team names, rosters, logos, and team colors, with an 18-character team-name safety limit for the current preview layout. The current game number is derived from series score instead of being entered manually. It is not wired into normal Control Room selection and does not affect the legacy live Rocket League flow.
+Status: first panel foundation exists and has a cleaner major-module layout. The main panel now focuses on local score/series controls and a scoreboard-style local preview. Match setup moved into a Global Modal Layer flow using Event Name, Division / Season / Etc, Week / Round, and Series Length. Team setup moved into a Teams modal that owns team names, rosters, logos, team colors, and same-team roster slot swaps, with an 18-character team-name safety limit for the current preview layout. The current game number is derived from series score instead of being entered manually. The panel also has local-only Swap Teams, event history, and undo/reset behavior inspired by the legacy controller. It is not wired into normal Control Room selection and does not affect the legacy live Rocket League flow.
 
 Dev preview status: the panel can be toggled from Control Room > Dev Tools > Modules > Rocket League Proper Preview. This uses the real Control Room module content layer, not a hidden workbench or test scene. It is not available in the normal Control Room module selector and does not replace the legacy Rocket League launch path.
 
@@ -267,7 +267,7 @@ Current top-level shape:
   - `overlay.overlayPreset`
   - `overlay.delaySeconds`
   - `overlay.queuedUpdates`
-- history and undo placeholders:
+- local history and undo fields:
   - `history`
   - `undo.undoDepth`
   - `undo.lastActionId`

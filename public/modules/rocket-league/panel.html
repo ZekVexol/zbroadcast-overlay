@@ -13,6 +13,11 @@
                 <div class="rocket-league-toolbar-left">
                     <button type="button" class="rocket-league-primary-button" data-open-match-setup>Match Setup</button>
                     <button type="button" class="rocket-league-secondary-button" data-open-teams>Teams</button>
+                    <button type="button" class="rocket-league-secondary-button" data-swap-teams>Swap Teams</button>
+                </div>
+                <div class="rocket-league-match-info" data-match-info hidden>
+                    <div data-match-info-primary></div>
+                    <div data-match-info-secondary></div>
                 </div>
                 <div class="rocket-league-toolbar-right">
                     <button type="button" class="rocket-league-secondary-button" data-undo-score>Undo</button>
@@ -48,6 +53,10 @@
                         <button type="button" class="rocket-league-step-button is-minus" data-score-action="adjust-series" data-side="blue" data-delta="-1">-</button>
                         <button type="button" class="rocket-league-step-button is-plus" data-score-action="adjust-series" data-side="blue" data-delta="1">+</button>
                     </div>
+                </section>
+
+                <section class="rocket-league-history-section" aria-label="Rocket League event history">
+                    <div class="rocket-league-history-list" data-event-history></div>
                 </section>
 
                 <section class="rocket-league-section rocket-league-team-section rocket-league-team-orange" aria-label="Orange score controls">
@@ -89,6 +98,40 @@
                 return Math.min(max, Math.max(min, Math.round(Number(value) || 0)));
             }
 
+            function escapeHtml(value) {
+                return String(value || "").replace(/[&<>"']/g, (character) => ({
+                    "&": "&amp;",
+                    "<": "&lt;",
+                    ">": "&gt;",
+                    '"': "&quot;",
+                    "'": "&#39;"
+                }[character]));
+            }
+
+            function getReadableBorderColor(hexColor) {
+                const normalizedHex = String(hexColor || "").replace("#", "");
+
+                if (!/^[0-9a-fA-F]{6}$/.test(normalizedHex)) {
+                    return "rgba(255, 255, 255, 0.82)";
+                }
+
+                const red = parseInt(normalizedHex.slice(0, 2), 16);
+                const green = parseInt(normalizedHex.slice(2, 4), 16);
+                const blue = parseInt(normalizedHex.slice(4, 6), 16);
+                const luminance = (0.299 * red + 0.587 * green + 0.114 * blue) / 255;
+
+                return luminance > 0.62 ? "#05080d" : "#ffffff";
+            }
+
+            function getTeamEventColor(state, side) {
+                return state.teams[side] && state.teams[side].accentColor ? state.teams[side].accentColor : "#ffffff";
+            }
+
+            function getSafeEventColor(color, fallbackColor) {
+                const normalizedColor = String(color || "").trim();
+                return /^#[0-9a-fA-F]{6}$/.test(normalizedColor) ? normalizedColor : fallbackColor;
+            }
+
             function getWinCondition(bestOf) {
                 return Math.floor(bestOf / 2) + 1;
             }
@@ -123,6 +166,10 @@
                 };
             }
 
+            function createActionId() {
+                return `rocket-action-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+            }
+
             function pushUndoSnapshot(state) {
                 state.undo = state.undo || {};
                 state.undo.scoreSnapshots = Array.isArray(state.undo.scoreSnapshots) ? state.undo.scoreSnapshots : [];
@@ -136,6 +183,36 @@
                 state.teams.orange.score = snapshot.orangeScore;
                 state.teams.blue.seriesScore = snapshot.blueSeriesScore;
                 state.teams.orange.seriesScore = snapshot.orangeSeriesScore;
+            }
+
+            function getTeamName(state, side) {
+                return state.teams[side].name || side.toUpperCase();
+            }
+
+            function appendHistoryEvent(state, event) {
+                state.history = Array.isArray(state.history) ? state.history : [];
+                state.history.push({
+                    id: `${event.type}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+                    createdAt: Date.now(),
+                    ...event
+                });
+                state.history = state.history.slice(-100);
+            }
+
+            function swapTeamsInState(state) {
+                const blueTeam = state.teams.blue;
+                const orangeTeam = state.teams.orange;
+
+                state.teams.blue = {
+                    ...orangeTeam,
+                    id: "blue",
+                    side: "blue"
+                };
+                state.teams.orange = {
+                    ...blueTeam,
+                    id: "orange",
+                    side: "orange"
+                };
             }
 
             function setScoreValue(name, value) {
@@ -202,16 +279,71 @@
 
             function getMetaText(state) {
                 const status = getSeriesStatus(state);
-                const details = [
-                    state.match.tournamentName,
-                    state.match.weekRound,
-                    state.match.seriesInfo
-                ].filter(Boolean).join(" / ");
-                const gameText = status.isComplete
+                return status.isComplete
                     ? `Bo${status.bestOf} / Final`
                     : `Bo${status.bestOf} / Game ${status.currentGame}`;
+            }
 
-                return details ? `${details} / ${gameText}` : gameText;
+            function getMatchInfoLines(state) {
+                return {
+                    primary: state.match.tournamentName || "",
+                    secondary: [
+                        state.match.seriesInfo,
+                        state.match.weekRound
+                    ].filter(Boolean).join(" | ")
+                };
+            }
+
+            function renderEventHistory(state) {
+                const historyElement = document.querySelector("[data-event-history]");
+                const history = Array.isArray(state.history) ? state.history : [];
+
+                if (!historyElement) {
+                    return;
+                }
+
+                if (!history.length) {
+                    historyElement.innerHTML = `<div class="rocket-league-history-empty">No events yet</div>`;
+                    return;
+                }
+
+                historyElement.innerHTML = history.slice().reverse().map((entry) => {
+                    if (entry.type === "goal") {
+                        const goalAccent = getSafeEventColor(entry.eventColor, "#ffffff");
+                        return `
+                            <div class="rocket-league-history-entry is-goal is-${escapeHtml(entry.teamSide || "neutral")}" style="--rocket-history-accent: ${escapeHtml(goalAccent)}; --rocket-history-contrast: ${escapeHtml(getReadableBorderColor(goalAccent))};">
+                                <span>${escapeHtml(`${entry.teamName || entry.teamSide || "Team"} Goal`.toUpperCase())}</span>
+                            </div>
+                        `;
+                    }
+
+                    if (entry.type === "gameFinal") {
+                        const gameAccent = getSafeEventColor(entry.eventColor, "#ffffff");
+                        return `
+                            <div class="rocket-league-history-entry is-game-final" style="--rocket-history-accent: ${escapeHtml(gameAccent)}; --rocket-history-contrast: ${escapeHtml(getReadableBorderColor(gameAccent))};">
+                                <span>GAME ${entry.gameNumber} FINAL</span>
+                                <strong>${escapeHtml(`${entry.winningTeamName || "Team"} Wins ${entry.blueScore}-${entry.orangeScore}`.toUpperCase())}</strong>
+                            </div>
+                        `;
+                    }
+
+                    if (entry.type === "seriesFinal") {
+                        const seriesAccent = getSafeEventColor(entry.eventColor, "#ffffff");
+                        return `
+                            <div class="rocket-league-history-entry is-series-final" style="--rocket-history-accent: ${escapeHtml(seriesAccent)}; --rocket-history-contrast: ${escapeHtml(getReadableBorderColor(seriesAccent))};">
+                                <span>SERIES FINAL</span>
+                                <strong>${escapeHtml(`${entry.winningTeamName || "Team"} Wins ${entry.blueSeriesScore}-${entry.orangeSeriesScore}`.toUpperCase())}</strong>
+                            </div>
+                        `;
+                    }
+
+                    return `
+                        <div class="rocket-league-history-entry">
+                            <span>${escapeHtml(entry.label || "Event")}</span>
+                            <strong>${escapeHtml(entry.teamName || "")}</strong>
+                        </div>
+                    `;
+                }).join("");
             }
 
             function render(state) {
@@ -238,11 +370,19 @@
                 document.querySelector('[data-preview-score="blue"]').textContent = blue.score;
                 document.querySelector('[data-preview-score="orange"]').textContent = orange.score;
                 document.querySelector("[data-preview-meta]").textContent = getMetaText(currentState);
+                const matchInfoElement = document.querySelector("[data-match-info]");
+                const matchInfo = getMatchInfoLines(currentState);
+                matchInfoElement.querySelector("[data-match-info-primary]").textContent = matchInfo.primary;
+                matchInfoElement.querySelector("[data-match-info-secondary]").textContent = matchInfo.secondary;
+                matchInfoElement.hidden = !matchInfo.primary && !matchInfo.secondary;
                 document.documentElement.style.setProperty("--rocket-blue", blue.accentColor || "#2f80ff");
                 document.documentElement.style.setProperty("--rocket-orange", orange.accentColor || "#ff8a24");
+                document.documentElement.style.setProperty("--rocket-blue-pip-border", getReadableBorderColor(blue.accentColor || "#2f80ff"));
+                document.documentElement.style.setProperty("--rocket-orange-pip-border", getReadableBorderColor(orange.accentColor || "#ff8a24"));
                 renderLogo("blue", blue);
                 renderLogo("orange", orange);
                 renderSeriesPips(currentState);
+                renderEventHistory(currentState);
             }
 
             function readScoreState() {
@@ -284,12 +424,91 @@
                 });
             }
 
+            function recordGoal(side) {
+                const nextState = readScoreState();
+                const snapshotBefore = snapshotScores(nextState);
+                const status = getSeriesStatus(nextState);
+
+                if (status.isComplete) {
+                    return;
+                }
+
+                nextState.teams[side].score = clampValue(nextState.teams[side].score + 1, 0, 999);
+                appendHistoryEvent(nextState, {
+                    actionId: createActionId(),
+                    type: "goal",
+                    teamSide: side,
+                    teamName: getTeamName(nextState, side),
+                    eventColor: getTeamEventColor(nextState, side),
+                    blueScore: nextState.teams.blue.score,
+                    orangeScore: nextState.teams.orange.score,
+                    gameNumber: status.currentGame,
+                    snapshotBefore
+                });
+                saveLocalState(nextState);
+            }
+
+            function completeGame(side) {
+                const nextState = readScoreState();
+                const status = getSeriesStatus(nextState);
+                const otherSide = side === "blue" ? "orange" : "blue";
+                const snapshotBefore = snapshotScores(nextState);
+                const actionId = createActionId();
+
+                if (status.isComplete || nextState.teams[side].seriesScore >= status.winCondition || nextState.teams[side].seriesScore + nextState.teams[otherSide].seriesScore >= status.bestOf) {
+                    return;
+                }
+
+                appendHistoryEvent(nextState, {
+                    actionId,
+                    type: "gameFinal",
+                    winningSide: side,
+                    winningTeamName: getTeamName(nextState, side),
+                    eventColor: getTeamEventColor(nextState, side),
+                    blueScore: nextState.teams.blue.score,
+                    orangeScore: nextState.teams.orange.score,
+                    gameNumber: status.currentGame,
+                    snapshotBefore
+                });
+
+                nextState.teams[side].seriesScore = clampValue(nextState.teams[side].seriesScore + 1, 0, status.winCondition);
+                nextState.teams.blue.score = 0;
+                nextState.teams.orange.score = 0;
+
+                const nextStatus = getSeriesStatus(nextState);
+                if (nextStatus.isComplete && nextStatus.winningSide) {
+                    appendHistoryEvent(nextState, {
+                        actionId,
+                        type: "seriesFinal",
+                        winningSide: nextStatus.winningSide,
+                        winningTeamName: getTeamName(nextState, nextStatus.winningSide),
+                        eventColor: getTeamEventColor(nextState, nextStatus.winningSide),
+                        blueSeriesScore: nextState.teams.blue.seriesScore,
+                        orangeSeriesScore: nextState.teams.orange.seriesScore,
+                        gameNumber: status.currentGame,
+                        snapshotBefore
+                    });
+                }
+
+                saveLocalState(nextState);
+            }
+
             panel.querySelector("[data-open-match-setup]").addEventListener("click", () => postPanelRequest("open-match-setup"));
             panel.querySelector("[data-open-teams]").addEventListener("click", () => postPanelRequest("open-teams"));
+            panel.querySelector("[data-swap-teams]").addEventListener("click", () => {
+                const nextState = readScoreState();
+                swapTeamsInState(nextState);
+                saveLocalState(nextState);
+            });
             panel.querySelector("[data-reset-game-score]").addEventListener("click", () => {
                 updateScore((state) => {
+                    const history = Array.isArray(state.history) ? state.history : [];
+                    const lastCompletedIndex = Math.max(
+                        history.map((entry, index) => entry.type === "gameFinal" || entry.type === "seriesFinal" ? index : -1).reduce((max, index) => Math.max(max, index), -1)
+                    );
                     state.teams.blue.score = 0;
                     state.teams.orange.score = 0;
+                    state.history = lastCompletedIndex >= 0 ? history.slice(0, lastCompletedIndex + 1) : [];
                 });
             });
             panel.querySelector("[data-reset-series]").addEventListener("click", () => {
@@ -298,10 +517,26 @@
                     state.teams.orange.score = 0;
                     state.teams.blue.seriesScore = 0;
                     state.teams.orange.seriesScore = 0;
+                    state.history = [];
                 });
             });
             panel.querySelector("[data-undo-score]").addEventListener("click", () => {
                 const nextState = stateApi.normalizeState(currentState);
+                const history = Array.isArray(nextState.history) ? nextState.history : [];
+                const lastEvent = history[history.length - 1];
+
+                if (lastEvent && lastEvent.snapshotBefore) {
+                    const actionId = lastEvent.actionId || lastEvent.id;
+
+                    restoreSnapshot(nextState, lastEvent.snapshotBefore);
+                    while (history.length && (history[history.length - 1].actionId || history[history.length - 1].id) === actionId) {
+                        history.pop();
+                    }
+                    nextState.history = history;
+                    saveLocalState(nextState);
+                    return;
+                }
+
                 const snapshots = nextState.undo && Array.isArray(nextState.undo.scoreSnapshots) ? nextState.undo.scoreSnapshots : [];
                 const snapshot = snapshots.pop();
 
@@ -321,9 +556,9 @@
                     const delta = Number(button.dataset.delta || 0);
 
                     if (button.dataset.scoreAction === "goal") {
-                        adjustGameScore(side, 1);
+                        recordGoal(side);
                     } else if (button.dataset.scoreAction === "win") {
-                        adjustSeriesScore(side, 1);
+                        completeGame(side);
                     } else if (button.dataset.scoreAction === "adjust-game") {
                         adjustGameScore(side, delta);
                     } else if (button.dataset.scoreAction === "adjust-series") {

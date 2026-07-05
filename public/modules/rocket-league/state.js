@@ -226,13 +226,35 @@
 
     function normalizeHistory(history) {
         return Array.isArray(history)
-            ? history.slice(-100).map((entry, index) => ({
-                id: normalizeText(entry && entry.id) || `history-${index + 1}`,
-                type: normalizeText(entry && entry.type) || "note",
-                label: normalizeText(entry && entry.label),
-                teamSide: TEAM_SIDES.includes(entry && entry.teamSide) ? entry.teamSide : "",
-                createdAt: Number.isFinite(Number(entry && entry.createdAt)) ? Number(entry.createdAt) : 0
-            }))
+            ? history.slice(-100).map((entry, index) => {
+                const snapshotBefore = entry && entry.snapshotBefore && typeof entry.snapshotBefore === "object"
+                    ? {
+                        blueScore: clampNumber(entry.snapshotBefore.blueScore, 0, 999, 0),
+                        orangeScore: clampNumber(entry.snapshotBefore.orangeScore, 0, 999, 0),
+                        blueSeriesScore: clampNumber(entry.snapshotBefore.blueSeriesScore, 0, 99, 0),
+                        orangeSeriesScore: clampNumber(entry.snapshotBefore.orangeSeriesScore, 0, 99, 0)
+                    }
+                    : null;
+
+                return {
+                    id: normalizeText(entry && entry.id) || `history-${index + 1}`,
+                    actionId: normalizeText(entry && entry.actionId),
+                    type: normalizeText(entry && entry.type) || "note",
+                    label: normalizeText(entry && entry.label),
+                    teamSide: TEAM_SIDES.includes(entry && entry.teamSide) ? entry.teamSide : "",
+                    teamName: limitText(entry && entry.teamName, TEAM_NAME_MAX_LENGTH),
+                    eventColor: normalizeText(entry && entry.eventColor),
+                    winningSide: TEAM_SIDES.includes(entry && entry.winningSide) ? entry.winningSide : "",
+                    winningTeamName: limitText(entry && entry.winningTeamName, TEAM_NAME_MAX_LENGTH),
+                    blueScore: clampNumber(entry && entry.blueScore, 0, 999, 0),
+                    orangeScore: clampNumber(entry && entry.orangeScore, 0, 999, 0),
+                    blueSeriesScore: clampNumber(entry && entry.blueSeriesScore, 0, 99, 0),
+                    orangeSeriesScore: clampNumber(entry && entry.orangeSeriesScore, 0, 99, 0),
+                    gameNumber: clampNumber(entry && entry.gameNumber, 1, 99, 1),
+                    snapshotBefore,
+                    createdAt: Number.isFinite(Number(entry && entry.createdAt)) ? Number(entry.createdAt) : 0
+                };
+            })
             : [];
     }
 
