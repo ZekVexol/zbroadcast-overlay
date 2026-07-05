@@ -167,14 +167,91 @@ Control Room supports:
 - one module loaded
 - multiple modules loaded later
 
+Control Room contains a module grid inside the Scene / Module Content Layer. The grid should handle module placement; individual modules should not create their own Control Room layout systems.
+
 Rules:
 
 - Preview Overlay should always be accessible from Control Room.
 - If an active module has no overlay output, Preview Overlay can fall back to the default room overlay or show an idle output.
-- One module should appear centered/primary.
-- Two modules should split space cleanly.
-- Three or more modules should use a responsive grid later.
+- Minor-only layouts should center the whole module group in the available Control Room content area.
+- Major or legacy-major layouts should reserve a primary area for the major module.
+- If a major module is active with minor modules later, the major module should sit in the primary zone and minor modules should fill a secondary zone to the right or around it.
 - Control Room should not become a custom layout per module.
+- Do not build advanced docking, drag/drop, resizing, or saved custom layouts until the simple metadata-driven rules are stable.
+
+### Module Layout Sizes
+
+Modules should declare a simple layout size in catalog metadata.
+
+Current field:
+
+```json
+"layoutSize": "minor"
+```
+
+Supported first-pass values:
+
+- `minor`
+- `major`
+- `legacy-major`
+
+#### Minor Modules
+
+Minor modules are smaller supporting modules.
+
+Examples:
+
+- Predictions
+- sponsor rotator
+- stream goals
+- alerts
+
+Rules:
+
+- Should fit into compact cards.
+- Can share Control Room space with other minor modules.
+- One active minor module should sit dead center.
+- Two active minor modules should sit side by side with even spacing, centered as a group.
+- Three active minor modules should sit in a centered row if space allows.
+- Four active minor modules should use a balanced centered 2x2 or equivalent formation.
+- Five or more minor modules should continue balanced centered wrapping behavior.
+- Minor modules must not hug the left edge when unused room exists.
+- Should scroll internally when content grows instead of pushing the whole Control Room scene.
+
+#### Major Modules
+
+Major modules are large primary control modules.
+
+Examples:
+
+- future rebuilt Rocket League controller
+- future Rainbow Six controller
+
+Rules:
+
+- Should receive primary Control Room space.
+- Minor modules can eventually surround or sit beside them.
+- Major/minor mixed layout should be handled by the Control Room grid, not custom module wrappers.
+- For the first implementation, a major module should reserve the primary left-side zone when mixed with minors.
+
+#### Legacy Major Modules
+
+Legacy major modules are older large modules temporarily embedded during the desktop transition.
+
+Rocket League is currently `legacy-major` because it still uses the old `public/control.html` workflow.
+
+Rules:
+
+- Preserve working behavior first.
+- Allow full-frame embedded control surfaces where needed.
+- Do not force legacy modules into compact cards before they are rebuilt.
+- Treat this as a temporary bridge toward a first-class module panel.
+- Rocket League currently remains full-frame for stability even though future major/minor mixed layouts should reserve a primary left zone.
+
+Current first-pass metadata:
+
+- Predictions: `layoutSize: "minor"`
+- Rocket League: `layoutSize: "legacy-major"`
 
 ## Predictions Example
 
