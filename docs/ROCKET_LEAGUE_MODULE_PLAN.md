@@ -1,186 +1,294 @@
-# Rocket League Module Plan
+# Rocket League Proper Module Rebuild Plan
 
 ## Goal
 
-Plan Phase 3C - Rocket League Module Integration.
+Plan how Rocket League moves from a preserved `legacy-major` embedded controller into a proper ZBroadcast module.
 
-The current Rocket League controller works, but it is still a large standalone web control page embedded inside the desktop app shell. Phase 3C should gradually turn it into the first official ZBroadcast module without breaking current scoreboard behavior.
+This is a planning document only. Do not modify the current Rocket League controller, overlay, or server as part of this plan.
 
-## Current State
+## Current Status
 
-- Rocket League scoreboard/control currently lives in `public/control.html`.
-- Overlay output currently lives in `public/overlay.html`.
-- Server, state, room, asset, and Socket.IO behavior currently lives in `server.js`.
-- The desktop app currently launches the controller through the Control Room flow.
-- The current desktop app shell treats Rocket League as a selectable Control Room module, but the controller itself is not yet module-aware.
+Rocket League is currently a preserved legacy-major module.
 
-## What Must Be Preserved
+Current shape:
 
-- Score controls.
-- Series controls.
-- Team names.
-- Rosters/subs.
-- Logos.
-- Overlay background.
-- History.
-- Undo.
-- Overlay delay.
-- Timing display.
-- Queue/instant update behavior.
-- OBS browser-source overlay output.
-- Room-based URLs.
-- `npm start` behavior.
-- `npm run desktop` behavior.
+- Controller lives in `public/control.html`.
+- Overlay output lives in `public/overlay.html`.
+- Server-side state, room handling, assets, admin behavior, and Socket.IO events live in `server.js`.
+- The desktop app embeds the old controller through the Control Room flow.
+- The module catalog marks Rocket League as runnable and `legacy-major`.
 
-## Problems With The Current Embedded Approach
+This flow is useful and should be preserved. It is not yet a proper module under the official ZBroadcast module contract because the controller, overlay, and state are still part of the older web-app prototype.
 
-- The old control page has its own layout and spacing.
-- App wrapper controls are separate from the controller page.
-- Responsive/windowed behavior is rough.
-- Module selection exists in the app shell, but the controller itself is not yet module-aware.
-- `control.html` is large and fragile.
-- Any direct rewrite of `control.html` risks breaking working production behavior.
+## Target Proper Module Structure
 
-## Desired Module Direction
-
-Rocket League Scoreboard should become the first official ZBroadcast module.
-
-Proposed module definition:
+Future Rocket League should eventually move toward:
 
 ```text
-module id: rocket-league-scoreboard
-display name: Rocket League Scoreboard
-category: Esports
-supported control surface: current scoreboard controller
-overlay output: current OBS browser-source overlay
-future settings: series type, overlay delay, hotkeys, assets, timing display
-future presets: Rocket League Cast
-compatibility metadata: local desktop, OBS browser source, room-based workflow
+public/modules/rocket-league/
+  panel.html
+  overlay.html
+  state.js
+  styles.css
 ```
 
-The first version of the module system should describe the current working module. It should not force a rewrite of the controller.
+Optional later pieces:
 
-## Progress / Status
+- Dev Tools hooks.
+- Settings hooks.
+- preset support.
+- migration helpers from legacy state.
 
-Phase 3C is in progress. The first integration chunks are complete:
+The new module should coexist with the legacy flow until the replacement is proven.
 
-- Phase 3C-1: Module metadata / config is complete.
-- Phase 3C-2: App shell reads module metadata is complete.
-- Phase 3C-3: Module-aware launch flow is complete.
-- Phase 3C-4: Embedded wrapper / navigation cleanup is complete.
+## Layer Mapping
 
-Future work remains open:
+Future Rocket League should follow the official app layer model.
 
-- Safer Rocket League module polish.
-- Desktop layout improvements.
-- Eventual `control.html` split only when safe.
-- Eventual responsive module layout.
+- Rocket League panel lives in the Scene / Module Content Layer.
+- Rocket League overlay lives in Preview Overlay output and can be used by the Preview / Atmosphere Background Layer.
+- Rocket League test/debug tools live in the Dev Tools Layer.
+- Rocket League setup or confirm flows use the Global Modal Layer.
+- Rocket League should not own app-wide navigation.
+- Rocket League should not create its own app-wide modal system.
+- Rocket League should not create full-screen opaque wrappers outside its assigned module area.
 
-## Recommended Migration Phases
+## Module Size
 
-### Phase 3C-1: Module Metadata / Config Only
+Rocket League should become a future `major` module.
 
-Add static metadata that describes Rocket League Scoreboard.
+Meaning:
 
-This should include:
+- It is a larger primary game-controller module.
+- It should receive the primary Control Room space.
+- Minor modules like Predictions can eventually sit beside or around it.
 
-- module id
-- display name
-- category
-- usable/disabled state
-- control route
-- overlay route
-- preset membership
-- short internal notes
+Current status remains:
 
-No scoreboard behavior should change in this step.
+```text
+layoutSize: legacy-major
+```
 
-### Phase 3C-2: App Shell Reads Module Metadata
+Keep the current legacy-major behavior until the rebuilt panel and overlay are ready.
 
-Update the Control Room selector to read module labels/routes from metadata instead of hardcoded labels.
+## Preserve-First Rebuild Strategy
 
-Keep this small:
+### Phase A: Inventory Current Legacy Behavior
 
-- Rocket League still launches the same existing controller route.
-- Rocket League Cast still selects Rocket League.
-- START still gates on the runnable Rocket League module.
+Document the current Rocket League feature set and state shape.
 
-### Phase 3C-3: Create A Module Wrapper Route/Page If Needed
+Tasks:
 
-If the desktop shell needs better structure, add a lightweight module wrapper page or route.
+- List current controller features.
+- List current overlay features.
+- Identify server state fields used by Rocket League.
+- Identify Socket.IO events used by Rocket League.
+- Identify asset paths and upload behavior.
+- Do not change old files.
 
-This wrapper could own:
+Goal: understand what must be preserved before rebuilding anything.
 
-- desktop module framing
-- Home / Preview Overlay controls
-- future module-specific shell behavior
+### Phase B: Create New Module Folder As A Prototype
 
-It should still embed or load the existing `public/control.html` until a safer split exists.
+Create new module files without replacing the legacy flow.
 
-### Phase 3C-4: Improve Embedded Controller Wrapper / Navigation
+Target files:
 
-Make the current embedded controller feel more like part of the desktop app.
+```text
+public/modules/rocket-league/panel.html
+public/modules/rocket-league/overlay.html
+public/modules/rocket-league/state.js
+public/modules/rocket-league/styles.css
+```
 
-Safe improvements may include:
+Early prototype rules:
 
-- cleaner wrapper spacing
-- consistent app navigation
-- clearer preview overlay access
-- better handling of desktop window sizes
+- Use local-first module state first.
+- Do not refactor `server.js`.
+- Do not edit `public/control.html`.
+- Do not edit `public/overlay.html`.
+- Do not change the current Rocket League launch path yet.
 
-Do not edit the controller internals unless a specific bug requires it.
+Goal: build a safe sandbox for the proper module.
 
-### Phase 3C-5: Later Split `control.html` Into Smaller Module Files
+### Phase C: Build New Control Room Panel
 
-Only split `control.html` after behavior is protected.
+Build a new Rocket League Control Room panel as a proper module panel.
 
-Possible later split:
+Panel rules:
 
-- controller markup
-- controller styles
-- controller client logic
-- shared module config
+- Lives in the Scene / Module Content Layer.
+- Uses `layoutSize: major` once it becomes the active module.
+- Keeps core controls accessible.
+- Does not include testing/debug controls.
+- Requests app modals through the Global Modal Layer if needed.
+- Does not duplicate Home, Preview Overlay, or Change Module.
 
-This should be done carefully because `control.html` is currently the working production controller.
+Keep the old controller available during this phase.
 
-### Phase 3C-6: Later Improve Responsive Desktop Layout
+### Phase D: Build New Overlay Output
 
-Once the module shell is stable, improve the Rocket League controller layout for desktop windows.
+Build a new module overlay output.
 
-This may include:
+Overlay rules:
 
-- better scaling at smaller window sizes
-- more desktop-native spacing
-- less page-style scrolling
-- clearer module navigation
+- Lives in `public/modules/rocket-league/overlay.html`.
+- Is stream-facing.
+- Contains no operator controls.
+- Handles empty/inactive state cleanly.
+- Remains OBS/browser-source friendly.
 
-This should happen after the current control behavior has test coverage or a reliable smoke-test path.
+Compare the new overlay against the old `public/overlay.html` output before switching.
 
-## What Not To Do Yet
+### Phase E: Migrate Control Room Launch Path
 
-- Do not rewrite `control.html` yet.
-- Do not rewrite `overlay.html` yet.
-- Do not change Socket.IO events yet.
-- Do not change the server state shape yet.
-- Do not break Railway/web app behavior.
-- Do not move to a database yet.
-- Do not add Twitch integration yet.
-- Do not add OBS integration yet.
-- Do not combine remote operator architecture with this module cleanup phase.
+Only after the new panel and overlay are proven:
 
-## First Recommended Coding Step
+- Update module catalog routes to point to the new Rocket League module files.
+- Change Rocket League from `legacy-major` to `major`.
+- Keep a fallback path to the old legacy controller during transition if useful.
+- Smoke test desktop and browser flows.
 
-The smallest first code change after this document should be:
+### Phase F: Deprecate Legacy Files Only When Safe
 
-Add static module metadata/config that describes Rocket League Scoreboard, then use that metadata in the app shell instead of hardcoded Control Room labels/routes.
+Do not remove or deprecate `public/control.html`, `public/overlay.html`, or related server behavior until the replacement has proven parity.
 
-Recommended first implementation shape:
+Deprecation requirements:
 
-- Add a small module metadata source.
-- Define Rocket League Scoreboard in that metadata.
-- Keep the control route as `http://localhost:3000/room/default-room/control`.
-- Keep the overlay route as `http://localhost:3000/room/default-room/overlay`.
-- Update the Caster Command Control Room selector to read display labels and routes from that metadata.
-- Do not touch `server.js`, `public/control.html`, or `public/overlay.html` for this first step.
+- New panel covers current operator workflow.
+- New overlay covers current OBS output needs.
+- State behavior is understood and stable.
+- Existing users have a clear migration path.
+- Smoke tests pass.
 
-That gives ZBroadcast a real module foundation while keeping the working scoreboard safe.
+## Features To Preserve Or Intentionally Replace
+
+The rebuild must preserve or deliberately replace:
+
+- team names
+- scores
+- series score
+- best-of / series settings
+- logos
+- rosters
+- substitutes
+- player names / stats if currently supported
+- history
+- undo
+- queued updates
+- instant updates
+- overlay delay
+- timing display
+- caster/operator controls
+- room/admin behavior if still needed later
+- OBS browser-source overlay output behavior
+- desktop local-first behavior
+
+If a feature is intentionally changed, document the decision before implementation.
+
+## State Direction
+
+The rebuild should move toward local-first module state first.
+
+Recommended direction:
+
+- Use namespaced module state for the new prototype.
+- Keep state understandable and resettable.
+- Avoid coupling the first rebuild to remote rooms.
+- Add remote rooms/operators later as a separate architecture layer.
+- Add server-backed state only when the local module behavior is clear.
+
+Remote rooms and remote operators are future architecture, not the immediate foundation.
+
+## Dev Tools Direction
+
+Future Rocket League Dev Tools can include:
+
+- mock game state
+- reset module state
+- test logos
+- test rosters
+- simulate score changes
+- force overlay states
+- diagnostics
+
+Rules:
+
+- Dev Tools belong in the global Dev Tools Layer.
+- Do not put test/debug controls in the live Control Room panel.
+- Show Rocket League Dev Tools only when relevant.
+
+## Optional Settings Direction
+
+Future Rocket League settings may include:
+
+- default best-of format
+- overlay delay defaults
+- hotkey presets
+- logo/team asset preferences
+- display theme options
+- reduced animation / performance options
+
+These should integrate with the app Settings system or a module-specific settings area. Do not create a disconnected settings system.
+
+## Non-Goals For The First Rebuild
+
+Do not start the rebuild with:
+
+- Twitch integration.
+- OBS websocket integration.
+- remote operator rebuild.
+- server refactor.
+- database storage.
+- monetization or store logic.
+- replacing `public/control.html` immediately.
+- replacing `public/overlay.html` immediately.
+- changing existing Socket.IO events.
+- changing existing server state shape.
+
+Keep the first rebuild focused on proving the proper module shape.
+
+## First Recommended Branch
+
+Recommended first coding branch:
+
+```text
+rocket-league-module-inventory
+```
+
+First branch scope:
+
+- document current state fields
+- document current Socket.IO events
+- document current controller sections
+- document current overlay sections
+- add no behavior changes
+
+Recommended second branch:
+
+```text
+rocket-league-module-prototype-shell
+```
+
+Second branch scope:
+
+- create `public/modules/rocket-league/` files
+- add local prototype state
+- do not switch the catalog route yet
+- do not edit legacy files
+
+## Success Criteria
+
+Rocket League becomes a proper ZBroadcast module when:
+
+- it has catalog metadata
+- it uses `layoutSize: major`
+- it has a first-class Control Room panel
+- it has module overlay output
+- its state boundary is clear
+- its Dev Tools hooks live in the global Dev Tools Layer
+- its modals use the Global Modal Layer
+- it no longer depends on embedding the old `public/control.html` page
+- current scoreboard behavior remains preserved or intentionally replaced
+
+Move slowly. Preserve the working legacy flow until the replacement is clearly better and safer.
