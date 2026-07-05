@@ -1020,6 +1020,27 @@ body.settings-high-contrast .scene-copy {
     min-height: 0;
 }
 
+.module-grid.control-room--minor-only {
+    display: flex;
+    flex-wrap: wrap;
+    align-content: center;
+    align-items: center;
+    justify-content: center;
+    padding: clamp(24px, 4vw, 56px);
+}
+
+.module-grid.control-room--has-major {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    align-items: stretch;
+    justify-items: stretch;
+}
+
+.module-grid.control-room--has-major:not(.control-room--legacy-major-only) {
+    grid-template-columns: minmax(520px, 1fr) minmax(260px, 420px);
+    padding: clamp(16px, 3vw, 40px);
+}
+
 .module-grid.module-count-2 {
     grid-template-columns: repeat(2, minmax(260px, min(44vw, 560px)));
 }
@@ -1029,6 +1050,23 @@ body.settings-high-contrast .scene-copy {
 }
 
 .module-grid.module-count-4 {
+    grid-template-columns: repeat(2, minmax(260px, min(40vw, 520px)));
+    grid-template-rows: repeat(2, minmax(220px, min(40vh, 420px)));
+}
+
+.module-grid.all-minor.module-count-1 {
+    grid-template-columns: minmax(260px, min(520px, calc(100vw - 48px)));
+}
+
+.module-grid.all-minor.module-count-2 {
+    grid-template-columns: repeat(2, minmax(260px, min(42vw, 520px)));
+}
+
+.module-grid.all-minor.module-count-3 {
+    grid-template-columns: repeat(3, minmax(220px, min(29vw, 420px)));
+}
+
+.module-grid.all-minor.module-count-4 {
     grid-template-columns: repeat(2, minmax(260px, min(40vw, 520px)));
     grid-template-rows: repeat(2, minmax(220px, min(40vh, 420px)));
 }
@@ -1047,8 +1085,16 @@ body.settings-high-contrast .scene-copy {
 }
 
 .module-slot.minor {
+    flex: 0 1 min(520px, calc(100vw - 48px));
     width: min(520px, calc(100vw - 48px));
     height: min(520px, calc(100vh - 96px));
+}
+
+.module-slot.legacy-major {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
 }
 
 .module-slot .embedded-frame {
@@ -2535,7 +2581,79 @@ function getActiveModuleName(moduleConfig = activeModule) {
 }
 
 function getModuleSizeClass(moduleConfig) {
-    return moduleConfig && moduleConfig.moduleSize === "minor" ? "minor" : "major";
+    const layoutSize = moduleConfig && (moduleConfig.layoutSize || moduleConfig.moduleSize);
+
+    if (layoutSize === "minor") {
+        return "minor";
+    }
+
+    if (layoutSize === "legacy-major") {
+        return "legacy-major";
+    }
+
+    return "major";
+}
+
+function clearControlRoomLayoutClasses(moduleGrid, moduleSlot) {
+    const layoutClasses = [
+        "module-count-1",
+        "module-count-2",
+        "module-count-3",
+        "module-count-4",
+        "all-minor",
+        "control-room--minor-only",
+        "control-room--has-major",
+        "control-room--legacy-major-only",
+        "control-room--minor-count-0",
+        "control-room--minor-count-1",
+        "control-room--minor-count-2",
+        "control-room--minor-count-3",
+        "control-room--minor-count-4-plus"
+    ];
+
+    if (moduleGrid) {
+        moduleGrid.classList.remove(...layoutClasses);
+        delete moduleGrid.dataset.layoutSize;
+        delete moduleGrid.dataset.minorCount;
+        delete moduleGrid.dataset.majorCount;
+    }
+
+    if (moduleSlot) {
+        moduleSlot.classList.remove("minor", "major", "legacy-major");
+        delete moduleSlot.dataset.layoutSize;
+    }
+}
+
+function applyControlRoomLayoutClasses(moduleGrid, moduleSlot, modules) {
+    const activeModules = modules.filter(Boolean);
+    const minorModules = activeModules.filter((module) => getModuleSizeClass(module) === "minor");
+    const majorModules = activeModules.filter((module) => getModuleSizeClass(module) !== "minor");
+    const primaryModule = activeModules[0];
+    const primaryLayoutSize = getModuleSizeClass(primaryModule);
+    const minorCountClass = minorModules.length >= 4
+        ? "control-room--minor-count-4-plus"
+        : `control-room--minor-count-${minorModules.length}`;
+
+    clearControlRoomLayoutClasses(moduleGrid, moduleSlot);
+
+    if (moduleGrid) {
+        moduleGrid.classList.add(`module-count-${Math.min(Math.max(activeModules.length, 1), 4)}`);
+        moduleGrid.classList.add(minorCountClass);
+        moduleGrid.classList.toggle("all-minor", activeModules.length > 0 && majorModules.length === 0);
+        moduleGrid.classList.toggle("control-room--minor-only", activeModules.length > 0 && majorModules.length === 0);
+        moduleGrid.classList.toggle("control-room--has-major", majorModules.length > 0);
+        moduleGrid.classList.toggle("control-room--legacy-major-only", activeModules.length === 1 && primaryLayoutSize === "legacy-major");
+        moduleGrid.dataset.layoutSize = majorModules.length > 0 ? "has-major" : "minor-only";
+        moduleGrid.dataset.minorCount = String(minorModules.length);
+        moduleGrid.dataset.majorCount = String(majorModules.length);
+    }
+
+    if (moduleSlot) {
+        moduleSlot.classList.toggle("minor", primaryLayoutSize === "minor");
+        moduleSlot.classList.toggle("major", primaryLayoutSize === "major");
+        moduleSlot.classList.toggle("legacy-major", primaryLayoutSize === "legacy-major");
+        moduleSlot.dataset.layoutSize = primaryLayoutSize;
+    }
 }
 
 async function loadModuleCatalog() {
@@ -3399,6 +3517,9 @@ function showControlScene(options = {}) {
 
             controlRoomModule = null;
             syncControlRoomBackground(null);
+            const moduleGrid = document.getElementById("controlModuleGrid");
+            const moduleSlot = document.querySelector("[data-module-slot='primary']");
+            clearControlRoomLayoutClasses(moduleGrid, moduleSlot);
             setFrameStatus("controlFrameStatus", "No modules loaded. Choose a module from Control Room setup.");
             if (!options.keepDevToolsOpen) {
                 closeGlobalDevTools();
@@ -3416,13 +3537,11 @@ function showControlScene(options = {}) {
     }
     setDesktopAdminStorage();
     const controlFrame = document.getElementById("controlFrame");
+    const moduleGrid = document.getElementById("controlModuleGrid");
     const moduleSlot = document.querySelector("[data-module-slot='primary']");
     controlFrame.dataset.zbroadcastEmpty = "false";
     controlRoomModule = moduleForControlRoom;
-    if (moduleSlot) {
-        moduleSlot.classList.toggle("minor", getModuleSizeClass(moduleForControlRoom) === "minor");
-        moduleSlot.classList.toggle("major", getModuleSizeClass(moduleForControlRoom) !== "minor");
-    }
+    applyControlRoomLayoutClasses(moduleGrid, moduleSlot, [moduleForControlRoom]);
     syncControlRoomBackground(moduleForControlRoom);
     const controlUrl = getActiveControlUrl(moduleForControlRoom);
     const didChangeUrl = controlFrame.src !== controlUrl;
