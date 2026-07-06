@@ -2,6 +2,10 @@
     "use strict";
 
 const ROCKET_LEAGUE_PLAYER_NAME_MAX_LENGTH = 24;
+const ROCKET_LEAGUE_SAVED_TEAM_COLUMN_COUNT = 3;
+const ROCKET_LEAGUE_SAVED_TEAM_MIN_ROWS_PER_COLUMN = 6;
+const ROCKET_LEAGUE_SAVED_TEAM_BUTTON_HEIGHT = 32;
+const ROCKET_LEAGUE_SAVED_TEAM_BUTTON_GAP = 6;
 const STYLE_URL = "/modules/rocket-league/native-panel.css";
 
 function ensureRocketLeagueNativeStyles() {
@@ -47,6 +51,7 @@ function showRocketLeagueModal(config) {
 }
 
 function closeRocketLeagueModal() {
+    closeRocketLeagueSavedTeamsPanel();
     if (typeof panelOptions.closeModal === "function") {
         panelOptions.closeModal();
     }
@@ -62,6 +67,10 @@ let rocketLeagueNativePanel = null;
 let rocketLeagueNativeState = null;
 let unsubscribeRocketLeagueNativePanel = null;
 let panelOptions = {};
+let rocketLeagueSavedTeamsPanel = null;
+let rocketLeagueSavedTeamsResizeHandler = null;
+let rocketLeagueSavedTeamsSelection = [];
+let rocketLeagueSavedTeamsPage = 0;
 
 function getRocketLeagueStateApi() {
     return panelOptions.stateApi || window.ZBroadcastRocketLeague || null;
@@ -765,6 +774,103 @@ function swapRocketLeagueTeamsInState(state) {
     return nextState;
 }
 
+function normalizeRocketLeagueSavedTeamName(name) {
+    return String(name || "").trim().toLowerCase();
+}
+
+function getRocketLeagueDefaultTeamSlot(side) {
+    const isBlue = side === "blue";
+
+    return {
+        id: side,
+        side,
+        name: "",
+        score: 0,
+        seriesScore: 0,
+        logoPath: "",
+        accentColor: isBlue ? "#2f80ff" : "#ff8a24",
+        players: [1, 2, 3].map((slot) => ({
+            id: `${side}-player-${slot}`,
+            name: ""
+        })),
+        subs: [1, 2].map((slot) => ({
+            id: `${side}-sub-${slot}`,
+            name: ""
+        }))
+    };
+}
+
+function createRocketLeagueSavedTeamFromTeam(team) {
+    const name = String(team && team.name || "").trim();
+
+    if (!name) {
+        return null;
+    }
+
+    return {
+        id: `saved-team-${normalizeRocketLeagueSavedTeamName(name).replace(/[^a-z0-9]+/g, "-") || Date.now()}`,
+        name,
+        logoPath: String(team.logoPath || "").trim(),
+        accentColor: String(team.accentColor || "#2f80ff").trim(),
+        players: Array.isArray(team.players)
+            ? team.players.slice(0, 3).map((player, index) => ({
+                id: `saved-player-${index + 1}`,
+                name: String(player && player.name || "").trim()
+            }))
+            : [],
+        subs: Array.isArray(team.subs)
+            ? team.subs.slice(0, 2).map((player, index) => ({
+                id: `saved-sub-${index + 1}`,
+                name: String(player && player.name || "").trim()
+            }))
+            : [],
+        createdAt: Date.now(),
+        updatedAt: Date.now()
+    };
+}
+
+function mergeRocketLeagueSavedTeams(existingTeams, teamsToSave) {
+    const savedTeams = Array.isArray(existingTeams) ? existingTeams.slice() : [];
+    const existingNames = new Set(savedTeams.map((team) => normalizeRocketLeagueSavedTeamName(team && team.name)).filter(Boolean));
+
+    teamsToSave.forEach((team) => {
+        const savedTeam = createRocketLeagueSavedTeamFromTeam(team);
+        const normalizedName = normalizeRocketLeagueSavedTeamName(savedTeam && savedTeam.name);
+
+        if (!savedTeam || !normalizedName || existingNames.has(normalizedName)) {
+            return;
+        }
+
+        existingNames.add(normalizedName);
+        savedTeams.push(savedTeam);
+    });
+
+    return savedTeams.sort((first, second) => String(first.name || "").localeCompare(String(second.name || "")));
+}
+
+function applyRocketLeagueSavedTeamToSlot(savedTeam, side, currentTeam) {
+    const slotTeam = currentTeam || getRocketLeagueDefaultTeamSlot(side);
+
+    return {
+        ...slotTeam,
+        id: side,
+        side,
+        name: savedTeam.name || "",
+        logoPath: savedTeam.logoPath || "",
+        accentColor: savedTeam.accentColor || (side === "blue" ? "#2f80ff" : "#ff8a24"),
+        players: [1, 2, 3].map((slot, index) => ({
+            ...(slotTeam.players && slotTeam.players[index] ? slotTeam.players[index] : {}),
+            id: `${side}-player-${slot}`,
+            name: savedTeam.players && savedTeam.players[index] ? savedTeam.players[index].name || "" : ""
+        })),
+        subs: [1, 2].map((slot, index) => ({
+            ...(slotTeam.subs && slotTeam.subs[index] ? slotTeam.subs[index] : {}),
+            id: `${side}-sub-${slot}`,
+            name: savedTeam.subs && savedTeam.subs[index] ? savedTeam.subs[index].name || "" : ""
+        }))
+    };
+}
+
 function collectRocketLeagueMatchState(baseState) {
     const nextState = cloneRocketLeagueModalState(baseState);
     nextState.match = nextState.match || {};
@@ -805,6 +911,287 @@ function collectRocketLeagueTeamsState(baseState) {
     });
 
     return nextState;
+}
+
+function clearRocketLeagueTeamsState(baseState) {
+    const nextState = cloneRocketLeagueModalState(baseState);
+    nextState.teams = nextState.teams || {};
+    nextState.teams.blue = getRocketLeagueDefaultTeamSlot("blue");
+    nextState.teams.orange = getRocketLeagueDefaultTeamSlot("orange");
+    return nextState;
+}
+
+function saveRocketLeagueTeamsToLibrary(baseState) {
+    const stateApi = getRocketLeagueStateApi();
+    const currentState = stateApi ? stateApi.loadState() : baseState;
+    const modalState = collectRocketLeagueTeamsState(baseState);
+    const nextState = cloneRocketLeagueModalState(currentState || baseState);
+
+    nextState.savedTeams = mergeRocketLeagueSavedTeams(
+        nextState.savedTeams,
+        [modalState.teams.blue, modalState.teams.orange]
+    );
+    baseState.savedTeams = nextState.savedTeams;
+    saveRocketLeagueNativeState(nextState);
+    return nextState.savedTeams;
+}
+
+function positionRocketLeagueSavedTeamsPanel() {
+    if (!rocketLeagueSavedTeamsPanel) {
+        return;
+    }
+
+    const teamsModal = document.querySelector(".app-modal.rocket-league-teams-modal");
+
+    if (!teamsModal) {
+        return;
+    }
+
+    const modalRect = teamsModal.getBoundingClientRect();
+    const gap = 12;
+    const availableRight = window.innerWidth - modalRect.right - gap - 16;
+    const availableLeft = modalRect.left - gap - 16;
+    const canFitRight = availableRight >= 360;
+    const availableWidth = canFitRight ? availableRight : availableLeft;
+    const panelWidth = Math.min(420, Math.max(320, availableWidth));
+    const panelTop = Math.max(12, modalRect.top);
+    const panelHeight = Math.min(modalRect.height, window.innerHeight - panelTop - 12);
+
+    rocketLeagueSavedTeamsPanel.style.width = `${panelWidth}px`;
+    rocketLeagueSavedTeamsPanel.style.top = `${panelTop}px`;
+    rocketLeagueSavedTeamsPanel.style.left = canFitRight
+        ? `${modalRect.right + gap}px`
+        : `${Math.max(12, modalRect.left - gap - panelWidth)}px`;
+    rocketLeagueSavedTeamsPanel.style.height = `${panelHeight}px`;
+}
+
+function closeRocketLeagueSavedTeamsPanel() {
+    if (rocketLeagueSavedTeamsResizeHandler) {
+        window.removeEventListener("resize", rocketLeagueSavedTeamsResizeHandler);
+        rocketLeagueSavedTeamsResizeHandler = null;
+    }
+
+    if (rocketLeagueSavedTeamsPanel) {
+        rocketLeagueSavedTeamsPanel.remove();
+        rocketLeagueSavedTeamsPanel = null;
+    }
+
+    rocketLeagueSavedTeamsSelection = [];
+    rocketLeagueSavedTeamsPage = 0;
+}
+
+function getRocketLeagueSavedTeamRowsPerColumn() {
+    const teamsModal = document.querySelector(".app-modal.rocket-league-teams-modal");
+
+    if (!teamsModal) {
+        return ROCKET_LEAGUE_SAVED_TEAM_MIN_ROWS_PER_COLUMN;
+    }
+
+    const modalRect = teamsModal.getBoundingClientRect();
+    const estimatedPanelChrome = 10 + 10 + 8 + 26 + 8 + 32;
+    const availableListHeight = Math.max(0, modalRect.height - estimatedPanelChrome);
+    const rowPitch = ROCKET_LEAGUE_SAVED_TEAM_BUTTON_HEIGHT + ROCKET_LEAGUE_SAVED_TEAM_BUTTON_GAP;
+
+    return Math.max(
+        ROCKET_LEAGUE_SAVED_TEAM_MIN_ROWS_PER_COLUMN,
+        Math.floor((availableListHeight + ROCKET_LEAGUE_SAVED_TEAM_BUTTON_GAP) / rowPitch)
+    );
+}
+
+function renderRocketLeagueSavedTeamsPanel(baseState, preservedSelectedNames = rocketLeagueSavedTeamsSelection, pageIndex = rocketLeagueSavedTeamsPage) {
+    closeRocketLeagueSavedTeamsPanel();
+    const savedTeams = Array.isArray(baseState.savedTeams) ? baseState.savedTeams.slice() : [];
+
+    const sortedTeams = savedTeams
+        .filter((team) => team && team.name)
+        .sort((first, second) => String(first.name || "").localeCompare(String(second.name || "")));
+
+    const panel = document.createElement("aside");
+    panel.className = "rocket-league-saved-teams-panel";
+    panel.setAttribute("aria-label", "Saved Rocket League teams");
+    rocketLeagueSavedTeamsPanel = panel;
+    rocketLeagueSavedTeamsSelection = preservedSelectedNames.slice(0, 2);
+
+    function deleteSelectedTeams(selectedNames) {
+        const stateApi = getRocketLeagueStateApi();
+        const currentState = stateApi ? stateApi.loadState() : baseState;
+        const selectedSet = new Set(selectedNames.map(normalizeRocketLeagueSavedTeamName));
+        const nextState = cloneRocketLeagueModalState(currentState || baseState);
+
+        nextState.savedTeams = (Array.isArray(nextState.savedTeams) ? nextState.savedTeams : [])
+            .filter((team) => !selectedSet.has(normalizeRocketLeagueSavedTeamName(team && team.name)));
+        baseState.savedTeams = nextState.savedTeams;
+        saveRocketLeagueNativeState(nextState);
+        renderRocketLeagueSavedTeamsPanel(baseState);
+    }
+
+    function showDeleteConfirmation(selectedNames) {
+        const existingConfirm = panel.querySelector("[data-rocket-league-delete-confirm]");
+
+        if (existingConfirm) {
+            existingConfirm.remove();
+        }
+
+        const confirmation = document.createElement("div");
+        confirmation.className = "rocket-league-saved-team-confirm";
+        confirmation.dataset.rocketLeagueDeleteConfirm = "true";
+        confirmation.innerHTML = `
+            <div>${selectedNames.length > 1 ? "Delete selected saved teams?" : "Delete selected saved team?"}</div>
+            <div class="rocket-league-saved-team-confirm-actions">
+                <button type="button" class="action-button" data-rocket-league-delete-cancel>Cancel</button>
+                <button type="button" class="action-button danger" data-rocket-league-delete-confirm-button>Delete</button>
+            </div>
+        `;
+        panel.appendChild(confirmation);
+        confirmation.querySelector("[data-rocket-league-delete-cancel]").addEventListener("click", () => confirmation.remove());
+        confirmation.querySelector("[data-rocket-league-delete-confirm-button]").addEventListener("click", () => {
+            confirmation.remove();
+            deleteSelectedTeams(selectedNames);
+        });
+    }
+
+    if (!sortedTeams.length) {
+        panel.innerHTML = `
+            <div class="rocket-league-saved-teams-empty">No saved teams yet.</div>
+            <div class="rocket-league-saved-teams-pager" aria-hidden="true"></div>
+            <div class="rocket-league-saved-teams-footer">
+                <button type="button" class="action-button rocket-league-saved-teams-footer-button" data-rocket-league-load-cancel>Close</button>
+            </div>
+        `;
+        document.body.appendChild(panel);
+        panel.querySelector("[data-rocket-league-load-cancel]").addEventListener("click", closeRocketLeagueSavedTeamsPanel);
+        positionRocketLeagueSavedTeamsPanel();
+        return;
+    }
+
+    const rowsPerColumn = getRocketLeagueSavedTeamRowsPerColumn();
+    const pageCapacity = rowsPerColumn * ROCKET_LEAGUE_SAVED_TEAM_COLUMN_COUNT;
+    const pageCount = Math.max(1, Math.ceil(sortedTeams.length / pageCapacity));
+    rocketLeagueSavedTeamsPage = Math.min(Math.max(0, pageIndex), pageCount - 1);
+    const pageTeams = sortedTeams.slice(
+        rocketLeagueSavedTeamsPage * pageCapacity,
+        (rocketLeagueSavedTeamsPage + 1) * pageCapacity
+    );
+    const teamColumns = Array.from({ length: ROCKET_LEAGUE_SAVED_TEAM_COLUMN_COUNT }, (_, columnIndex) => {
+        const columnTeams = pageTeams.slice(columnIndex * rowsPerColumn, (columnIndex + 1) * rowsPerColumn);
+        return `
+            <div class="rocket-league-saved-team-column">
+                ${columnTeams.map((team) => {
+                    const teamIndex = sortedTeams.indexOf(team);
+                    const nameLengthClass = team.name.length <= 4
+                        ? " is-tiny-name"
+                        : (team.name.length <= 6 ? " is-short-name" : (team.name.length >= 20 ? " is-extra-long-name" : (team.name.length >= 14 ? " is-long-name" : " is-medium-name")));
+                    return `
+                        <button type="button" class="rocket-league-saved-team-button${nameLengthClass}" data-rocket-league-saved-team-index="${teamIndex}" data-rocket-league-saved-team-name="${escapeHtml(team.name)}">
+                            <span class="rocket-league-saved-team-logo" aria-hidden="true"></span>
+                            <span class="rocket-league-saved-team-name">${escapeHtml(team.name.toUpperCase())}</span>
+                        </button>
+                    `;
+                }).join("")}
+            </div>
+        `;
+    }).join("");
+
+    panel.innerHTML = `
+        <div class="rocket-league-saved-teams-list">
+            <span class="rocket-league-saved-teams-divider is-first" aria-hidden="true"></span>
+            <span class="rocket-league-saved-teams-divider is-second" aria-hidden="true"></span>
+            ${teamColumns}
+        </div>
+        <div class="rocket-league-saved-teams-pager" aria-label="Saved teams pages">
+            ${rocketLeagueSavedTeamsPage > 0 ? `<button type="button" class="rocket-league-saved-teams-page-button" data-rocket-league-page-prev aria-label="Previous saved teams page">&lt;</button>` : `<span></span>`}
+            ${rocketLeagueSavedTeamsPage < pageCount - 1 ? `<button type="button" class="rocket-league-saved-teams-page-button" data-rocket-league-page-next aria-label="Next saved teams page">&gt;</button>` : `<span></span>`}
+        </div>
+        <div class="rocket-league-saved-teams-footer">
+            <button type="button" class="action-button rocket-league-saved-teams-footer-button" data-rocket-league-load-cancel>Close</button>
+            <button type="button" class="action-button danger rocket-league-saved-teams-footer-button" data-rocket-league-delete-selected disabled>Delete</button>
+            <button type="button" class="action-button primary rocket-league-saved-teams-footer-button" data-rocket-league-load-apply disabled>Load Selected</button>
+        </div>
+    `;
+
+    const availableNames = new Map(sortedTeams.map((team) => [normalizeRocketLeagueSavedTeamName(team.name), team.name]));
+    const selectedNames = preservedSelectedNames
+        .map((name) => availableNames.get(normalizeRocketLeagueSavedTeamName(name)))
+        .filter(Boolean)
+        .slice(0, 2);
+    const applyButton = panel.querySelector("[data-rocket-league-load-apply]");
+    const deleteButton = panel.querySelector("[data-rocket-league-delete-selected]");
+
+    function syncSelectionState() {
+        const isFull = selectedNames.length >= 2;
+
+        panel.querySelectorAll("[data-rocket-league-saved-team-index]").forEach((button) => {
+            const name = sortedTeams[Number(button.dataset.rocketLeagueSavedTeamIndex)].name;
+            const isSelected = selectedNames.includes(name);
+            button.classList.toggle("is-selected", isSelected);
+            button.classList.toggle("is-disabled", isFull && !isSelected);
+            button.disabled = isFull && !isSelected;
+        });
+        rocketLeagueSavedTeamsSelection = selectedNames.slice();
+        applyButton.disabled = selectedNames.length !== 2;
+        deleteButton.disabled = selectedNames.length === 0;
+    }
+
+    panel.querySelectorAll("[data-rocket-league-saved-team-index]").forEach((button) => {
+        const team = sortedTeams[Number(button.dataset.rocketLeagueSavedTeamIndex)];
+
+        const logo = button.querySelector(".rocket-league-saved-team-logo");
+
+        if (team && team.logoPath && logo) {
+            logo.style.backgroundImage = `url("${team.logoPath.replace(/"/g, '\\"')}")`;
+        }
+
+        button.addEventListener("click", () => {
+            const name = team.name;
+            const selectedIndex = selectedNames.indexOf(name);
+
+            if (selectedIndex >= 0) {
+                selectedNames.splice(selectedIndex, 1);
+            } else if (selectedNames.length < 2) {
+                selectedNames.push(name);
+            }
+
+            syncSelectionState();
+        });
+    });
+
+    panel.querySelector("[data-rocket-league-load-cancel]").addEventListener("click", closeRocketLeagueSavedTeamsPanel);
+    const previousPageButton = panel.querySelector("[data-rocket-league-page-prev]");
+    const nextPageButton = panel.querySelector("[data-rocket-league-page-next]");
+
+    if (previousPageButton) {
+        previousPageButton.addEventListener("click", () => renderRocketLeagueSavedTeamsPanel(baseState, selectedNames, rocketLeagueSavedTeamsPage - 1));
+    }
+
+    if (nextPageButton) {
+        nextPageButton.addEventListener("click", () => renderRocketLeagueSavedTeamsPanel(baseState, selectedNames, rocketLeagueSavedTeamsPage + 1));
+    }
+
+    deleteButton.addEventListener("click", () => {
+        if (selectedNames.length) {
+            showDeleteConfirmation(selectedNames.slice());
+        }
+    });
+    applyButton.addEventListener("click", () => {
+        if (selectedNames.length !== 2) {
+            return;
+        }
+
+        const firstTeam = sortedTeams.find((team) => team.name === selectedNames[0]);
+        const secondTeam = sortedTeams.find((team) => team.name === selectedNames[1]);
+
+        baseState.teams = baseState.teams || {};
+        baseState.teams.blue = applyRocketLeagueSavedTeamToSlot(firstTeam, "blue", baseState.teams.blue);
+        baseState.teams.orange = applyRocketLeagueSavedTeamToSlot(secondTeam, "orange", baseState.teams.orange);
+        closeRocketLeagueSavedTeamsPanel();
+        showRocketLeagueTeamsModal(baseState);
+    });
+
+    document.body.appendChild(panel);
+    syncSelectionState();
+    positionRocketLeagueSavedTeamsPanel();
+    rocketLeagueSavedTeamsResizeHandler = () => renderRocketLeagueSavedTeamsPanel(baseState, rocketLeagueSavedTeamsSelection, rocketLeagueSavedTeamsPage);
+    window.addEventListener("resize", rocketLeagueSavedTeamsResizeHandler);
 }
 
 function updateRocketLeagueLogoPreview(side, logoPath) {
@@ -949,16 +1336,26 @@ function showRocketLeagueTeamsModal(state) {
 
     showRocketLeagueModal({
         title: "",
-        modalClass: "rocket-league-setup-modal",
+        modalClass: "rocket-league-setup-modal rocket-league-teams-modal",
         onCancel: closeRocketLeagueModal,
         renderBody: (container) => {
+            closeRocketLeagueSavedTeamsPanel();
             container.innerHTML = `
                 <div class="rocket-league-modal-team-grid">
                     ${renderRocketLeagueTeamModalFields(baseState, "blue")}
                     ${renderRocketLeagueTeamModalFields(baseState, "orange")}
                 </div>
                 <div class="rocket-league-teams-modal-footer">
-                    <button type="button" class="action-button" data-rocket-league-teams-swap>Swap Teams</button>
+                    <div class="rocket-league-teams-management-actions">
+                        <div class="rocket-league-teams-action-stack">
+                            <button type="button" class="action-button" data-rocket-league-teams-clear>Clear</button>
+                            <button type="button" class="action-button" data-rocket-league-teams-swap>Swap</button>
+                        </div>
+                        <div class="rocket-league-teams-action-stack">
+                            <button type="button" class="action-button" data-rocket-league-teams-load>Load</button>
+                            <button type="button" class="action-button" data-rocket-league-teams-save>Save</button>
+                        </div>
+                    </div>
                     <div class="rocket-league-teams-modal-actions">
                         <button type="button" class="action-button danger" data-rocket-league-teams-cancel>Cancel</button>
                         <button type="button" class="action-button primary" data-rocket-league-teams-apply>Apply</button>
@@ -976,6 +1373,22 @@ function showRocketLeagueTeamsModal(state) {
                 baseState.teams = swappedState.teams;
                 sendRocketLeaguePanelState(swappedState);
                 showRocketLeagueTeamsModal(swappedState);
+            });
+            container.querySelector("[data-rocket-league-teams-clear]").addEventListener("click", () => {
+                const clearedState = clearRocketLeagueTeamsState(baseState);
+                baseState.teams = clearedState.teams;
+                showRocketLeagueTeamsModal(baseState);
+            });
+            container.querySelector("[data-rocket-league-teams-save]").addEventListener("click", () => {
+                saveRocketLeagueTeamsToLibrary(baseState);
+                if (rocketLeagueSavedTeamsPanel) {
+                    renderRocketLeagueSavedTeamsPanel(baseState, rocketLeagueSavedTeamsSelection, rocketLeagueSavedTeamsPage);
+                }
+            });
+            container.querySelector("[data-rocket-league-teams-load]").addEventListener("click", () => {
+                const currentState = getRocketLeagueStateApi() ? getRocketLeagueStateApi().loadState() : baseState;
+                baseState.savedTeams = currentState.savedTeams || baseState.savedTeams || [];
+                renderRocketLeagueSavedTeamsPanel(baseState);
             });
             container.querySelector("[data-rocket-league-teams-cancel]").addEventListener("click", closeRocketLeagueModal);
             container.querySelector("[data-rocket-league-teams-apply]").addEventListener("click", () => {
@@ -1035,6 +1448,8 @@ function showRocketLeagueMatchSetupModal(state) {
 }
 
 function unmount() {
+    closeRocketLeagueSavedTeamsPanel();
+
     if (unsubscribeRocketLeagueNativePanel) {
         unsubscribeRocketLeagueNativePanel();
         unsubscribeRocketLeagueNativePanel = null;
