@@ -219,12 +219,7 @@ body {
     text-overflow: ellipsis;
     text-transform: uppercase;
     white-space: nowrap;
-    text-shadow:
-        -1px 0 0 rgba(0, 0, 0, 0.88),
-        1px 0 0 rgba(0, 0, 0, 0.88),
-        0 -1px 0 rgba(0, 0, 0, 0.88),
-        0 1px 0 rgba(0, 0, 0, 0.88),
-        0 3px 11px rgba(0, 0, 0, 0.82);
+    text-shadow: none;
 }
 
 .rocket-league-live-name-text {
@@ -232,6 +227,9 @@ body {
     max-width: 100%;
     min-width: 0;
     overflow: hidden;
+    -webkit-text-stroke: 2px rgba(0, 0, 0, 0.86);
+    paint-order: stroke fill;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.52), 0 0 1px rgba(0, 0, 0, 0.32);
     text-overflow: ellipsis;
     white-space: nowrap;
 }
@@ -366,12 +364,7 @@ body {
     padding: 7px 12px;
     text-overflow: ellipsis;
     white-space: nowrap;
-    text-shadow:
-        -1px 0 0 rgba(0, 0, 0, 0.86),
-        1px 0 0 rgba(0, 0, 0, 0.86),
-        0 -1px 0 rgba(0, 0, 0, 0.86),
-        0 1px 0 rgba(0, 0, 0, 0.86),
-        0 3px 9px rgba(0, 0, 0, 0.76);
+    text-shadow: none;
 }
 
 .rocket-league-live-player-text {
@@ -379,17 +372,24 @@ body {
     max-width: 100%;
     min-width: 0;
     overflow: hidden;
+    -webkit-text-stroke: 1px rgba(0, 0, 0, 0.78);
+    paint-order: stroke fill;
+    text-align: inherit;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.48), 0 0 1px rgba(0, 0, 0, 0.3);
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
 .rocket-league-live-players-blue .rocket-league-live-player {
+    justify-content: flex-start;
+    text-align: left;
     border-left: 4px solid var(--rocket-blue, #2f80ff);
     background:
         linear-gradient(90deg, color-mix(in srgb, var(--rocket-blue, #2f80ff) 28%, rgba(4, 8, 15, 0.78)), rgba(4, 8, 15, 0.64));
 }
 
 .rocket-league-live-players-orange .rocket-league-live-player {
+    justify-content: flex-end;
     border-right: 4px solid var(--rocket-orange, #ff8a24);
     background:
         linear-gradient(90deg, rgba(4, 8, 15, 0.64), color-mix(in srgb, var(--rocket-orange, #ff8a24) 28%, rgba(4, 8, 15, 0.78)));
@@ -632,12 +632,9 @@ body {
     overflow: hidden;
     font-size: var(--rocket-name-size);
     line-height: 0.98;
-    text-shadow:
-        -1px 0 0 rgba(0, 0, 0, 0.9),
-        1px 0 0 rgba(0, 0, 0, 0.9),
-        0 -1px 0 rgba(0, 0, 0, 0.9),
-        0 1px 0 rgba(0, 0, 0, 0.9),
-        0 2px 8px rgba(0, 0, 0, 0.82);
+    -webkit-text-stroke: 2px rgba(0, 0, 0, 0.86);
+    paint-order: stroke fill;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.52), 0 0 1px rgba(0, 0, 0, 0.32);
     text-overflow: ellipsis;
     white-space: nowrap;
 }
