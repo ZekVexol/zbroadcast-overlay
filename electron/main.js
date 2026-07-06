@@ -29,6 +29,12 @@ ipcMain.on("zbroadcast:quit", () => {
     app.quit();
 });
 
+ipcMain.on("zbroadcast:open-console", () => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.openDevTools({ mode: "detach" });
+    }
+});
+
 function getDisplayResolution(display) {
     const scaleFactor = typeof display.scaleFactor === "number" && display.scaleFactor > 0
         ? display.scaleFactor
@@ -323,6 +329,15 @@ async function createWindow() {
     mainWindow.webContents.setWindowOpenHandler(({ url }) => {
         loadAppUrl(url);
         return { action: "deny" };
+    });
+
+    mainWindow.webContents.on("before-input-event", (event, input) => {
+        const key = String(input.key || "").toLowerCase();
+
+        if (input.key === "F12" || ((input.control || input.meta) && input.shift && key === "i")) {
+            event.preventDefault();
+            mainWindow.webContents.openDevTools({ mode: "detach" });
+        }
     });
 
     mainWindow.loadURL("data:text/html;charset=utf-8," + encodeURIComponent(`

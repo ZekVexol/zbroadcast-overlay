@@ -1264,9 +1264,11 @@ body.settings-high-contrast .scene-copy {
 
 .control-background-frame {
     z-index: 0;
-    opacity: 0.12;
+    opacity: 0.24;
     filter: saturate(0.78) contrast(0.92);
     pointer-events: none;
+    background: transparent;
+    background-color: transparent;
 }
 
 .module-grid {
@@ -1359,8 +1361,27 @@ body.settings-high-contrast .scene-copy {
     height: 100%;
 }
 
+.module-slot[data-module-id="rocket-league-proper-preview"] {
+    display: grid;
+    place-items: center;
+    pointer-events: none;
+}
+
 .module-slot .embedded-frame {
     z-index: 0;
+    background: transparent;
+    background-color: transparent;
+}
+
+.module-slot[data-module-id="rocket-league-proper-preview"] .embedded-frame {
+    position: relative;
+    inset: auto;
+    display: block;
+    width: min(var(--rocket-league-proper-frame-width, 998px), calc(100vw - 96px));
+    height: min(var(--rocket-league-proper-frame-height, 430px), calc(100vh - 112px));
+    max-width: 100%;
+    max-height: 100%;
+    pointer-events: auto;
 }
 
 .module-slot.minor .embedded-frame {
@@ -2060,7 +2081,7 @@ body.settings-high-contrast .scene-copy {
     </section>
 
     <section class="app-scene" id="controlAppScene">
-        <iframe class="control-background-frame" id="controlBackgroundFrame" title="Live Overlay Monitor" aria-hidden="true"></iframe>
+        <iframe class="control-background-frame" id="controlBackgroundFrame" title="Live Overlay Monitor" aria-hidden="true" allowtransparency="true"></iframe>
         <div class="top-app-bar">
             <div class="top-left-controls">
                 <button class="home-button" type="button" data-home>⌂ Home</button>
@@ -2136,6 +2157,7 @@ body.settings-high-contrast .scene-copy {
                             <div class="global-devtools-list">
                                 <button class="global-devtools-action" type="button" id="devResetLocalModuleStateButton">Reset Local Module State</button>
                                 <button class="global-devtools-action" type="button" id="devReloadUiButton">Reload UI</button>
+                                <button class="global-devtools-action" type="button" id="devOpenConsoleButton">Open Console</button>
                             </div>
                         </div>
                     </div>
@@ -2164,6 +2186,7 @@ const PREDICTIONS_MODULE_ID = "predictions";
 const EMBEDDED_CONTROL_INSET_PX = 56;
 const FRAME_LOAD_TIMEOUT_MS = 15000;
 const SETTINGS_STORAGE_KEY = "zbroadcast:settings";
+const ROCKET_LEAGUE_PLAYER_NAME_MAX_LENGTH = 24;
 const IDLE_OUTPUT_HTML = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -2224,8 +2247,8 @@ const ROCKET_LEAGUE_PROPER_PREVIEW_MODULE = {
     devOnly: true,
     previewOnly: true,
     controlUrl: "/modules/rocket-league/panel.html",
-    overlayUrl: "",
-    description: "Dev Tools-only preview of the future proper Rocket League module panel."
+    overlayUrl: "/modules/rocket-league/overlay.html",
+    description: "Dev Tools-only preview of the future proper Rocket League module panel and overlay."
 };
 const selectedModules = new Set();
 let selectedPreset = "";
@@ -2332,6 +2355,7 @@ function applyAppSettings() {
     document.body.classList.toggle("settings-reduce-motion", !!appSettings.reduceMotion);
     document.body.classList.toggle("settings-compact-ui", !!appSettings.compactUi);
     document.body.classList.toggle("settings-high-contrast", !!appSettings.highContrast);
+    syncControlRoomBackground(controlRoomModule);
 }
 
 function getDesktopDisplayApi() {
@@ -2837,21 +2861,96 @@ function getActiveControlUrl(moduleConfig = activeModule) {
     return resolveAppUrl(moduleConfig.controlUrl, FALLBACK_CONTROL_URL);
 }
 
-function getActiveOverlayUrl() {
-    if (!controlRoomModule) {
-        return "";
-    }
-
-    return resolveAppUrl(controlRoomModule.overlayUrl, FALLBACK_OVERLAY_URL);
-}
-
-function getControlRoomBackgroundOverlayUrl(moduleConfig = controlRoomModule) {
-    if (!moduleConfig) {
+function getModuleOverlayOutputUrl(moduleConfig) {
+    if (!moduleConfig || typeof moduleConfig.overlayUrl !== "string" || moduleConfig.overlayUrl.trim() === "") {
         return "";
     }
 
     return resolveAppUrl(moduleConfig.overlayUrl, FALLBACK_OVERLAY_URL);
 }
+
+function getCurrentPreviewOverlayOutputUrl(moduleConfig = controlRoomModule) {
+    if (moduleConfig) {
+        return getModuleOverlayOutputUrl(moduleConfig);
+    }
+
+    const overlayFrame = document.getElementById("overlayFrame");
+
+    if (
+        overlayFrame &&
+        overlayFrame.dataset.zbroadcastIdle !== "true" &&
+        typeof overlayFrame.src === "string" &&
+        overlayFrame.src
+    ) {
+        return overlayFrame.src;
+    }
+
+    return "";
+}
+
+function getActiveOverlayUrl() {
+    return getCurrentPreviewOverlayOutputUrl(controlRoomModule);
+}
+
+function getControlRoomBackgroundOverlayUrl(moduleConfig = controlRoomModule) {
+    if (!appSettings.liveOverlayMonitor || !moduleConfig) {
+        return "";
+    }
+
+    return getCurrentPreviewOverlayOutputUrl(moduleConfig);
+}
+
+function getCurrentSceneName() {
+    const sceneSelectors = [
+        ["control-room", "#controlAppScene"],
+        ["preview-overlay", "#overlayAppScene"],
+        ["main-menu", "#mainMenuScene"],
+        ["settings", "#optionsScene"],
+        ["control-room-setup", "#controlRoomScene"]
+    ];
+    const activeScene = sceneSelectors.find(([, selector]) => {
+        const scene = document.querySelector(selector);
+        return scene && scene.classList.contains("active");
+    });
+
+    return activeScene ? activeScene[0] : "";
+}
+
+function getPreviewBackgroundDebugInfo() {
+    const backgroundFrame = document.getElementById("controlBackgroundFrame");
+    const overlayFrame = document.getElementById("overlayFrame");
+    const backgroundStyles = backgroundFrame ? window.getComputedStyle(backgroundFrame) : null;
+
+    return {
+        currentScene: getCurrentSceneName(),
+        previewBackgroundSetting: !!appSettings.liveOverlayMonitor,
+        resolvedPreviewOverlayUrl: getCurrentPreviewOverlayOutputUrl(controlRoomModule),
+        resolvedControlRoomBackgroundUrl: getControlRoomBackgroundOverlayUrl(controlRoomModule),
+        previewOverlayFrame: overlayFrame ? {
+            src: overlayFrame.src,
+            idle: overlayFrame.dataset.zbroadcastIdle === "true",
+            hasParent: !!overlayFrame.parentElement
+        } : null,
+        controlBackgroundFrame: backgroundFrame ? {
+            src: backgroundFrame.src,
+            hidden: backgroundFrame.hidden,
+            display: backgroundStyles.display,
+            visibility: backgroundStyles.visibility,
+            opacity: backgroundStyles.opacity,
+            zIndex: backgroundStyles.zIndex,
+            pointerEvents: backgroundStyles.pointerEvents,
+            hasParent: !!backgroundFrame.parentElement
+        } : null,
+        activeModuleId: activeModule && activeModule.id,
+        activeModuleName: activeModule && (activeModule.shortName || activeModule.displayName || activeModule.id),
+        controlRoomModuleId: controlRoomModule && controlRoomModule.id,
+        controlRoomModuleName: controlRoomModule && (controlRoomModule.shortName || controlRoomModule.displayName || controlRoomModule.id),
+        isRocketLeagueProperPreview: !!(controlRoomModule && controlRoomModule.id === ROCKET_LEAGUE_PROPER_PREVIEW_MODULE_ID),
+        isPredictions: !!(controlRoomModule && controlRoomModule.id === PREDICTIONS_MODULE_ID)
+    };
+}
+
+window.__zbDebugPreviewBackground = getPreviewBackgroundDebugInfo;
 
 function getActiveModuleName(moduleConfig = activeModule) {
     moduleConfig = moduleConfig || getRocketLeagueModule();
@@ -2899,6 +2998,7 @@ function clearControlRoomLayoutClasses(moduleGrid, moduleSlot) {
     if (moduleSlot) {
         moduleSlot.classList.remove("minor", "major", "legacy-major");
         delete moduleSlot.dataset.layoutSize;
+        delete moduleSlot.dataset.moduleId;
     }
 }
 
@@ -2931,6 +3031,9 @@ function applyControlRoomLayoutClasses(moduleGrid, moduleSlot, modules) {
         moduleSlot.classList.toggle("major", primaryLayoutSize === "major");
         moduleSlot.classList.toggle("legacy-major", primaryLayoutSize === "legacy-major");
         moduleSlot.dataset.layoutSize = primaryLayoutSize;
+        if (primaryModule && primaryModule.id) {
+            moduleSlot.dataset.moduleId = primaryModule.id;
+        }
     }
 }
 
@@ -3798,7 +3901,7 @@ function renderRocketLeagueTeamModalFields(state, side) {
     const title = side === "blue" ? "Blue" : "Orange";
     const renderPlayerRow = (fieldName, placeholder, value) => `
         <div class="rocket-league-modal-player-row">
-            <input class="rocket-league-modal-input" type="text" maxlength="40" placeholder="${placeholder}" value="${escapeHtml(value || "")}" data-rocket-league-team="${side}" data-rocket-league-field="${fieldName}">
+            <input class="rocket-league-modal-input" type="text" maxlength="${ROCKET_LEAGUE_PLAYER_NAME_MAX_LENGTH}" placeholder="${placeholder}" value="${escapeHtml(String(value || "").slice(0, ROCKET_LEAGUE_PLAYER_NAME_MAX_LENGTH))}" data-rocket-league-team="${side}" data-rocket-league-field="${fieldName}">
             <button type="button" class="rocket-league-modal-swap-button" aria-label="Arm ${placeholder} swap" data-rocket-league-player-swap="${fieldName}" data-rocket-league-team="${side}">&#x1F500;</button>
         </div>
     `;
@@ -3931,7 +4034,9 @@ function handleRocketLeaguePanelMessage(event) {
         return;
     }
 
-    if (data.type === "open-match-setup") {
+    if (data.type === "panel-size") {
+        syncRocketLeagueProperFrameSize(data.size);
+    } else if (data.type === "open-match-setup") {
         showRocketLeagueMatchSetupModal(data.state || {});
     } else if (data.type === "open-teams") {
         showRocketLeagueTeamsModal(data.state || {});
@@ -4109,13 +4214,37 @@ function syncControlRoomBackground(moduleConfig) {
     const overlayUrl = getControlRoomBackgroundOverlayUrl(moduleConfig);
 
     if (!overlayUrl) {
+        backgroundFrame.hidden = true;
+        backgroundFrame.style.display = "none";
         backgroundFrame.removeAttribute("src");
         return;
     }
 
+    backgroundFrame.hidden = false;
+    backgroundFrame.removeAttribute("hidden");
+    backgroundFrame.style.display = "block";
+    backgroundFrame.style.visibility = "visible";
+
     if (backgroundFrame.src !== overlayUrl) {
         backgroundFrame.src = overlayUrl;
     }
+}
+
+function syncRocketLeagueProperFrameSize(size) {
+    if (!controlRoomModule || controlRoomModule.id !== ROCKET_LEAGUE_PROPER_PREVIEW_MODULE_ID) {
+        return;
+    }
+
+    const moduleSlot = document.querySelector("[data-module-slot='primary']");
+    const width = Math.ceil(Number(size && size.width) || 0);
+    const height = Math.ceil(Number(size && size.height) || 0);
+
+    if (!moduleSlot || width <= 0 || height <= 0) {
+        return;
+    }
+
+    moduleSlot.style.setProperty("--rocket-league-proper-frame-width", `${width}px`);
+    moduleSlot.style.setProperty("--rocket-league-proper-frame-height", `${height}px`);
 }
 
 function showControlScene(options = {}) {
@@ -4174,6 +4303,7 @@ function showControlScene(options = {}) {
 
     hideAllScenes();
     document.getElementById("controlAppScene").classList.add("active");
+    window.requestAnimationFrame(() => syncControlRoomBackground(controlRoomModule));
     updateGlobalDevToolsContext();
     if (moduleForControlRoom.id === ROCKET_LEAGUE_MODULE_ID) {
         window.setTimeout(() => applyEmbeddedFrameInset(controlFrame, EMBEDDED_CONTROL_INSET_PX, "control"), 0);
@@ -4374,6 +4504,7 @@ document.getElementById("controlFrame").addEventListener("error", (event) => {
 });
 document.getElementById("overlayFrame").addEventListener("load", (event) => {
     finishFrameLoad(event.currentTarget, "overlayFrameStatus");
+    syncControlRoomBackground(controlRoomModule);
 });
 document.getElementById("overlayFrame").addEventListener("error", (event) => {
     failFrameLoad(event.currentTarget, "overlayFrameStatus", "Could not load overlay preview. Make sure the local server is running.");
@@ -4414,6 +4545,11 @@ document.querySelectorAll("[data-settings-tab]").forEach((tab) => {
 document.getElementById("resetSettingsButton").addEventListener("click", resetAppSettings);
 document.getElementById("applySettingsButton").addEventListener("click", applyDraftSettings);
 document.getElementById("cancelSettingsButton").addEventListener("click", cancelDraftSettings);
+document.getElementById("devOpenConsoleButton").addEventListener("click", () => {
+    if (window.zbroadcastDesktop && typeof window.zbroadcastDesktop.openConsole === "function") {
+        window.zbroadcastDesktop.openConsole();
+    }
+});
 document.getElementById("appModalBackdrop").addEventListener("click", () => {
     if (currentAppModal && typeof currentAppModal.onCancel === "function") {
         currentAppModal.onCancel();

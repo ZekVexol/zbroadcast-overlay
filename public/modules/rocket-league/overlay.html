@@ -3,20 +3,341 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Rocket League Overlay Shell</title>
+    <title>Rocket League Overlay</title>
     <link rel="stylesheet" href="./styles.css">
 </head>
 <body class="rocket-league-overlay-page">
-    <main class="rocket-league-overlay-shell" aria-labelledby="rocket-league-overlay-shell-title">
-        <section class="rocket-league-overlay-card">
-            <p class="rocket-league-shell-kicker">Overlay placeholder</p>
-            <h1 id="rocket-league-overlay-shell-title">Rocket League Overlay Shell</h1>
-            <p>
-                Future proper Rocket League overlay output will live here.
-                Current live output still uses the preserved legacy overlay.
-            </p>
+    <main class="rocket-league-live-overlay" aria-label="Rocket League proper overlay output">
+        <section class="rocket-league-live-scorebug">
+            <div class="rocket-league-live-match-info" data-live-match-info hidden>
+                <div class="rocket-league-live-match-cell" data-live-match-cell="event"></div>
+                <div class="rocket-league-live-match-cell" data-live-match-cell="series"></div>
+                <div class="rocket-league-live-match-cell" data-live-match-cell="round"></div>
+            </div>
+
+            <div class="rocket-league-live-bar">
+                <div class="rocket-league-live-team rocket-league-live-team-blue">
+                    <div class="rocket-league-live-logo" data-live-logo="blue">BLU</div>
+                    <div class="rocket-league-live-name" data-live-name="blue"><span class="rocket-league-live-name-text" data-live-name-text="blue">BLUE</span></div>
+                </div>
+
+                <div class="rocket-league-live-score" data-live-score="blue">0</div>
+
+                <div class="rocket-league-live-center">
+                    <div class="rocket-league-live-meta" data-live-meta>GAME 1 OF 5</div>
+                    <div class="rocket-league-live-pips" data-live-pips></div>
+                </div>
+
+                <div class="rocket-league-live-score" data-live-score="orange">0</div>
+
+                <div class="rocket-league-live-team rocket-league-live-team-orange">
+                    <div class="rocket-league-live-name" data-live-name="orange"><span class="rocket-league-live-name-text" data-live-name-text="orange">ORANGE</span></div>
+                    <div class="rocket-league-live-logo" data-live-logo="orange">ORG</div>
+                </div>
+            </div>
         </section>
+
+        <aside class="rocket-league-live-players rocket-league-live-players-blue" data-live-players="blue" aria-label="Blue active players"></aside>
+        <aside class="rocket-league-live-players rocket-league-live-players-orange" data-live-players="orange" aria-label="Orange active players"></aside>
     </main>
+
     <script src="./state.js"></script>
+    <script>
+        (function () {
+            "use strict";
+
+            const stateApi = window.ZBroadcastRocketLeague;
+            let pendingFitFrame = 0;
+            let pendingFitTimer = 0;
+            let pendingFontFit = false;
+            const fontReadyPromise = document.fonts && document.fonts.ready
+                ? document.fonts.ready.catch(() => {})
+                : Promise.resolve();
+
+            function getWinCondition(bestOf) {
+                return Math.floor(bestOf / 2) + 1;
+            }
+
+            function getSeriesStatus(state) {
+                const bestOf = Number(state.match.bestOf) || 1;
+                const winCondition = getWinCondition(bestOf);
+                const blueSeries = Number(state.teams.blue.seriesScore) || 0;
+                const orangeSeries = Number(state.teams.orange.seriesScore) || 0;
+                const completedGames = blueSeries + orangeSeries;
+                const winningSide = blueSeries >= winCondition ? "blue" : (orangeSeries >= winCondition ? "orange" : "");
+                const isComplete = Boolean(winningSide) || completedGames >= bestOf;
+
+                return {
+                    bestOf,
+                    blueSeries,
+                    orangeSeries,
+                    winningSide,
+                    isComplete,
+                    currentGame: isComplete ? bestOf : Math.min(bestOf, completedGames + 1)
+                };
+            }
+
+            function getPipState(index, status) {
+                if (index < status.blueSeries) {
+                    return "blue";
+                }
+
+                if (index >= status.bestOf - status.orangeSeries) {
+                    return "orange";
+                }
+
+                return "";
+            }
+
+            function getReadableBorderColor(hexColor) {
+                const normalizedHex = String(hexColor || "").replace("#", "");
+
+                if (!/^[0-9a-fA-F]{6}$/.test(normalizedHex)) {
+                    return "#ffffff";
+                }
+
+                const red = parseInt(normalizedHex.slice(0, 2), 16);
+                const green = parseInt(normalizedHex.slice(2, 4), 16);
+                const blue = parseInt(normalizedHex.slice(4, 6), 16);
+                const luminance = (0.299 * red + 0.587 * green + 0.114 * blue) / 255;
+
+                return luminance > 0.62 ? "#05080d" : "#ffffff";
+            }
+
+            function setText(selector, value) {
+                const element = document.querySelector(selector);
+
+                if (element) {
+                    element.textContent = value;
+                }
+            }
+
+            function applyNameLengthClass(element, name) {
+                element.classList.remove("is-long", "is-extra-long", "is-max-long");
+                element.classList.toggle("is-long", name.length > 12);
+                element.classList.toggle("is-extra-long", name.length > 15);
+                element.classList.toggle("is-max-long", name.length > 17);
+            }
+
+            function fitTextElement(element, textSelector, propertyName, fontSizes) {
+                const textElement = element.querySelector(textSelector);
+
+                if (!textElement) {
+                    return true;
+                }
+
+                element.style.removeProperty(propertyName);
+
+                for (const size of fontSizes) {
+                    element.style.setProperty(propertyName, `${size}px`);
+                    textElement.offsetWidth;
+                    if (textElement.scrollWidth <= textElement.clientWidth + 1) {
+                        return true;
+                    }
+                }
+
+                return textElement.clientWidth > 1;
+            }
+
+            function fitNameText(element) {
+                return fitTextElement(
+                    element,
+                    ".rocket-league-live-name-text",
+                    "--rocket-live-name-size",
+                    [52, 50, 48, 46, 44, 42, 40, 38, 36, 34, 32, 30, 28, 26, 24, 22, 20, 18, 16, 14, 13]
+                );
+            }
+
+            function fitPlayerText(element) {
+                return fitTextElement(
+                    element,
+                    ".rocket-league-live-player-text",
+                    "--rocket-live-player-size",
+                    [25, 24, 23, 22, 21, 20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8]
+                );
+            }
+
+            function fitOverlayText() {
+                let didFitAll = true;
+
+                document.querySelectorAll(".rocket-league-live-name").forEach((element) => {
+                    didFitAll = fitNameText(element) && didFitAll;
+                });
+                document.querySelectorAll(".rocket-league-live-player").forEach((element) => {
+                    didFitAll = fitPlayerText(element) && didFitAll;
+                });
+
+                if (!didFitAll) {
+                    window.clearTimeout(pendingFitTimer);
+                    pendingFitTimer = window.setTimeout(fitOverlayText, 120);
+                }
+            }
+
+            function runDeferredTextFit() {
+                if (pendingFitFrame) {
+                    window.cancelAnimationFrame(pendingFitFrame);
+                }
+                window.clearTimeout(pendingFitTimer);
+
+                pendingFitFrame = window.requestAnimationFrame(() => {
+                    pendingFitFrame = window.requestAnimationFrame(() => {
+                        pendingFitFrame = 0;
+                        fitOverlayText();
+                    });
+                });
+                pendingFitTimer = window.setTimeout(fitOverlayText, 90);
+            }
+
+            function scheduleOverlayTextFit() {
+                runDeferredTextFit();
+
+                if (!pendingFontFit) {
+                    pendingFontFit = true;
+                    fontReadyPromise.then(() => {
+                        pendingFontFit = false;
+                        runDeferredTextFit();
+                    });
+                }
+            }
+
+            function setTeamName(side, name) {
+                const element = document.querySelector(`[data-live-name="${side}"]`);
+                const textElement = document.querySelector(`[data-live-name-text="${side}"]`);
+
+                if (!element || !textElement) {
+                    return;
+                }
+
+                element.classList.remove("is-long", "is-extra-long", "is-max-long");
+                element.style.setProperty("--rocket-live-name-size", "13px");
+                textElement.textContent = name;
+                element.title = name;
+                applyNameLengthClass(element, name);
+            }
+
+            function renderLogo(side, team) {
+                const logo = document.querySelector(`[data-live-logo="${side}"]`);
+
+                if (!logo) {
+                    return;
+                }
+
+                logo.textContent = team.logoPath ? "" : side.slice(0, 3).toUpperCase();
+                logo.style.backgroundImage = team.logoPath ? `url("${team.logoPath}")` : "";
+            }
+
+            function renderPips(state) {
+                const pips = document.querySelector("[data-live-pips]");
+                const status = getSeriesStatus(state);
+
+                if (!pips) {
+                    return;
+                }
+
+                pips.innerHTML = "";
+                for (let index = 0; index < status.bestOf; index += 1) {
+                    const pip = document.createElement("span");
+                    const pipState = getPipState(index, status);
+                    pip.className = `rocket-league-live-pip${pipState ? ` is-${pipState}` : ""}${status.bestOf % 2 === 1 && index === Math.floor(status.bestOf / 2) ? " is-center" : ""}`;
+                    pips.appendChild(pip);
+                }
+            }
+
+            function renderMatchInfo(state) {
+                const wrapper = document.querySelector("[data-live-match-info]");
+                const cells = {
+                    event: state.match.tournamentName || "",
+                    series: state.match.seriesInfo || "",
+                    round: state.match.weekRound || ""
+                };
+
+                if (!wrapper) {
+                    return;
+                }
+
+                Object.entries(cells).forEach(([key, value]) => {
+                    const cell = wrapper.querySelector(`[data-live-match-cell="${key}"]`);
+                    if (cell) {
+                        cell.textContent = value;
+                    }
+                });
+                wrapper.hidden = !cells.event && !cells.series && !cells.round;
+            }
+
+            function renderPlayers(side, team) {
+                const wrapper = document.querySelector(`[data-live-players="${side}"]`);
+
+                if (!wrapper) {
+                    return;
+                }
+
+                const players = Array.isArray(team.players)
+                    ? team.players.slice(0, 3).filter((player) => player && player.name)
+                    : [];
+
+                wrapper.innerHTML = "";
+                players.forEach((player) => {
+                    const item = document.createElement("div");
+                    item.className = "rocket-league-live-player";
+                    item.title = player.name;
+                    item.style.setProperty("--rocket-live-player-size", "8px");
+                    item.innerHTML = `<span class="rocket-league-live-player-text"></span>`;
+                    item.querySelector(".rocket-league-live-player-text").textContent = player.name;
+                    wrapper.appendChild(item);
+                });
+                wrapper.hidden = players.length === 0;
+            }
+
+            function render(state) {
+                const currentState = stateApi.normalizeState(state);
+                const blue = currentState.teams.blue;
+                const orange = currentState.teams.orange;
+                const status = getSeriesStatus(currentState);
+
+                document.documentElement.style.setProperty("--rocket-blue", blue.accentColor || "#2f80ff");
+                document.documentElement.style.setProperty("--rocket-orange", orange.accentColor || "#ff8a24");
+                document.documentElement.style.setProperty("--rocket-blue-pip-border", getReadableBorderColor(blue.accentColor || "#2f80ff"));
+                document.documentElement.style.setProperty("--rocket-orange-pip-border", getReadableBorderColor(orange.accentColor || "#ff8a24"));
+
+                setTeamName("blue", blue.name || "BLUE");
+                setTeamName("orange", orange.name || "ORANGE");
+                setText('[data-live-score="blue"]', blue.score);
+                setText('[data-live-score="orange"]', orange.score);
+                setText("[data-live-meta]", status.isComplete ? "SERIES FINAL" : `GAME ${status.currentGame} OF ${status.bestOf}`);
+                renderLogo("blue", blue);
+                renderLogo("orange", orange);
+                renderPips(currentState);
+                renderMatchInfo(currentState);
+                renderPlayers("blue", blue);
+                renderPlayers("orange", orange);
+                scheduleOverlayTextFit();
+            }
+
+            if (stateApi) {
+                stateApi.subscribe(render);
+            }
+
+            window.addEventListener("resize", scheduleOverlayTextFit);
+            document.addEventListener("visibilitychange", () => {
+                if (!document.hidden) {
+                    scheduleOverlayTextFit();
+                }
+            });
+
+            if ("ResizeObserver" in window) {
+                const resizeObserver = new ResizeObserver(scheduleOverlayTextFit);
+                [
+                    ".rocket-league-live-scorebug",
+                    ".rocket-league-live-bar",
+                    ".rocket-league-live-name",
+                    ".rocket-league-live-players"
+                ].forEach((selector) => {
+                    document.querySelectorAll(selector).forEach((element) => {
+                        resizeObserver.observe(element);
+                    });
+                });
+            }
+        }());
+    </script>
 </body>
 </html>

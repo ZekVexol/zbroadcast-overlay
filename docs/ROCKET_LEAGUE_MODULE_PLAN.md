@@ -44,20 +44,21 @@ The new module should coexist with the legacy flow until the replacement is prov
 Current shell status:
 
 - `public/modules/rocket-league/panel.html` exists as a first local-only Control Room panel foundation.
-- `public/modules/rocket-league/overlay.html` exists as a placeholder future overlay output.
+- `public/modules/rocket-league/overlay.html` exists as the first proper local-only overlay output.
 - `public/modules/rocket-league/state.js` defines the first local-first state schema using `zbroadcast:module:rocket-league`.
 - `public/modules/rocket-league/styles.css` exists for scoped module shell styles.
 - The shell is not wired into the Control Room selector or module catalog launch path yet.
 - Legacy Rocket League remains the live behavior.
 - The panel reads and writes only the local proper-module state namespace; it does not control the legacy overlay.
-- The proper panel can be previewed in the real Control Room module grid through Dev Tools only as `Rocket League Proper Preview`.
+- The proper panel and overlay can be previewed through Dev Tools only as `Rocket League Proper Preview`.
+- The proper overlay is routed through the same Preview Overlay output path used by the Control Room background preview layer while this dev-only module is active.
 
 ## Layer Mapping
 
 Future Rocket League should follow the official app layer model.
 
 - Rocket League panel lives in the Scene / Module Content Layer.
-- Rocket League overlay lives in Preview Overlay output and can be used by the Preview / Atmosphere Background Layer.
+- Rocket League overlay lives in Preview Overlay output. When the Control Room live preview setting is enabled, the Control Room background preview layer should reuse that same Preview Overlay output instead of hardcoding a separate per-module background.
 - Rocket League test/debug tools live in the Dev Tools Layer.
 - Rocket League setup or confirm flows use the Global Modal Layer.
 - Rocket League should not own app-wide navigation.
@@ -168,6 +169,8 @@ Overlay rules:
 - Remains OBS/browser-source friendly.
 
 Compare the new overlay against the old `public/overlay.html` output before switching.
+
+Status: first proper overlay output exists at `public/modules/rocket-league/overlay.html`. It reads the local module state namespace, renders a broadcast-facing scorebug with team names, logos, scores, fixed match-info cells, `GAME X OF Y` or `SERIES FINAL`, larger series pips, and active-player stacks, and remains dev/local-only. The dev-only preview module routes this output into the Preview Overlay scene; when the Control Room live preview setting is enabled, the Control Room background layer uses that same active Preview Overlay output. The legacy `public/overlay.html` output remains the live Rocket League overlay path.
 
 ### Phase E: Migrate Control Room Launch Path
 
