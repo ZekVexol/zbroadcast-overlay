@@ -2261,6 +2261,7 @@ let predictionsHoldTimer = 0;
 let predictionsHoldDelayTimer = 0;
 let predictionsHoldActive = false;
 let currentAppModal = null;
+let appModalBackdropPointerStarted = false;
 let predictionsModalSetupOptions = [];
 let predictionsPendingWinnerId = "";
 const defaultAppSettings = {
@@ -2691,6 +2692,8 @@ function closeGlobalAppModal() {
     const body = document.getElementById("appModalBody");
     const actions = document.getElementById("appModalActions");
 
+    appModalBackdropPointerStarted = false;
+
     if (backdrop) {
         backdrop.classList.remove("visible");
         backdrop.setAttribute("aria-hidden", "true");
@@ -2753,6 +2756,70 @@ function showGlobalAppModal(config) {
 
     backdrop.classList.add("visible");
     backdrop.setAttribute("aria-hidden", "false");
+}
+
+function cancelGlobalAppModalFromBackdrop() {
+    if (currentAppModal && typeof currentAppModal.onCancel === "function") {
+        currentAppModal.onCancel();
+        return;
+    }
+
+    closeGlobalAppModal();
+}
+
+function isTextSelectableField(element) {
+    if (!element) {
+        return false;
+    }
+
+    const tagName = element.tagName ? element.tagName.toLowerCase() : "";
+
+    if (tagName === "textarea") {
+        return !element.readOnly && !element.disabled;
+    }
+
+    if (tagName !== "input" || element.readOnly || element.disabled) {
+        return false;
+    }
+
+    const type = (element.getAttribute("type") || "text").toLowerCase();
+    return type === "text" || type === "number";
+}
+
+function selectTextFieldContents(input) {
+    if (!isTextSelectableField(input)) {
+        return;
+    }
+
+    window.requestAnimationFrame(() => {
+        try {
+            input.select();
+        } catch (error) {
+            if (typeof input.setSelectionRange === "function") {
+                input.setSelectionRange(0, String(input.value || "").length);
+            }
+        }
+    });
+}
+
+function bindSelectOnFirstFocus(root = document) {
+    root.addEventListener("mousedown", (event) => {
+        const input = event.target && event.target.closest ? event.target.closest("input, textarea") : null;
+
+        if (!isTextSelectableField(input) || document.activeElement === input) {
+            return;
+        }
+
+        event.preventDefault();
+        input.focus({ preventScroll: true });
+        selectTextFieldContents(input);
+    }, true);
+
+    root.addEventListener("focusin", (event) => {
+        if (isTextSelectableField(event.target)) {
+            selectTextFieldContents(event.target);
+        }
+    });
 }
 
 function hideSettingsUnsavedModal() {
@@ -4558,17 +4625,24 @@ document.getElementById("devQuitAppButton").addEventListener("click", () => {
     closeGlobalDevTools();
     quitApp();
 });
-document.getElementById("appModalBackdrop").addEventListener("click", () => {
-    if (currentAppModal && typeof currentAppModal.onCancel === "function") {
-        currentAppModal.onCancel();
-        return;
-    }
+document.getElementById("appModalBackdrop").addEventListener("pointerdown", (event) => {
+    appModalBackdropPointerStarted = event.target === event.currentTarget;
+});
+document.getElementById("appModalBackdrop").addEventListener("pointerup", (event) => {
+    const shouldCancel = appModalBackdropPointerStarted && event.target === event.currentTarget;
+    appModalBackdropPointerStarted = false;
 
-    closeGlobalAppModal();
+    if (shouldCancel) {
+        cancelGlobalAppModalFromBackdrop();
+    }
+});
+document.getElementById("appModalBackdrop").addEventListener("pointercancel", () => {
+    appModalBackdropPointerStarted = false;
 });
 document.getElementById("appModal").addEventListener("click", (event) => {
     event.stopPropagation();
 });
+bindSelectOnFirstFocus();
 window.addEventListener("message", handlePredictionsPanelMessage);
 window.addEventListener("message", handleRocketLeaguePanelMessage);
 ["mouseup", "pointerup", "pointercancel", "blur"].forEach((eventName) => {
