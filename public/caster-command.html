@@ -1361,7 +1361,7 @@ body.settings-high-contrast .scene-copy {
     height: 100%;
 }
 
-.module-slot[data-module-id="rocket-league-proper-preview"] {
+.module-slot[data-module-id="rocket-league-scoreboard"] {
     display: grid;
     place-items: center;
     pointer-events: none;
@@ -1373,7 +1373,7 @@ body.settings-high-contrast .scene-copy {
     background-color: transparent;
 }
 
-.module-slot[data-module-id="rocket-league-proper-preview"] .embedded-frame {
+.module-slot[data-module-id="rocket-league-scoreboard"] .embedded-frame {
     position: relative;
     inset: auto;
     display: block;
@@ -1783,15 +1783,6 @@ body.settings-high-contrast .scene-copy {
                         </div>
                     </div>
                 </div>
-
-                <div class="presets-container">
-                    <h3 class="section-label">PRESETS</h3>
-                    <div class="preset-list">
-                        <button class="preset-card" type="button" data-preset="rocketLeagueCast">
-                            <div class="module-title">Rocket League Cast</div>
-                        </button>
-                    </div>
-                </div>
             </div>
 
             <p class="compat-note"><em>Some modules may not be compatible with every setup.</em></p>
@@ -2173,12 +2164,10 @@ body.settings-high-contrast .scene-copy {
 
 <script src="/modules/predictions/state.js"></script>
 <script>
-const FALLBACK_CONTROL_URL = "http://localhost:3000/room/default-room/control";
-const FALLBACK_OVERLAY_URL = "http://localhost:3000/room/default-room/overlay";
+const FALLBACK_CONTROL_URL = "/modules/rocket-league/panel.html";
+const FALLBACK_OVERLAY_URL = "/modules/rocket-league/overlay.html";
 const ROCKET_LEAGUE_MODULE_ID = "rocket-league-scoreboard";
-const ROCKET_LEAGUE_PROPER_PREVIEW_MODULE_ID = "rocket-league-proper-preview";
 const PREDICTIONS_MODULE_ID = "predictions";
-const EMBEDDED_CONTROL_INSET_PX = 56;
 const FRAME_LOAD_TIMEOUT_MS = 15000;
 const SETTINGS_STORAGE_KEY = "zbroadcast:settings";
 const ROCKET_LEAGUE_PLAYER_NAME_MAX_LENGTH = 24;
@@ -2224,29 +2213,19 @@ body {
 </html>`;
 const FALLBACK_ROCKET_LEAGUE_MODULE = {
     id: ROCKET_LEAGUE_MODULE_ID,
+    displayName: "Rocket League",
     shortName: "Rocket League",
-    controlUrl: "/room/default-room/control",
-    overlayUrl: "/room/default-room/overlay",
-    runnable: true
-};
-const ROCKET_LEAGUE_PROPER_PREVIEW_MODULE = {
-    id: ROCKET_LEAGUE_PROPER_PREVIEW_MODULE_ID,
-    displayName: "Rocket League Proper Preview",
-    shortName: "Rocket League Proper Preview",
     category: "esports",
     type: "scoreboard",
     moduleSize: "major",
     layoutSize: "major",
-    status: "dev-preview",
+    status: "active",
     runnable: true,
-    devOnly: true,
-    previewOnly: true,
     controlUrl: "/modules/rocket-league/panel.html",
     overlayUrl: "/modules/rocket-league/overlay.html",
-    description: "Dev Tools-only preview of the future proper Rocket League module panel and overlay."
+    description: "Rocket League Control Room panel and overlay module."
 };
 const selectedModules = new Set();
-let selectedPreset = "";
 let rocketLeagueModuleConfig = null;
 let catalogModules = [FALLBACK_ROCKET_LEAGUE_MODULE];
 let activeModule = null;
@@ -3021,7 +3000,7 @@ function getPreviewBackgroundDebugInfo() {
         activeModuleName: activeModule && (activeModule.shortName || activeModule.displayName || activeModule.id),
         controlRoomModuleId: controlRoomModule && controlRoomModule.id,
         controlRoomModuleName: controlRoomModule && (controlRoomModule.shortName || controlRoomModule.displayName || controlRoomModule.id),
-        isRocketLeagueProperPreview: !!(controlRoomModule && controlRoomModule.id === ROCKET_LEAGUE_PROPER_PREVIEW_MODULE_ID),
+        isRocketLeagueProperPreview: !!(controlRoomModule && controlRoomModule.id === ROCKET_LEAGUE_MODULE_ID),
         isPredictions: !!(controlRoomModule && controlRoomModule.id === PREDICTIONS_MODULE_ID)
     };
 }
@@ -3134,7 +3113,7 @@ async function loadModuleCatalog() {
         rocketLeagueModuleConfig = rocketLeagueModule;
         predictionsModuleConfig = predictionsModule || null;
 
-        if (selectedModules.has("rocketLeagueScoreboard") || selectedPreset === "rocketLeagueCast") {
+        if (selectedModules.has("rocketLeagueScoreboard")) {
             activeModule = getRocketLeagueModule();
             updateStartState();
         }
@@ -3218,30 +3197,8 @@ function setDesktopAdminStorage() {
     }
 }
 
-function applyEmbeddedFrameInset(frame, insetPx, label) {
-    try {
-        const frameDocument = frame.contentDocument || (frame.contentWindow && frame.contentWindow.document);
-
-        if (!frameDocument || !frameDocument.body || insetPx <= 0) {
-            return;
-        }
-
-        if (!frameDocument.body.dataset.zbroadcastDesktopOriginalPaddingTop) {
-            const computedStyle = frameDocument.defaultView.getComputedStyle(frameDocument.body);
-            frameDocument.body.dataset.zbroadcastDesktopOriginalPaddingTop = computedStyle.paddingTop || "0px";
-        }
-
-        frameDocument.documentElement.style.setProperty("--zbroadcast-desktop-frame-inset", `${insetPx}px`);
-        frameDocument.body.style.boxSizing = "border-box";
-        frameDocument.body.style.paddingTop =
-            `calc(${frameDocument.body.dataset.zbroadcastDesktopOriginalPaddingTop} + var(--zbroadcast-desktop-frame-inset))`;
-    } catch (error) {
-        console.warn(`Could not apply desktop iframe inset for ${label}.`, error);
-    }
-}
-
 function hasRocketLeagueModule() {
-    return selectedModules.has("rocketLeagueScoreboard") || selectedPreset === "rocketLeagueCast";
+    return selectedModules.has("rocketLeagueScoreboard");
 }
 
 function getModuleConfigForSelection(moduleId) {
@@ -3260,7 +3217,7 @@ function getSelectedRunnableModule() {
     const selectedModuleIds = [PREDICTIONS_MODULE_ID, "rocketLeagueScoreboard"];
 
     for (const moduleId of selectedModuleIds) {
-        if (selectedModules.has(moduleId) || (moduleId === "rocketLeagueScoreboard" && selectedPreset === "rocketLeagueCast")) {
+        if (selectedModules.has(moduleId)) {
             const moduleConfig = getModuleConfigForSelection(moduleId);
 
             if (moduleConfig && moduleConfig.runnable) {
@@ -3287,10 +3244,6 @@ function getRunnableDevModules() {
 
     if (!runnableModules.some((module) => module.id === ROCKET_LEAGUE_MODULE_ID)) {
         runnableModules.unshift(getRocketLeagueModule());
-    }
-
-    if (!runnableModules.some((module) => module.id === ROCKET_LEAGUE_PROPER_PREVIEW_MODULE_ID)) {
-        runnableModules.push(ROCKET_LEAGUE_PROPER_PREVIEW_MODULE);
     }
 
     return runnableModules;
@@ -4169,8 +4122,6 @@ function toggleDevControlRoomModule(moduleId) {
         } else if (moduleId === PREDICTIONS_MODULE_ID) {
             clearPresetSelection();
             setModuleSelection(PREDICTIONS_MODULE_ID, true);
-        } else if (moduleId === ROCKET_LEAGUE_PROPER_PREVIEW_MODULE_ID) {
-            clearPresetSelection();
         }
     }
 
@@ -4307,7 +4258,7 @@ function syncControlRoomBackground(moduleConfig) {
 }
 
 function syncRocketLeagueProperFrameSize(size) {
-    if (!controlRoomModule || controlRoomModule.id !== ROCKET_LEAGUE_PROPER_PREVIEW_MODULE_ID) {
+    if (!controlRoomModule || controlRoomModule.id !== ROCKET_LEAGUE_MODULE_ID) {
         return;
     }
 
@@ -4381,10 +4332,6 @@ function showControlScene(options = {}) {
     document.getElementById("controlAppScene").classList.add("active");
     window.requestAnimationFrame(() => syncControlRoomBackground(controlRoomModule));
     updateGlobalDevToolsContext();
-    if (moduleForControlRoom.id === ROCKET_LEAGUE_MODULE_ID) {
-        window.setTimeout(() => applyEmbeddedFrameInset(controlFrame, EMBEDDED_CONTROL_INSET_PX, "control"), 0);
-    }
-
     if (!didChangeUrl) {
         finishFrameLoad(controlFrame, "controlFrameStatus");
     }
@@ -4443,7 +4390,6 @@ document.querySelectorAll("[data-home]").forEach((button) => {
 });
 
 function clearPresetSelection() {
-    selectedPreset = "";
     document.querySelectorAll("[data-preset]").forEach((presetButton) => {
         presetButton.classList.remove("selected");
     });
@@ -4482,33 +4428,6 @@ document.querySelectorAll(".module-card[data-module]").forEach((moduleButton) =>
         const moduleId = moduleButton.dataset.module;
         clearPresetSelection();
         setModuleSelection(moduleId, !selectedModules.has(moduleId));
-        updateStartState();
-    });
-});
-
-function applyPresetModules(presetId) {
-    selectedModules.clear();
-    activeModule = null;
-    document.querySelectorAll(".module-card[data-module]").forEach((moduleButton) => {
-        moduleButton.classList.remove("selected");
-    });
-
-    if (presetId === "rocketLeagueCast") {
-        setModuleSelection("rocketLeagueScoreboard", true);
-    }
-}
-
-document.querySelectorAll("[data-preset]").forEach((button) => {
-    button.addEventListener("click", () => {
-        const nextPreset = button.dataset.preset;
-        selectedPreset = selectedPreset === nextPreset ? "" : nextPreset;
-
-        applyPresetModules(selectedPreset);
-
-        document.querySelectorAll("[data-preset]").forEach((presetButton) => {
-            presetButton.classList.toggle("selected", presetButton.dataset.preset === selectedPreset);
-        });
-
         updateStartState();
     });
 });
@@ -4572,9 +4491,6 @@ document.getElementById("controlFrame").addEventListener("load", (event) => {
         return;
     }
 
-    if (controlRoomModule && controlRoomModule.id === ROCKET_LEAGUE_MODULE_ID) {
-        applyEmbeddedFrameInset(event.currentTarget, EMBEDDED_CONTROL_INSET_PX, "control");
-    }
     finishFrameLoad(event.currentTarget, "controlFrameStatus");
 });
 document.getElementById("controlFrame").addEventListener("error", (event) => {

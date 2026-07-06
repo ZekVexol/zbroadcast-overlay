@@ -2,17 +2,17 @@
   "modules": [
     {
       "id": "rocket-league-scoreboard",
-      "displayName": "Rocket League Scoreboard",
+      "displayName": "Rocket League",
       "shortName": "Rocket League",
       "category": "esports",
       "type": "scoreboard",
       "moduleSize": "major",
-      "layoutSize": "legacy-major",
+      "layoutSize": "major",
       "status": "active",
       "runnable": true,
-      "description": "Existing Rocket League scoreboard control module.",
-      "controlUrl": "/room/default-room/control",
-      "overlayUrl": "/room/default-room/overlay",
+      "description": "Rocket League Control Room panel and overlay module.",
+      "controlUrl": "/modules/rocket-league/panel.html",
+      "overlayUrl": "/modules/rocket-league/overlay.html",
       "tags": [
         "Rocket League",
         "Scoreboard",
@@ -23,23 +23,17 @@
         "desktop": true,
         "web": true,
         "obsBrowserSource": true,
-        "remoteRooms": true
+        "remoteRooms": false
       },
-      "preservedBehavior": [
+      "plannedBehavior": [
         "score controls",
         "series controls",
         "team names",
         "rosters and substitutes",
         "logos",
-        "overlay background",
         "history",
         "undo",
-        "overlay delay",
-        "timing display",
-        "queued updates",
-        "instant updates",
-        "OBS browser-source overlay output",
-        "room-based URLs"
+        "OBS browser-source overlay output"
       ]
     },
     {
