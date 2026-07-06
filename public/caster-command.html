@@ -2137,17 +2137,11 @@ body.settings-high-contrast .scene-copy {
                         <button class="global-devtools-branch-label" type="button">Navigation</button>
                         <div class="global-devtools-submenu">
                             <div class="global-devtools-list">
-                                <div class="global-devtools-branch">
-                                    <button class="global-devtools-branch-label" type="button">Scenes</button>
-                                    <div class="global-devtools-submenu">
-                                        <div class="global-devtools-list">
-                                            <button class="global-devtools-action" type="button" data-dev-scene="control-room">Control Room</button>
-                                            <button class="global-devtools-action" type="button" data-dev-scene="main-menu">Main Menu</button>
-                                            <button class="global-devtools-action" type="button" data-dev-scene="preview-overlay">Preview Overlay</button>
-                                            <button class="global-devtools-action" type="button" data-dev-scene="settings">Settings</button>
-                                        </div>
-                                    </div>
-                                </div>
+                                <button class="global-devtools-action" type="button" data-dev-scene="control-room">Control Room</button>
+                                <button class="global-devtools-action" type="button" data-dev-scene="module-select">Module Select</button>
+                                <button class="global-devtools-action" type="button" data-dev-scene="main-menu">Main Menu</button>
+                                <button class="global-devtools-action" type="button" data-dev-scene="preview-overlay">Preview Overlay</button>
+                                <button class="global-devtools-action" type="button" data-dev-scene="settings">Settings</button>
                             </div>
                         </div>
                     </div>
@@ -2158,6 +2152,7 @@ body.settings-high-contrast .scene-copy {
                                 <button class="global-devtools-action" type="button" id="devResetLocalModuleStateButton">Reset Local Module State</button>
                                 <button class="global-devtools-action" type="button" id="devReloadUiButton">Reload UI</button>
                                 <button class="global-devtools-action" type="button" id="devOpenConsoleButton">Open Console</button>
+                                <button class="global-devtools-action" type="button" id="devQuitAppButton">Quit App</button>
                             </div>
                         </div>
                     </div>
@@ -2633,6 +2628,20 @@ function cancelDraftSettings() {
     clearSettingsStatus(1600);
 }
 
+function quitApp() {
+    if (window.zbroadcastDesktop && typeof window.zbroadcastDesktop.quit === "function") {
+        window.zbroadcastDesktop.quit();
+        return true;
+    }
+
+    const quitMessage = document.getElementById("quitMessage");
+    if (quitMessage) {
+        quitMessage.textContent = "Quit only works in the desktop app.";
+    }
+
+    return false;
+}
+
 function resetAppSettings() {
     if (!window.confirm("Reset all settings to defaults?")) {
         return;
@@ -2906,7 +2915,7 @@ function getCurrentSceneName() {
         ["preview-overlay", "#overlayAppScene"],
         ["main-menu", "#mainMenuScene"],
         ["settings", "#optionsScene"],
-        ["control-room-setup", "#controlRoomScene"]
+        ["module-select", "#controlRoomScene"]
     ];
     const activeScene = sceneSelectors.find(([, selector]) => {
         const scene = document.querySelector(selector);
@@ -4156,7 +4165,7 @@ function getCurrentDevScene() {
     }
 
     if (document.getElementById("controlRoomScene").classList.contains("active")) {
-        return "control-room";
+        return "module-select";
     }
 
     return "";
@@ -4448,6 +4457,8 @@ document.querySelectorAll("[data-dev-scene]").forEach((button) => {
 
         if (scene === "control-room") {
             runDevToolsNavigation(() => showControlScene({ allowEmpty: true, useLoadedOnly: true }));
+        } else if (scene === "module-select") {
+            runDevToolsNavigation(() => showSubmenu("controlRoomScene"));
         } else if (scene === "main-menu") {
             runDevToolsNavigation(showMainMenu);
         } else if (scene === "preview-overlay") {
@@ -4513,14 +4524,7 @@ document.getElementById("controlBackgroundFrame").addEventListener("error", () =
     console.warn("Could not load Control Room background overlay preview.");
 });
 
-document.getElementById("quitButton").addEventListener("click", () => {
-    if (window.zbroadcastDesktop && typeof window.zbroadcastDesktop.quit === "function") {
-        window.zbroadcastDesktop.quit();
-        return;
-    }
-
-    document.getElementById("quitMessage").textContent = "Quit only works in the desktop app.";
-});
+document.getElementById("quitButton").addEventListener("click", quitApp);
 
 document.querySelectorAll("[data-setting]").forEach((input) => {
     const eventName = input.type === "range" ? "input" : "change";
@@ -4549,6 +4553,10 @@ document.getElementById("devOpenConsoleButton").addEventListener("click", () => 
     if (window.zbroadcastDesktop && typeof window.zbroadcastDesktop.openConsole === "function") {
         window.zbroadcastDesktop.openConsole();
     }
+});
+document.getElementById("devQuitAppButton").addEventListener("click", () => {
+    closeGlobalDevTools();
+    quitApp();
 });
 document.getElementById("appModalBackdrop").addEventListener("click", () => {
     if (currentAppModal && typeof currentAppModal.onCancel === "function") {
