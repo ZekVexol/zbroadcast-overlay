@@ -42,6 +42,7 @@
             queuedUpdates: []
         },
         history: [],
+        savedTeams: [],
         undo: {
             undoDepth: 0,
             lastActionId: "",
@@ -259,6 +260,34 @@
             : [];
     }
 
+    function normalizeSavedTeams(savedTeams) {
+        const seenNames = new Set();
+        const sourceTeams = Array.isArray(savedTeams) ? savedTeams : [];
+
+        return sourceTeams.reduce((teams, team, index) => {
+            const sourceTeam = team && typeof team === "object" ? team : {};
+            const name = limitText(sourceTeam.name, TEAM_NAME_MAX_LENGTH);
+            const normalizedName = name.toLowerCase();
+
+            if (!name || seenNames.has(normalizedName)) {
+                return teams;
+            }
+
+            seenNames.add(normalizedName);
+            teams.push({
+                id: normalizeText(sourceTeam.id) || `saved-team-${index + 1}`,
+                name,
+                logoPath: normalizeText(sourceTeam.logoPath),
+                accentColor: normalizeText(sourceTeam.accentColor) || "#2f80ff",
+                players: normalizePlayers(sourceTeam.players, `saved-team-${index + 1}`).slice(0, 3),
+                subs: normalizePlayers(sourceTeam.subs, `saved-team-${index + 1}-sub`).slice(0, 2),
+                createdAt: Number.isFinite(Number(sourceTeam.createdAt)) ? Number(sourceTeam.createdAt) : 0,
+                updatedAt: Number.isFinite(Number(sourceTeam.updatedAt)) ? Number(sourceTeam.updatedAt) : 0
+            });
+            return teams;
+        }, []);
+    }
+
     function normalizeScoreSnapshots(snapshots) {
         return Array.isArray(snapshots)
             ? snapshots.slice(-20).map((snapshot) => ({
@@ -289,6 +318,7 @@
             teams,
             overlay: normalizeOverlay(sourceState.overlay),
             history: normalizeHistory(sourceState.history),
+            savedTeams: normalizeSavedTeams(sourceState.savedTeams),
             undo: {
                 undoDepth: clampNumber(sourceState.undo && sourceState.undo.undoDepth, 0, 100, 0),
                 lastActionId: normalizeText(sourceState.undo && sourceState.undo.lastActionId),
