@@ -8,6 +8,7 @@
     const TEAM_SIDES = ["blue", "orange"];
     const BEST_OF_OPTIONS = [1, 2, 3, 5, 7];
     const TEAM_NAME_MAX_LENGTH = 18;
+    const PLAYER_NAME_MAX_LENGTH = 24;
     const defaultPlayerStats = {
         goals: 0,
         assists: 0,
@@ -119,7 +120,7 @@
         const sourcePlayers = Array.isArray(players) ? players : [];
         const normalizedPlayers = sourcePlayers.slice(0, 6).map((player, index) => ({
             id: normalizeText(player && player.id) || `${side}-player-${index + 1}`,
-            name: normalizeText(player && player.name),
+            name: limitText(player && player.name, PLAYER_NAME_MAX_LENGTH),
             role: normalizeText(player && player.role),
             stats: normalizeStats(player && player.stats)
         }));
@@ -419,6 +420,19 @@
             }
         });
     }
+
+    window.addEventListener("storage", (event) => {
+        if (event.key !== STORAGE_KEY || !event.newValue) {
+            return;
+        }
+
+        try {
+            const nextState = normalizeState(JSON.parse(event.newValue));
+            listeners.forEach((listener) => listener(clone(nextState)));
+        } catch (error) {
+            console.warn("Could not sync Rocket League module state.", error);
+        }
+    });
 
     window.ZBroadcastRocketLeague = {
         moduleId: MODULE_ID,

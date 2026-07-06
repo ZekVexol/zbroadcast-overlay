@@ -85,6 +85,7 @@
             const stateApi = window.ZBroadcastRocketLeague;
             const panel = document.querySelector(".rocket-league-panel-card");
             let currentState = stateApi.loadState();
+            let pendingSizeFrame = 0;
 
             function postPanelRequest(type) {
                 window.parent.postMessage({
@@ -92,6 +93,35 @@
                     type,
                     state: stateApi.normalizeState(currentState)
                 }, window.location.origin);
+            }
+
+            function postPanelSize() {
+                if (!panel) {
+                    return;
+                }
+
+                const rect = panel.getBoundingClientRect();
+                window.parent.postMessage({
+                    source: "zbroadcast-rocket-league-panel",
+                    type: "panel-size",
+                    size: {
+                        width: rect.width,
+                        height: rect.height
+                    }
+                }, window.location.origin);
+            }
+
+            function schedulePanelSizePost() {
+                if (pendingSizeFrame) {
+                    window.cancelAnimationFrame(pendingSizeFrame);
+                }
+
+                pendingSizeFrame = window.requestAnimationFrame(() => {
+                    pendingSizeFrame = window.requestAnimationFrame(() => {
+                        pendingSizeFrame = 0;
+                        postPanelSize();
+                    });
+                });
             }
 
             function clampValue(value, min, max) {
@@ -383,6 +413,7 @@
                 renderLogo("orange", orange);
                 renderSeriesPips(currentState);
                 renderEventHistory(currentState);
+                schedulePanelSizePost();
             }
 
             function readScoreState() {
@@ -580,6 +611,12 @@
             stateApi.subscribe((state) => {
                 render(state);
             });
+
+            window.addEventListener("resize", schedulePanelSizePost);
+            if ("ResizeObserver" in window && panel) {
+                const resizeObserver = new ResizeObserver(schedulePanelSizePost);
+                resizeObserver.observe(panel);
+            }
         }());
     </script>
 </body>

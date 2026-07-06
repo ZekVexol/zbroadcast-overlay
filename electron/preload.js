@@ -35,6 +35,7 @@ function getRoomIdFromPath(pathname) {
 contextBridge.exposeInMainWorld("zbroadcastDesktop", {
     getAdminKey: () => getLocalDesktopAdminKey(),
     quit: () => ipcRenderer.send("zbroadcast:quit"),
+    openConsole: () => ipcRenderer.send("zbroadcast:open-console"),
     display: {
         listDisplays: () => ipcRenderer.invoke("zbroadcast:list-displays"),
         getCurrentDisplay: () => ipcRenderer.invoke("zbroadcast:get-current-display"),
