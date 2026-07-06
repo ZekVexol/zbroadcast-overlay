@@ -152,6 +152,48 @@ function getSafeRocketLeagueEventColor(color, fallbackColor) {
     return /^#[0-9a-fA-F]{6}$/.test(normalizedColor) ? normalizedColor : fallbackColor;
 }
 
+function normalizeRocketLeagueIdentityValue(value) {
+    return String(value || "").trim().toLowerCase();
+}
+
+function getRocketLeagueHistoryCurrentSide(entry, state) {
+    const blue = state.teams && state.teams.blue ? state.teams.blue : {};
+    const orange = state.teams && state.teams.orange ? state.teams.orange : {};
+    const entryName = normalizeRocketLeagueIdentityValue(entry.teamName || entry.winningTeamName);
+
+    if (entryName) {
+        if (entryName === normalizeRocketLeagueIdentityValue(blue.name)) {
+            return "blue";
+        }
+
+        if (entryName === normalizeRocketLeagueIdentityValue(orange.name)) {
+            return "orange";
+        }
+    }
+
+    const entryColor = normalizeRocketLeagueIdentityValue(entry.eventColor);
+    if (entryColor) {
+        const blueColor = normalizeRocketLeagueIdentityValue(blue.accentColor);
+        const orangeColor = normalizeRocketLeagueIdentityValue(orange.accentColor);
+
+        if (entryColor === blueColor && entryColor !== orangeColor) {
+            return "blue";
+        }
+
+        if (entryColor === orangeColor && entryColor !== blueColor) {
+            return "orange";
+        }
+    }
+
+    return entry.teamSide || entry.winningSide || "neutral";
+}
+
+function formatRocketLeagueWinnerFirstScore(entry, winningSide, winnerScoreKey, loserScoreKey) {
+    const winnerScore = winningSide === "orange" ? entry[loserScoreKey] : entry[winnerScoreKey];
+    const loserScore = winningSide === "orange" ? entry[winnerScoreKey] : entry[loserScoreKey];
+    return `${Number(winnerScore) || 0}-${Number(loserScore) || 0}`;
+}
+
 function appendRocketLeagueHistoryEvent(state, event) {
     state.history = Array.isArray(state.history) ? state.history : [];
     state.history.push({
@@ -266,8 +308,9 @@ function renderRocketLeagueNativeHistory(root, state) {
     historyElement.innerHTML = history.slice().reverse().map((entry) => {
         if (entry.type === "goal") {
             const goalAccent = getSafeRocketLeagueEventColor(entry.eventColor, "#ffffff");
+            const currentSide = getRocketLeagueHistoryCurrentSide(entry, state);
             return `
-                <div class="rocket-league-history-entry is-goal is-${escapeHtml(entry.teamSide || "neutral")}" style="--rocket-history-accent: ${escapeHtml(goalAccent)}; --rocket-history-contrast: ${escapeHtml(getReadableBorderColor(goalAccent))};">
+                <div class="rocket-league-history-entry is-goal is-${escapeHtml(currentSide)}" style="--rocket-history-accent: ${escapeHtml(goalAccent)}; --rocket-history-contrast: ${escapeHtml(getReadableBorderColor(goalAccent))};">
                     <span>${escapeHtml(`${entry.teamName || entry.teamSide || "Team"} Goal`.toUpperCase())}</span>
                 </div>
             `;
@@ -275,20 +318,22 @@ function renderRocketLeagueNativeHistory(root, state) {
 
         if (entry.type === "gameFinal") {
             const gameAccent = getSafeRocketLeagueEventColor(entry.eventColor, "#ffffff");
+            const gameScore = formatRocketLeagueWinnerFirstScore(entry, entry.winningSide, "blueScore", "orangeScore");
             return `
                 <div class="rocket-league-history-entry is-game-final" style="--rocket-history-accent: ${escapeHtml(gameAccent)}; --rocket-history-contrast: ${escapeHtml(getReadableBorderColor(gameAccent))};">
                     <span>GAME ${entry.gameNumber} FINAL</span>
-                    <strong>${escapeHtml(`${entry.winningTeamName || "Team"} Wins ${entry.blueScore}-${entry.orangeScore}`.toUpperCase())}</strong>
+                    <strong>${escapeHtml(`${entry.winningTeamName || "Team"} Wins ${gameScore}`.toUpperCase())}</strong>
                 </div>
             `;
         }
 
         if (entry.type === "seriesFinal") {
             const seriesAccent = getSafeRocketLeagueEventColor(entry.eventColor, "#ffffff");
+            const seriesScore = formatRocketLeagueWinnerFirstScore(entry, entry.winningSide, "blueSeriesScore", "orangeSeriesScore");
             return `
                 <div class="rocket-league-history-entry is-series-final" style="--rocket-history-accent: ${escapeHtml(seriesAccent)}; --rocket-history-contrast: ${escapeHtml(getReadableBorderColor(seriesAccent))};">
                     <span>SERIES FINAL</span>
-                    <strong>${escapeHtml(`${entry.winningTeamName || "Team"} Wins ${entry.blueSeriesScore}-${entry.orangeSeriesScore}`.toUpperCase())}</strong>
+                    <strong>${escapeHtml(`${entry.winningTeamName || "Team"} Wins ${seriesScore}`.toUpperCase())}</strong>
                 </div>
             `;
         }
