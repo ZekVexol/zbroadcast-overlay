@@ -31,7 +31,8 @@ Expected fields include:
 - `status`
 - `runnable`
 - `layoutSize`
-- `controlUrl` or panel path
+- `controlPanelMode`
+- native panel renderer or temporary `controlUrl` fallback
 - `overlayUrl` if the module has Preview Overlay output
 - tags
 - compatibility notes
@@ -46,6 +47,12 @@ Layout size values:
 
 The catalog is the app shell's first source of truth for module availability and layout behavior.
 
+Control panel mode values:
+
+- `native-panel`: Control Room controls render as native app DOM/components inside `caster-command.html`.
+- `iframe-panel`: temporary compatibility path for older or not-yet-ported panel pages.
+- `fullscreen-scene`: only for modules that intentionally own the whole app scene.
+
 ## 2. Control Room Panel
 
 A proper module should provide a compact live operator panel when it needs operator controls.
@@ -53,10 +60,12 @@ A proper module should provide a compact live operator panel when it needs opera
 Rules:
 
 - Lives in the Scene / Module Content Layer.
+- Should be native app DOM/components for normal Control Room operation.
 - Fits inside the module's assigned layout size.
 - Does not own global navigation.
 - Does not own the global modal layer.
 - Does not create full-screen opaque wrappers.
+- Does not use an iframe unless there is a clear temporary compatibility reason.
 - Keeps critical controls accessible.
 - Scrolls internally when content grows.
 - Keeps testing/debug controls out of the live panel.
@@ -77,6 +86,8 @@ Rules:
 - Stays OBS/browser-source friendly when used as stream output.
 
 Preview output is what the audience sees. The Control Room panel is what the operator uses.
+
+Overlay outputs may remain separate HTML pages/iframes because OBS, Preview Overlay, and the Control Room background preview need browser-style output surfaces. This exception does not apply to normal Control Room operator panels.
 
 ## 4. Shared State
 
@@ -208,21 +219,15 @@ Predictions proves the intended pattern: clean live panel, stream-facing overlay
 
 ### Rocket League
 
-Rocket League is currently `legacy-major`.
+Rocket League is the first major module moving toward `controlPanelMode: "native-panel"`.
 
-It is still useful and must remain preserved, but it is not yet a proper module under this contract because it still uses:
+Its current direction:
 
-- the old embedded `public/control.html` flow
-- the old `public/overlay.html` output
-- existing server/socket state
-
-Future Rocket League cleanup should gradually move it toward:
-
-- catalog metadata
-- first-class Control Room panel
-- module overlay output
-- module Dev Tools hooks
-- module settings hooks
+- catalog metadata points at Rocket League as a major module
+- Control Room controls should move into native app DOM/components
+- proper overlay output remains a separate overlay page
+- iframe panel loading remains only as a temporary fallback while native controls are ported
+- legacy files remain preserved until the new flow is proven
 
 Rocket League cleanup should not block new modules that already follow this contract.
 

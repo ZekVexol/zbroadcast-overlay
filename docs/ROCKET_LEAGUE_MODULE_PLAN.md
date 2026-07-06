@@ -2,23 +2,24 @@
 
 ## Goal
 
-Plan how Rocket League moves from a preserved `legacy-major` embedded controller into a proper ZBroadcast module.
+Plan how Rocket League moves from a preserved embedded controller into a proper ZBroadcast module with a native Control Room panel.
 
 This is a planning document only. Do not modify the current Rocket League controller, overlay, or server as part of this plan.
 
 ## Current Status
 
-Rocket League is currently a preserved legacy-major module.
+Rocket League is transitioning from a preserved legacy-major flow into the active proper Rocket League module.
 
 Current shape:
 
 - Controller lives in `public/control.html`.
 - Overlay output lives in `public/overlay.html`.
 - Server-side state, room handling, assets, admin behavior, and Socket.IO events live in `server.js`.
-- The desktop app embeds the old controller through the Control Room flow.
-- The module catalog marks Rocket League as runnable and `legacy-major`.
+- The desktop app previously embedded the old controller through the Control Room flow.
+- The module catalog now points Rocket League at the proper module and marks it as `layoutSize: major`.
+- The catalog also marks Rocket League as the first `controlPanelMode: native-panel` target.
 
-This flow is useful and should be preserved. It is not yet a proper module under the official ZBroadcast module contract because the controller, overlay, and state are still part of the older web-app prototype.
+The legacy files remain useful and should be preserved for reference/fallback, but normal app module navigation should move toward the proper Rocket League module.
 
 ## Target Proper Module Structure
 
@@ -26,7 +27,7 @@ Future Rocket League should eventually move toward:
 
 ```text
 public/modules/rocket-league/
-  panel.html
+  panel.html          temporary iframe fallback while native controls are ported
   overlay.html
   state.js
   styles.css
@@ -47,17 +48,16 @@ Current shell status:
 - `public/modules/rocket-league/overlay.html` exists as the first proper local-only overlay output.
 - `public/modules/rocket-league/state.js` defines the first local-first state schema using `zbroadcast:module:rocket-league`.
 - `public/modules/rocket-league/styles.css` exists for scoped module shell styles.
-- The shell is not wired into the Control Room selector or module catalog launch path yet.
-- Legacy Rocket League remains the live behavior.
+- The proper Rocket League module is now the catalog/module-selection target.
+- The existing `panel.html` page remains the temporary iframe fallback while native Control Room controls are ported into `caster-command.html`.
 - The panel reads and writes only the local proper-module state namespace; it does not control the legacy overlay.
-- The proper panel and overlay can be previewed through Dev Tools only as `Rocket League Proper Preview`.
-- The proper overlay is routed through the same Preview Overlay output path used by the Control Room background preview layer while this dev-only module is active.
+- The proper overlay is routed through the same Preview Overlay output path used by the Control Room background preview layer.
 
 ## Layer Mapping
 
 Future Rocket League should follow the official app layer model.
 
-- Rocket League panel lives in the Scene / Module Content Layer.
+- Rocket League panel should live in the Scene / Module Content Layer as native app DOM/components.
 - Rocket League overlay lives in Preview Overlay output. When the Control Room live preview setting is enabled, the Control Room background preview layer should reuse that same Preview Overlay output instead of hardcoding a separate per-module background.
 - Rocket League test/debug tools live in the Dev Tools Layer.
 - Rocket League setup or confirm flows use the Global Modal Layer.
@@ -67,7 +67,7 @@ Future Rocket League should follow the official app layer model.
 
 ## Module Size
 
-Rocket League should become a future `major` module.
+Rocket League is a `major` module.
 
 Meaning:
 
@@ -75,13 +75,14 @@ Meaning:
 - It should receive the primary Control Room space.
 - Minor modules like Predictions can eventually sit beside or around it.
 
-Current status remains:
+Current catalog direction:
 
 ```text
-layoutSize: legacy-major
+layoutSize: major
+controlPanelMode: native-panel
 ```
 
-Keep the current legacy-major behavior until the rebuilt panel and overlay are ready.
+Keep iframe panel loading only as a temporary fallback until native panel controls are ported.
 
 ## Preserve-First Rebuild Strategy
 
@@ -123,19 +124,20 @@ Early prototype rules:
 - Do not refactor `server.js`.
 - Do not edit `public/control.html`.
 - Do not edit `public/overlay.html`.
-- Do not change the current Rocket League launch path yet.
+- Keep the legacy files untouched while the proper module launch path is refined.
 
 Goal: build a safe sandbox for the proper module.
 
-Status: initial shell files exist and the first local-first state schema is defined. Next, build read-only panel/overlay rendering against that schema before adding live controls.
+Status: initial shell files exist and the first local-first state schema is defined. The proper module is now the catalog target, with iframe panel loading kept as a temporary fallback until native controls are ported.
 
 ### Phase C: Build New Control Room Panel
 
-Build a new Rocket League Control Room panel as a proper module panel.
+Build a new Rocket League Control Room panel as a native app panel.
 
 Panel rules:
 
 - Lives in the Scene / Module Content Layer.
+- Renders as native DOM/components inside `caster-command.html`, not as a normal iframe-rendered Control Room page.
 - Uses `layoutSize: major` once it becomes the active module.
 - Keeps core controls accessible.
 - Does not include testing/debug controls.
@@ -144,13 +146,11 @@ Panel rules:
 
 Keep the old controller available during this phase.
 
-Status: first panel foundation exists and has a cleaner major-module layout. The main panel now focuses on local score/series controls and a scoreboard-style local preview. Match setup moved into a Global Modal Layer flow using Event Name, Division / Season / Etc, Week / Round, and Series Length. Team setup moved into a Teams modal that owns team names, rosters, logos, team colors, and same-team roster slot swaps, with an 18-character team-name safety limit for the current preview layout. The current game number is derived from series score instead of being entered manually. The panel also has local-only Swap Teams, event history, and undo/reset behavior inspired by the legacy controller. It is not wired into normal Control Room selection and does not affect the legacy live Rocket League flow.
-
-Dev preview status: the panel can be toggled from Control Room > Dev Tools > Modules > Rocket League Proper Preview. This uses the real Control Room module content layer, not a hidden workbench or test scene. It is not available in the normal Control Room module selector and does not replace the legacy Rocket League launch path.
+Status: first panel foundation exists as `public/modules/rocket-league/panel.html` and has a cleaner major-module layout. It is now the normal Rocket League module target, but it remains an iframe fallback while the native panel is ported into the app shell. The main panel focuses on local score/series controls and a scoreboard-style local preview. Match setup uses the Global Modal Layer with Event Name, Division / Season / Etc, Week / Round, and Series Length. Team setup uses a Teams modal for team names, rosters, logos, team colors, and same-team roster slot swaps. The current game number is derived from series score instead of being entered manually. The panel also has local-only Swap Teams, event history, and undo/reset behavior inspired by the legacy controller.
 
 Next panel steps:
 
-- render the same local state in the proper module overlay shell.
+- port the current Rocket League panel controls from iframe fallback into native app DOM/components.
 - add Dev Tools hooks for test state once the read-only panel/overlay loop is stable.
 - add real operator controls only after the state schema and overlay rendering are proven.
 - move instant/queued mode and overlay delay into module settings or a compact panel dropdown.
@@ -170,16 +170,17 @@ Overlay rules:
 
 Compare the new overlay against the old `public/overlay.html` output before switching.
 
-Status: first proper overlay output exists at `public/modules/rocket-league/overlay.html`. It reads the local module state namespace, renders a broadcast-facing scorebug with team names, logos, scores, fixed match-info cells, `GAME X OF Y` or `SERIES FINAL`, larger series pips, and active-player stacks, and remains dev/local-only. The dev-only preview module routes this output into the Preview Overlay scene; when the Control Room live preview setting is enabled, the Control Room background layer uses that same active Preview Overlay output. The legacy `public/overlay.html` output remains the live Rocket League overlay path.
+Status: first proper overlay output exists at `public/modules/rocket-league/overlay.html`. It reads the local module state namespace, renders a broadcast-facing scorebug with team names, logos, scores, fixed match-info cells, `GAME X OF Y` or `SERIES FINAL`, larger series pips, and active-player stacks. The proper Rocket League module routes this output into the Preview Overlay scene; when the Control Room live preview setting is enabled, the Control Room background layer uses that same active Preview Overlay output. The legacy `public/overlay.html` file remains preserved.
 
 ### Phase E: Migrate Control Room Launch Path
 
-Only after the new panel and overlay are proven:
+Current status: partially complete.
 
-- Update module catalog routes to point to the new Rocket League module files.
-- Change Rocket League from `legacy-major` to `major`.
-- Keep a fallback path to the old legacy controller during transition if useful.
-- Smoke test desktop and browser flows.
+- Module catalog routes point to the proper Rocket League module files.
+- Rocket League is now `layoutSize: major`.
+- Rocket League is marked as `controlPanelMode: native-panel`.
+- The current `panel.html` iframe remains the fallback while native controls are ported into `caster-command.html`.
+- Legacy files remain untouched.
 
 ### Phase F: Deprecate Legacy Files Only When Safe
 

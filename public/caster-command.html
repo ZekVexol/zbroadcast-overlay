@@ -1249,7 +1249,8 @@ body.settings-high-contrast .scene-copy {
 }
 
 .control-background-frame,
-.embedded-frame {
+.embedded-frame,
+.native-panel-host {
     position: absolute;
     left: 0;
     right: 0;
@@ -1260,6 +1261,18 @@ body.settings-high-contrast .scene-copy {
     height: 100%;
     border: 0;
     background: #121212;
+}
+
+.native-panel-host {
+    z-index: 0;
+    display: block;
+    overflow: visible;
+    background: transparent;
+    background-color: transparent;
+}
+
+.native-panel-host[hidden] {
+    display: none;
 }
 
 .control-background-frame {
@@ -1373,6 +1386,10 @@ body.settings-high-contrast .scene-copy {
     background-color: transparent;
 }
 
+.module-slot .native-panel-host {
+    z-index: 0;
+}
+
 .module-slot[data-module-id="rocket-league-scoreboard"] .embedded-frame {
     position: relative;
     inset: auto;
@@ -1381,6 +1398,15 @@ body.settings-high-contrast .scene-copy {
     height: min(var(--rocket-league-proper-frame-height, 430px), calc(100vh - 112px));
     max-width: 100%;
     max-height: 100%;
+    pointer-events: auto;
+}
+
+.module-slot[data-module-id="rocket-league-scoreboard"] .native-panel-host {
+    position: relative;
+    inset: auto;
+    width: min(var(--rocket-league-proper-frame-width, 998px), calc(100vw - 96px));
+    min-height: min(var(--rocket-league-proper-frame-height, 430px), calc(100vh - 112px));
+    max-width: 100%;
     pointer-events: auto;
 }
 
@@ -2085,6 +2111,7 @@ body.settings-high-contrast .scene-copy {
         <div class="module-grid" id="controlModuleGrid">
             <div class="module-slot" data-module-slot="primary">
                 <div class="frame-status" id="controlFrameStatus" aria-live="polite"></div>
+                <div class="native-panel-host" id="controlNativePanel" hidden></div>
                 <iframe class="embedded-frame" id="controlFrame" title="Control Room Module" allowtransparency="true"></iframe>
             </div>
         </div>
@@ -2231,6 +2258,7 @@ let catalogModules = [FALLBACK_ROCKET_LEAGUE_MODULE];
 let activeModule = null;
 let controlRoomModule = null;
 let predictionsModuleConfig = null;
+const nativeControlPanelRenderers = new Map();
 const frameLoadTimers = new Map();
 let availableDesktopDisplays = [];
 let settingsStatusTimer = null;
@@ -2916,6 +2944,47 @@ function getActiveControlUrl(moduleConfig = activeModule) {
     return resolveAppUrl(moduleConfig.controlUrl, FALLBACK_CONTROL_URL);
 }
 
+function getControlPanelMode(moduleConfig) {
+    if (!moduleConfig) {
+        return "iframe-panel";
+    }
+
+    return moduleConfig.controlPanelMode || moduleConfig.panelMode || "iframe-panel";
+}
+
+function getControlPanelKind(moduleConfig) {
+    if (getControlPanelMode(moduleConfig) === "native-panel") {
+        return "native-panel";
+    }
+
+    return "iframe-panel";
+}
+
+function clearNativeControlPanel() {
+    const nativePanel = document.getElementById("controlNativePanel");
+
+    if (!nativePanel) {
+        return;
+    }
+
+    nativePanel.replaceChildren();
+    nativePanel.hidden = true;
+}
+
+function mountNativeControlPanel(moduleConfig) {
+    const nativePanel = document.getElementById("controlNativePanel");
+    const renderer = moduleConfig && nativeControlPanelRenderers.get(moduleConfig.id);
+
+    if (!nativePanel || typeof renderer !== "function") {
+        return false;
+    }
+
+    nativePanel.hidden = false;
+    nativePanel.replaceChildren();
+    renderer(nativePanel, moduleConfig);
+    return true;
+}
+
 function getModuleOverlayOutputUrl(moduleConfig) {
     if (!moduleConfig || typeof moduleConfig.overlayUrl !== "string" || moduleConfig.overlayUrl.trim() === "") {
         return "";
@@ -3054,6 +3123,7 @@ function clearControlRoomLayoutClasses(moduleGrid, moduleSlot) {
         moduleSlot.classList.remove("minor", "major", "legacy-major");
         delete moduleSlot.dataset.layoutSize;
         delete moduleSlot.dataset.moduleId;
+        delete moduleSlot.dataset.controlPanelKind;
     }
 }
 
@@ -3239,7 +3309,13 @@ function updateStartState() {
 function getRunnableDevModules() {
     const modules = Array.isArray(catalogModules) ? catalogModules : [];
     const runnableModules = modules.filter((module) => {
-        return module && module.runnable === true && typeof module.controlUrl === "string" && module.controlUrl.trim() !== "";
+        if (!module || module.runnable !== true) {
+            return false;
+        }
+
+        const hasControlUrl = typeof module.controlUrl === "string" && module.controlUrl.trim() !== "";
+        const isNativePanel = getControlPanelKind(module) === "native-panel";
+        return hasControlUrl || isNativePanel;
     });
 
     if (!runnableModules.some((module) => module.id === ROCKET_LEAGUE_MODULE_ID)) {
@@ -4285,8 +4361,10 @@ function showControlScene(options = {}) {
                 frameLoadTimers.delete(controlFrame.id);
                 controlFrame.dataset.zbroadcastEmpty = "true";
                 controlFrame.src = "about:blank";
+                controlFrame.hidden = false;
             }
 
+            clearNativeControlPanel();
             controlRoomModule = null;
             syncControlRoomBackground(null);
             const moduleGrid = document.getElementById("controlModuleGrid");
@@ -4314,7 +4392,27 @@ function showControlScene(options = {}) {
     controlFrame.dataset.zbroadcastEmpty = "false";
     controlRoomModule = moduleForControlRoom;
     applyControlRoomLayoutClasses(moduleGrid, moduleSlot, [moduleForControlRoom]);
+    if (moduleSlot) {
+        moduleSlot.dataset.controlPanelKind = getControlPanelKind(moduleForControlRoom);
+    }
     syncControlRoomBackground(moduleForControlRoom);
+    const shouldUseNativePanel = getControlPanelKind(moduleForControlRoom) === "native-panel";
+
+    if (shouldUseNativePanel && mountNativeControlPanel(moduleForControlRoom)) {
+        window.clearTimeout(frameLoadTimers.get(controlFrame.id));
+        frameLoadTimers.delete(controlFrame.id);
+        controlFrame.hidden = true;
+        controlFrame.src = "about:blank";
+        clearFrameStatus("controlFrameStatus");
+        hideAllScenes();
+        document.getElementById("controlAppScene").classList.add("active");
+        window.requestAnimationFrame(() => syncControlRoomBackground(controlRoomModule));
+        updateGlobalDevToolsContext();
+        return;
+    }
+
+    clearNativeControlPanel();
+    controlFrame.hidden = false;
     const controlUrl = getActiveControlUrl(moduleForControlRoom);
     const didChangeUrl = controlFrame.src !== controlUrl;
 
