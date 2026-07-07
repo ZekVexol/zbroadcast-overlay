@@ -1,5 +1,6 @@
 const express = require("express");
 const http = require("http");
+const crypto = require("crypto");
 const { Server } = require("socket.io");
 const multer = require("multer");
 const fs = require("fs");
@@ -10,22 +11,13 @@ const server = http.createServer(app);
 const io = new Server(server);
 
 const PORT = process.env.PORT || 3000;
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "CHANGE_ME_NOW";
-const IS_DESKTOP_MODE = process.env.ZBROADCAST_DESKTOP === "1";
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || crypto.randomBytes(24).toString("hex");
 
 const publicPath = path.join(__dirname, "public");
 const overlayAssetsRootPath = path.join(publicPath, "overlay-assets");
 
 if (!fs.existsSync(overlayAssetsRootPath)) {
     fs.mkdirSync(overlayAssetsRootPath, { recursive: true });
-}
-
-if (ADMIN_PASSWORD === "CHANGE_ME_NOW") {
-    if (IS_DESKTOP_MODE) {
-        console.log('Local desktop mode: using default local admin key "CHANGE_ME_NOW" for this development session.');
-    } else {
-        console.warn('WARNING: Using default ADMIN_PASSWORD value "CHANGE_ME_NOW". Change this before public deployment.');
-    }
 }
 
 app.use("/overlay-assets", express.static(overlayAssetsRootPath));
@@ -347,28 +339,6 @@ function getValidatedRoomIdFromRequest(req, res) {
 
     return roomId;
 }
-
-app.get("/control.html", (req, res) => {
-    res.redirect("/room/default-room/control");
-});
-
-app.get("/overlay.html", (req, res) => {
-    res.redirect("/room/default-room/overlay");
-});
-
-app.get("/room/:roomId/control", (req, res) => {
-    const roomId = getValidatedRoomIdFromRequest(req, res);
-    if (!roomId) return;
-    getRoom(roomId);
-    res.sendFile(path.join(publicPath, "control.html"));
-});
-
-app.get("/room/:roomId/overlay", (req, res) => {
-    const roomId = getValidatedRoomIdFromRequest(req, res);
-    if (!roomId) return;
-    getRoom(roomId);
-    res.sendFile(path.join(publicPath, "overlay.html"));
-});
 
 app.post("/api/room/:roomId/upload-overlay", (req, res) => {
     const roomId = getValidatedRoomIdFromRequest(req, res);

@@ -9,7 +9,6 @@ const PRELOAD_ENTRY = path.join(__dirname, "preload.js");
 const PROJECT_ROOT = path.join(__dirname, "..");
 const READY_TIMEOUT_MS = 15000;
 const POLL_INTERVAL_MS = 300;
-const LOCAL_DESKTOP_ADMIN_KEY = process.env.ADMIN_PASSWORD || "CHANGE_ME_NOW";
 
 let mainWindow = null;
 let childServerProcess = null;
@@ -230,7 +229,6 @@ function startServer() {
         cwd: PROJECT_ROOT,
         env: {
             ...process.env,
-            ADMIN_PASSWORD: LOCAL_DESKTOP_ADMIN_KEY,
             ZBROADCAST_DESKTOP: "1"
         },
         stdio: "inherit",
@@ -317,10 +315,7 @@ async function createWindow() {
         webPreferences: {
             preload: PRELOAD_ENTRY,
             // Responsiveness test: ZBroadcast is a live broadcast control app and should stay responsive during focus/background changes.
-            backgroundThrottling: false,
-            additionalArguments: [
-                `--zbroadcast-admin-key=${encodeURIComponent(LOCAL_DESKTOP_ADMIN_KEY)}`
-            ]
+            backgroundThrottling: false
         }
     });
 

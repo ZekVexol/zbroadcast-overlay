@@ -1,25 +1,23 @@
 # Smoke Test Checklist
 
-Use this checklist after changes to confirm the current ZBroadcast web overlay workflow still works.
+Use this checklist after changes to confirm the current ZBroadcast desktop/module workflow still works.
 
 ## Local Startup
 
 - [ ] Run `npm start`.
 - [ ] Confirm the server starts without crashing.
 - [ ] Confirm the server reports the expected port, usually `3000`.
-- [ ] If running publicly, confirm `ADMIN_PASSWORD` is not the default value.
 
-## Control And Overlay Routes
+## App Shell And Module Routes
 
-- [ ] Open `http://localhost:3000/room/default-room/control`.
-- [ ] Enter the admin password when prompted.
-- [ ] Confirm the control page joins the room as admin/control.
-- [ ] Confirm the room name and overlay URL are shown.
-- [ ] Open `http://localhost:3000/room/default-room/overlay`.
-- [ ] Confirm the overlay joins without an admin prompt.
-- [ ] Confirm the overlay is read-only and exposes no operator controls.
-- [ ] Confirm legacy `/control.html` redirects to the default control route.
-- [ ] Confirm legacy `/overlay.html` redirects to the default overlay route.
+- [ ] Open Caster Command.
+- [ ] Confirm Main Menu opens.
+- [ ] Open Module Select.
+- [ ] Open Rocket League.
+- [ ] Confirm the Rocket League Control Room panel renders as app UI.
+- [ ] Open Preview Overlay.
+- [ ] Confirm the Rocket League overlay output renders.
+- [ ] Return to Control Room and confirm the background preview appears when enabled.
 
 ## Score And Series Controls
 

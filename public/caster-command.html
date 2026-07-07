@@ -1002,7 +1002,7 @@ body.settings-high-contrast .scene-copy {
 
 .control-background-frame,
 .embedded-frame,
-.native-panel-host {
+.app-panel-host {
     position: absolute;
     left: 0;
     right: 0;
@@ -1015,7 +1015,7 @@ body.settings-high-contrast .scene-copy {
     background: #121212;
 }
 
-.native-panel-host {
+.app-panel-host {
     z-index: 0;
     display: block;
     overflow: visible;
@@ -1023,7 +1023,7 @@ body.settings-high-contrast .scene-copy {
     background-color: transparent;
 }
 
-.native-panel-host[hidden] {
+.app-panel-host[hidden] {
     display: none;
 }
 
@@ -1138,7 +1138,7 @@ body.settings-high-contrast .scene-copy {
     background-color: transparent;
 }
 
-.module-slot .native-panel-host {
+.module-slot .app-panel-host {
     z-index: 0;
 }
 
@@ -1146,24 +1146,24 @@ body.settings-high-contrast .scene-copy {
     position: relative;
     inset: auto;
     display: block;
-    width: min(var(--rocket-league-proper-frame-width, 998px), calc(100vw - 96px));
-    height: min(var(--rocket-league-proper-frame-height, 430px), calc(100vh - 112px));
+    width: min(var(--rocket-league-panel-width, 998px), calc(100vw - 96px));
+    height: min(var(--rocket-league-panel-height, 430px), calc(100vh - 112px));
     max-width: 100%;
     max-height: 100%;
     pointer-events: auto;
 }
 
-.module-slot[data-control-panel-kind="native-panel"] .embedded-frame {
+.module-slot[data-control-panel-kind="app-panel"] .embedded-frame {
     display: none;
 }
 
-.module-slot[data-module-id="rocket-league-scoreboard"] .native-panel-host {
+.module-slot[data-module-id="rocket-league-scoreboard"] .app-panel-host {
     position: relative;
     inset: auto;
     display: grid;
     place-items: center;
-    width: min(var(--rocket-league-proper-frame-width, 998px), calc(100vw - 96px));
-    height: min(var(--rocket-league-proper-frame-height, 430px), calc(100vh - 112px));
+    width: min(var(--rocket-league-panel-width, 998px), calc(100vw - 96px));
+    height: min(var(--rocket-league-panel-height, 430px), calc(100vh - 112px));
     max-width: 100%;
     max-height: 100%;
     pointer-events: auto;
@@ -1819,7 +1819,6 @@ body.settings-high-contrast .scene-copy {
                         <h3>Advanced</h3>
                         <div class="settings-group">
                             <div class="settings-row placeholder-setting"><span><span class="settings-label">Diagnostics Mode</span><span class="settings-note">Collect troubleshooting details when diagnostics tools are available.</span></span><input class="settings-toggle" type="checkbox" data-setting="diagnosticsMode" disabled></div>
-                            <div class="settings-row placeholder-setting"><span><span class="settings-label">Local Admin / Auth</span><span class="settings-note">Local desktop admin setup will be configurable here later.</span></span><span class="coming-soon">Coming soon</span></div>
                             <div class="settings-row"><span><span class="settings-label">Local Server URL</span><span class="settings-note">Use this local address for local browser-source workflows.</span><span class="settings-value">http://localhost:3000</span></span></div>
                             <div class="settings-actions">
                                 <button class="home-button" type="button" id="resetSettingsButton">Reset Settings</button>
@@ -1871,7 +1870,7 @@ body.settings-high-contrast .scene-copy {
         <div class="module-grid" id="controlModuleGrid">
             <div class="module-slot" data-module-slot="primary">
                 <div class="frame-status" id="controlFrameStatus" aria-live="polite"></div>
-                <div class="native-panel-host" id="controlNativePanel" hidden></div>
+                <div class="app-panel-host" id="controlAppPanel" hidden></div>
                 <iframe class="embedded-frame" id="controlFrame" title="Control Room Module" allowtransparency="true"></iframe>
             </div>
         </div>
@@ -1952,7 +1951,7 @@ body.settings-high-contrast .scene-copy {
 <script src="/modules/predictions/state.js"></script>
 <script src="/modules/rocket-league/state.js"></script>
 <script>
-const FALLBACK_CONTROL_URL = "/modules/rocket-league/panel.html";
+const FALLBACK_CONTROL_URL = "";
 const FALLBACK_OVERLAY_URL = "/modules/rocket-league/overlay.html";
 const ROCKET_LEAGUE_MODULE_ID = "rocket-league-scoreboard";
 const PREDICTIONS_MODULE_ID = "predictions";
@@ -2006,10 +2005,10 @@ const FALLBACK_ROCKET_LEAGUE_MODULE = {
     type: "scoreboard",
     moduleSize: "major",
     layoutSize: "major",
-    controlPanelMode: "native-panel",
     status: "active",
     runnable: true,
-    controlUrl: "/modules/rocket-league/panel.html",
+    panelScriptUrl: "/modules/rocket-league/panel.js",
+    panelGlobalName: "ZBroadcastRocketLeaguePanel",
     overlayUrl: "/modules/rocket-league/overlay.html",
     description: "Rocket League Control Room panel and overlay module."
 };
@@ -2019,14 +2018,8 @@ let catalogModules = [FALLBACK_ROCKET_LEAGUE_MODULE];
 let activeModule = null;
 let controlRoomModule = null;
 let predictionsModuleConfig = null;
-const nativeControlPanelDefinitions = new Map([
-    [ROCKET_LEAGUE_MODULE_ID, {
-        scriptUrl: "/modules/rocket-league/native-panel.js",
-        globalName: "ZBroadcastRocketLeagueNativePanel"
-    }]
-]);
-const nativeControlPanelScriptPromises = new Map();
-let mountedNativeControlPanelApi = null;
+const appControlPanelScriptPromises = new Map();
+let mountedAppControlPanelApi = null;
 const frameLoadTimers = new Map();
 let availableDesktopDisplays = [];
 let settingsStatusTimer = null;
@@ -2717,92 +2710,105 @@ function getControlPanelMode(moduleConfig) {
         return "iframe-panel";
     }
 
-    return moduleConfig.controlPanelMode || moduleConfig.panelMode || "iframe-panel";
+    if (moduleConfig.controlPanelMode || moduleConfig.panelMode) {
+        return moduleConfig.controlPanelMode || moduleConfig.panelMode;
+    }
+
+    return moduleConfig.panelScriptUrl ? "app-panel" : "iframe-panel";
 }
 
 function getControlPanelKind(moduleConfig) {
-    if (getControlPanelMode(moduleConfig) === "native-panel") {
-        return "native-panel";
+    const mode = getControlPanelMode(moduleConfig);
+
+    if (mode === "app-panel" || mode === "native-panel") {
+        return "app-panel";
     }
 
     return "iframe-panel";
 }
 
-function getNativeControlPanelDefinition(moduleConfig) {
-    return moduleConfig ? nativeControlPanelDefinitions.get(moduleConfig.id) || null : null;
+function getAppControlPanelDefinition(moduleConfig) {
+    if (!moduleConfig || !moduleConfig.panelScriptUrl) {
+        return null;
+    }
+
+    return {
+        scriptUrl: moduleConfig.panelScriptUrl,
+        globalName: moduleConfig.panelGlobalName || ""
+    };
 }
 
-function getNativeControlPanelApi(moduleConfig) {
-    const definition = getNativeControlPanelDefinition(moduleConfig);
+function getAppControlPanelApi(moduleConfig) {
+    const definition = getAppControlPanelDefinition(moduleConfig);
     return definition && definition.globalName ? window[definition.globalName] : null;
 }
 
-function loadNativeControlPanelScript(moduleConfig) {
-    const definition = getNativeControlPanelDefinition(moduleConfig);
+function loadAppControlPanelScript(moduleConfig) {
+    const definition = getAppControlPanelDefinition(moduleConfig);
 
     if (!definition || !definition.scriptUrl) {
         return Promise.resolve(null);
     }
 
-    const existingApi = getNativeControlPanelApi(moduleConfig);
+    const existingApi = getAppControlPanelApi(moduleConfig);
     if (existingApi) {
         return Promise.resolve(existingApi);
     }
 
-    if (nativeControlPanelScriptPromises.has(definition.scriptUrl)) {
-        return nativeControlPanelScriptPromises.get(definition.scriptUrl);
+    if (appControlPanelScriptPromises.has(definition.scriptUrl)) {
+        return appControlPanelScriptPromises.get(definition.scriptUrl);
     }
 
     const scriptPromise = new Promise((resolve, reject) => {
-        const existingScript = document.querySelector(`script[data-native-panel-script="${definition.scriptUrl}"]`);
+        const existingScript = document.querySelector(`script[data-app-panel-script="${definition.scriptUrl}"]`);
 
         if (existingScript) {
-            existingScript.addEventListener("load", () => resolve(getNativeControlPanelApi(moduleConfig)), { once: true });
+            existingScript.addEventListener("load", () => resolve(getAppControlPanelApi(moduleConfig)), { once: true });
             existingScript.addEventListener("error", reject, { once: true });
             return;
         }
 
         const script = document.createElement("script");
         script.src = definition.scriptUrl;
-        script.dataset.nativePanelScript = definition.scriptUrl;
-        script.addEventListener("load", () => resolve(getNativeControlPanelApi(moduleConfig)), { once: true });
+        script.dataset.appPanelScript = definition.scriptUrl;
+        script.addEventListener("load", () => resolve(getAppControlPanelApi(moduleConfig)), { once: true });
         script.addEventListener("error", reject, { once: true });
         document.body.appendChild(script);
     });
 
-    nativeControlPanelScriptPromises.set(definition.scriptUrl, scriptPromise);
+    appControlPanelScriptPromises.set(definition.scriptUrl, scriptPromise);
     return scriptPromise;
 }
 
-function clearNativeControlPanel() {
-    const nativePanel = document.getElementById("controlNativePanel");
+function clearAppControlPanel() {
+    const appPanel = document.getElementById("controlAppPanel");
 
-    if (mountedNativeControlPanelApi && typeof mountedNativeControlPanelApi.unmount === "function") {
-        mountedNativeControlPanelApi.unmount();
+    if (mountedAppControlPanelApi && typeof mountedAppControlPanelApi.unmount === "function") {
+        mountedAppControlPanelApi.unmount();
     }
 
-    mountedNativeControlPanelApi = null;
+    mountedAppControlPanelApi = null;
 
-    if (!nativePanel) {
+    if (!appPanel) {
         return;
     }
 
-    nativePanel.replaceChildren();
-    nativePanel.hidden = true;
+    appPanel.replaceChildren();
+    appPanel.hidden = true;
 }
 
-async function mountNativeControlPanel(moduleConfig) {
-    const nativePanel = document.getElementById("controlNativePanel");
+async function mountAppControlPanel(moduleConfig) {
+    const appPanel = document.getElementById("controlAppPanel");
 
-    if (!nativePanel) {
+    if (!appPanel) {
         return false;
     }
 
     let api = null;
     try {
-        api = await loadNativeControlPanelScript(moduleConfig);
+        api = await loadAppControlPanelScript(moduleConfig);
     } catch (error) {
-        console.warn("Could not load native panel module.", error);
+        console.warn("Could not load app panel module.", error);
         return false;
     }
 
@@ -2810,23 +2816,23 @@ async function mountNativeControlPanel(moduleConfig) {
         return false;
     }
 
-    nativePanel.hidden = false;
-    nativePanel.replaceChildren();
+    appPanel.hidden = false;
+    appPanel.replaceChildren();
     try {
-        await api.mount(nativePanel, {
+        await api.mount(appPanel, {
             moduleConfig,
             stateApi: window.ZBroadcastRocketLeague || null,
             showModal: showGlobalAppModal,
             closeModal: closeGlobalAppModal,
-            syncFrameSize: syncRocketLeagueProperFrameSize
+            syncFrameSize: syncRocketLeaguePanelSize
         });
     } catch (error) {
-        console.warn("Could not mount native panel module.", error);
-        nativePanel.hidden = true;
-        nativePanel.replaceChildren();
+        console.warn("Could not mount app panel module.", error);
+        appPanel.hidden = true;
+        appPanel.replaceChildren();
         return false;
     }
-    mountedNativeControlPanelApi = api;
+    mountedAppControlPanelApi = api;
     return true;
 }
 function getModuleOverlayOutputUrl(moduleConfig) {
@@ -2920,13 +2926,13 @@ function getPreviewBackgroundDebugInfo() {
 
 window.__zbDebugPreviewBackground = getPreviewBackgroundDebugInfo;
 
-function getNativePanelCenterDebugInfo() {
+function getAppPanelCenterDebugInfo() {
     const scene = document.getElementById("controlAppScene");
     const moduleGrid = document.getElementById("controlModuleGrid");
     const moduleSlot = document.querySelector("[data-module-slot='primary']");
-    const nativePanel = document.getElementById("controlNativePanel");
+    const appPanel = document.getElementById("controlAppPanel");
     const controlFrame = document.getElementById("controlFrame");
-    const rocketLeaguePanel = nativePanel ? nativePanel.querySelector(".rocket-league-panel-card") : null;
+    const rocketLeaguePanel = appPanel ? appPanel.querySelector(".rocket-league-panel-card") : null;
     const toRect = (element) => {
         if (!element) {
             return null;
@@ -2945,7 +2951,7 @@ function getNativePanelCenterDebugInfo() {
     const sceneRect = toRect(scene);
     const moduleGridRect = toRect(moduleGrid);
     const moduleSlotRect = toRect(moduleSlot);
-    const nativePanelRect = toRect(nativePanel);
+    const appPanelRect = toRect(appPanel);
     const controlFrameRect = toRect(controlFrame);
     const rocketLeaguePanelRect = toRect(rocketLeaguePanel);
     const controlFrameStyle = controlFrame ? window.getComputedStyle(controlFrame) : null;
@@ -2957,9 +2963,9 @@ function getNativePanelCenterDebugInfo() {
     return {
         currentScene: getCurrentSceneName(),
         sceneRect,
-        nativeModuleLayerRect: moduleGridRect,
+        appModuleLayerRect: moduleGridRect,
         moduleSlotRect,
-        nativePanelRect,
+        appPanelRect,
         controlFrameRect,
         controlFrameHidden: controlFrame ? controlFrame.hidden : null,
         controlFrameDisplay: controlFrameStyle ? controlFrameStyle.display : null,
@@ -2974,8 +2980,9 @@ function getNativePanelCenterDebugInfo() {
     };
 }
 
-window.__zbDebugNativePanelCenter = getNativePanelCenterDebugInfo;
-window.__zbDebugControlRoomCenter = getNativePanelCenterDebugInfo;
+window.__zbDebugNativePanelCenter = getAppPanelCenterDebugInfo;
+window.__zbDebugControlRoomCenter = getAppPanelCenterDebugInfo;
+window.__zbDebugAppPanelCenter = getAppPanelCenterDebugInfo;
 
 function getActiveModuleName(moduleConfig = activeModule) {
     moduleConfig = moduleConfig || getRocketLeagueModule();
@@ -3158,16 +3165,6 @@ function failFrameLoad(frame, statusId, errorMessage) {
     console.warn(errorMessage);
 }
 
-function setDesktopAdminStorage() {
-    try {
-        if (window.zbroadcastDesktop && typeof window.zbroadcastDesktop.getAdminKey === "function") {
-            sessionStorage.setItem("adminKey:default-room", window.zbroadcastDesktop.getAdminKey());
-        }
-    } catch (error) {
-        console.warn("Could not set desktop admin key:", error);
-    }
-}
-
 function hasRocketLeagueModule() {
     return selectedModules.has("rocketLeagueScoreboard");
 }
@@ -3215,8 +3212,8 @@ function getRunnableDevModules() {
         }
 
         const hasControlUrl = typeof module.controlUrl === "string" && module.controlUrl.trim() !== "";
-        const isNativePanel = getControlPanelKind(module) === "native-panel";
-        return hasControlUrl || isNativePanel;
+        const isAppPanel = getControlPanelKind(module) === "app-panel";
+        return hasControlUrl || isAppPanel;
     });
 
     if (!runnableModules.some((module) => module.id === ROCKET_LEAGUE_MODULE_ID)) {
@@ -3715,35 +3712,6 @@ function showPredictionsWinnerGlobalModal(optionId) {
     });
 }
 
-async function handleRocketLeaguePanelMessage(event) {
-    const controlFrame = document.getElementById("controlFrame");
-
-    if (!controlFrame || event.source !== controlFrame.contentWindow) {
-        return;
-    }
-
-    const data = event.data || {};
-
-    if (data.source !== "zbroadcast-rocket-league-panel") {
-        return;
-    }
-
-    let api = null;
-    try {
-        api = await loadNativeControlPanelScript(getRocketLeagueModule());
-    } catch (error) {
-        console.warn("Could not load Rocket League native panel module.", error);
-    }
-
-    if (data.type === "panel-size") {
-        syncRocketLeagueProperFrameSize(data.size);
-    } else if (data.type === "open-match-setup" && api && typeof api.openMatchSetup === "function") {
-        api.openMatchSetup(data.state || {});
-    } else if (data.type === "open-teams" && api && typeof api.openTeams === "function") {
-        api.openTeams(data.state || {});
-    }
-}
-
 function handlePredictionsPanelMessage(event) {
     const controlFrame = document.getElementById("controlFrame");
 
@@ -3929,7 +3897,7 @@ function syncControlRoomBackground(moduleConfig) {
     }
 }
 
-function syncRocketLeagueProperFrameSize(size) {
+function syncRocketLeaguePanelSize(size) {
     if (!controlRoomModule || controlRoomModule.id !== ROCKET_LEAGUE_MODULE_ID) {
         return;
     }
@@ -3942,8 +3910,8 @@ function syncRocketLeagueProperFrameSize(size) {
         return;
     }
 
-    moduleSlot.style.setProperty("--rocket-league-proper-frame-width", `${width}px`);
-    moduleSlot.style.setProperty("--rocket-league-proper-frame-height", `${height}px`);
+    moduleSlot.style.setProperty("--rocket-league-panel-width", `${width}px`);
+    moduleSlot.style.setProperty("--rocket-league-panel-height", `${height}px`);
 }
 
 async function showControlScene(options = {}) {
@@ -3960,7 +3928,7 @@ async function showControlScene(options = {}) {
                 controlFrame.hidden = false;
             }
 
-            clearNativeControlPanel();
+            clearAppControlPanel();
             controlRoomModule = null;
             syncControlRoomBackground(null);
             const moduleGrid = document.getElementById("controlModuleGrid");
@@ -3981,7 +3949,6 @@ async function showControlScene(options = {}) {
     if (!options.keepDevToolsOpen) {
         closeGlobalDevTools();
     }
-    setDesktopAdminStorage();
     const controlFrame = document.getElementById("controlFrame");
     const moduleGrid = document.getElementById("controlModuleGrid");
     const moduleSlot = document.querySelector("[data-module-slot='primary']");
@@ -3992,9 +3959,9 @@ async function showControlScene(options = {}) {
         moduleSlot.dataset.controlPanelKind = getControlPanelKind(moduleForControlRoom);
     }
     syncControlRoomBackground(moduleForControlRoom);
-    const shouldUseNativePanel = getControlPanelKind(moduleForControlRoom) === "native-panel";
+    const shouldUseAppPanel = getControlPanelKind(moduleForControlRoom) === "app-panel";
 
-    if (shouldUseNativePanel && await mountNativeControlPanel(moduleForControlRoom)) {
+    if (shouldUseAppPanel && await mountAppControlPanel(moduleForControlRoom)) {
         window.clearTimeout(frameLoadTimers.get(controlFrame.id));
         frameLoadTimers.delete(controlFrame.id);
         controlFrame.hidden = true;
@@ -4007,7 +3974,7 @@ async function showControlScene(options = {}) {
         return;
     }
 
-    clearNativeControlPanel();
+    clearAppControlPanel();
     controlFrame.hidden = false;
     const controlUrl = getActiveControlUrl(moduleForControlRoom);
     const didChangeUrl = controlFrame.src !== controlUrl;
@@ -4254,7 +4221,6 @@ document.getElementById("appModal").addEventListener("click", (event) => {
 });
 bindSelectOnFirstFocus();
 window.addEventListener("message", handlePredictionsPanelMessage);
-window.addEventListener("message", handleRocketLeaguePanelMessage);
 ["mouseup", "pointerup", "pointercancel", "blur"].forEach((eventName) => {
     window.addEventListener(eventName, stopPredictionsHold);
 });
@@ -4264,7 +4230,6 @@ applyAppSettings();
 syncSettingsControlsFromDraft();
 loadDesktopDisplays();
 showSettingsTab("general");
-setDesktopAdminStorage();
 updateStartState();
 loadModuleCatalog();
 updateGlobalDevToolsContext();

@@ -6,10 +6,10 @@ const ROCKET_LEAGUE_SAVED_TEAM_COLUMN_COUNT = 3;
 const ROCKET_LEAGUE_SAVED_TEAM_MIN_ROWS_PER_COLUMN = 6;
 const ROCKET_LEAGUE_SAVED_TEAM_BUTTON_HEIGHT = 32;
 const ROCKET_LEAGUE_SAVED_TEAM_BUTTON_GAP = 6;
-const STYLE_URL = "/modules/rocket-league/native-panel.css";
+const STYLE_URL = "/modules/rocket-league/panel.css";
 
 function ensureRocketLeagueNativeStyles() {
-    const existingLink = document.querySelector('link[data-rocket-league-native-panel-style="true"]');
+    const existingLink = document.querySelector('link[data-rocket-league-panel-style="true"]');
 
     if (existingLink) {
         return existingLink.dataset.loaded === "true"
@@ -23,7 +23,7 @@ function ensureRocketLeagueNativeStyles() {
     const link = document.createElement("link");
     link.rel = "stylesheet";
     link.href = STYLE_URL;
-    link.dataset.rocketLeagueNativePanelStyle = "true";
+    link.dataset.rocketLeaguePanelStyle = "true";
     document.head.appendChild(link);
 
     return new Promise((resolve, reject) => {
@@ -57,7 +57,7 @@ function closeRocketLeagueModal() {
     }
 }
 
-function syncRocketLeagueFrameSize(size) {
+function syncRocketLeaguePanelSize(size) {
     if (typeof panelOptions.syncFrameSize === "function") {
         panelOptions.syncFrameSize(size);
     }
@@ -426,7 +426,7 @@ function renderRocketLeagueNativePanelState(state) {
         fitRocketLeagueNameText(orangeNameElement);
         const card = root.querySelector(".rocket-league-panel-card");
         if (card) {
-            syncRocketLeagueFrameSize(card.getBoundingClientRect());
+            syncRocketLeaguePanelSize(card.getBoundingClientRect());
         }
     });
 }
@@ -667,7 +667,7 @@ function renderRocketLeagueNativePanel(host) {
     }
 
     host.innerHTML = `
-        <main class="rocket-league-panel rocket-league-native-panel">
+        <main class="rocket-league-panel rocket-league-app-panel">
             <section class="rocket-league-panel-card">
                 <div class="rocket-league-toolbar">
                     <div class="rocket-league-toolbar-left">
@@ -1469,7 +1469,7 @@ async function mount(hostElement, options = {}) {
     renderRocketLeagueNativePanel(hostElement);
 }
 
-window.ZBroadcastRocketLeagueNativePanel = {
+window.ZBroadcastRocketLeaguePanel = {
     mount,
     unmount,
     openMatchSetup: showRocketLeagueMatchSetupModal,
