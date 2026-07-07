@@ -103,19 +103,19 @@ Examples:
 - Control Room module selector.
 - Control Room module grid.
 - Predictions panel.
-- Native Rocket League panel target.
+- App-mounted Rocket League panel.
 
 ### Module Panel Types
 
 Control Room panels should use one of three explicit shapes:
 
-- `native-panel`: normal app DOM/components rendered by `caster-command.html` inside the Control Room module grid.
+- `app-panel`: normal app DOM/components rendered by `caster-command.html` inside the Control Room module grid.
 - `overlay-output`: browser-style output used by OBS, Preview Overlay, and the low-opacity Control Room background preview.
 - `fullscreen-scene`: a module-owned full scene, only when the module intentionally needs the whole scene.
 
 Rules:
 
-- Normal operator controls should be `native-panel`.
+- Normal operator controls should be `app-panel`.
 - Overlay outputs can remain separate pages/iframes because OBS and Preview Overlay need browser-style output surfaces.
 - The Control Room background preview can remain an iframe because it is an output preview, not an operator panel.
 - Do not iframe normal Control Room control panels unless there is a clear technical reason.
@@ -269,7 +269,7 @@ Rules:
 Current first-pass metadata:
 
 - Predictions: `layoutSize: "minor"`
-- Rocket League: `layoutSize: "major"` and `controlPanelMode: "native-panel"` as the target.
+- Rocket League: `layoutSize: "major"` with `panelScriptUrl` pointing at its app-mounted panel.
 
 ## Predictions Example
 
@@ -293,14 +293,14 @@ Product decisions:
 
 ## Rocket League Example
 
-Rocket League is the first major module moving toward the native-panel model.
+Rocket League is the first major module using the app-panel model.
 
 Current direction:
 
-- Rocket League Control Room controls should become native app DOM inside `caster-command.html`.
+- Rocket League Control Room controls mount as app DOM inside `caster-command.html` from `public/modules/rocket-league/panel.js`.
 - Rocket League overlay output remains a separate overlay page for Preview Overlay, background preview, and future OBS use.
-- The existing iframe panel path remains available as a fallback while the native panel is ported.
-- The old legacy files remain preserved until the native panel and proper overlay are proven.
+- The iframe panel path remains available for compatibility modules, not for Rocket League's normal Control Room panel.
+- The old Rocket League controller/overlay entry points are no longer part of the normal module path.
 
 ## Module Workbenches
 

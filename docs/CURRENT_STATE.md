@@ -13,13 +13,20 @@ ZBroadcast_Overlay/
     CURRENT_STATE.md
     DESKTOP_PIVOT_PLAN.md
   public/
-    control.html
-    overlay.html
+    caster-command.html
+    modules/
+      rocket-league/
+        panel.js
+        panel.css
+        overlay.html
+        state.js
+        styles.css
+      predictions/
     overlay-assets/        # Created at runtime when assets are uploaded
   node_modules/            # Local installed dependencies
 ```
 
-The repository is currently a compact Node.js web app. The server owns match state and uploaded assets. The browser control page sends operator actions to the server. The browser overlay page receives state updates and renders the broadcast overlay for OBS.
+The repository is currently a desktop-first app shell backed by a local Node.js server. Caster Command owns the normal operator flow. Rocket League now runs as an app-mounted module panel with a separate module overlay output.
 
 ## Current Files
 
@@ -30,11 +37,8 @@ Runs the Express and Socket.IO server.
 Current responsibilities:
 
 - Serves static files from `public/`.
-- Redirects legacy `/control.html` and `/overlay.html` URLs into the default room routes.
-- Serves room-specific pages at `/room/:roomId/control` and `/room/:roomId/overlay`.
 - Holds in-memory room state for each room ID.
 - Validates room IDs with a conservative alphanumeric, underscore, and dash allowlist.
-- Requires an admin password for control sockets through `ADMIN_PASSWORD`.
 - Allows overlay sockets to join without an admin password.
 - Stores uploaded PNG assets under `public/overlay-assets/:roomId/`.
 - Supports upload and clear routes for overlay background, blue logo, and orange logo assets.
@@ -45,10 +49,6 @@ Current responsibilities:
 
 Main HTTP routes:
 
-- `GET /control.html` redirects to `/room/default-room/control`.
-- `GET /overlay.html` redirects to `/room/default-room/overlay`.
-- `GET /room/:roomId/control` serves the control UI.
-- `GET /room/:roomId/overlay` serves the overlay UI.
 - `POST /api/room/:roomId/upload-overlay` stores a PNG overlay background.
 - `POST /api/room/:roomId/clear-overlay` removes the room overlay background.
 - `POST /api/room/:roomId/upload-blue-logo` stores a PNG blue-team logo.
@@ -81,43 +81,39 @@ Main Socket.IO events:
 - `fullReset`
 - `undoLastAction`
 
-### `public/control.html`
+### `public/caster-command.html`
 
-The operator-facing control interface.
-
-Current responsibilities:
-
-- Determines the current room ID from the URL path.
-- Prompts for the admin password and stores it in `sessionStorage` for that room.
-- Joins the Socket.IO room as `admin`.
-- Shows the room ID and overlay URL.
-- Provides controls for team names, league/match metadata, series type, active rosters, substitute players, logos, and overlay background image.
-- Sends match info either as queued overlay updates or instant overlay updates.
-- Provides blue/orange score controls, undo goal controls, series win controls, undo series controls, game win controls, reset controls, team swap, full reset, and undo last action.
-- Supports a configurable overlay delay.
-- Supports a timing comparison display with start, stop, and reset controls.
-- Shows live game number, game score, series score, current team names, uploaded-logo previews, overlay-asset status, and match history.
-- Provides configurable hotkeys saved in browser `localStorage`.
-- Avoids firing hotkeys while the operator is typing in form fields.
-- Uploads PNG overlay/background and team logo files to the server using `fetch` and `FormData`.
-
-### `public/overlay.html`
-
-The OBS/browser-source overlay output.
+The desktop-first app shell and normal operator interface.
 
 Current responsibilities:
 
-- Determines the current room ID from the URL path.
-- Joins the Socket.IO room as `overlay`.
-- Renders a fixed 1920x1080 transparent overlay surface.
-- Displays optional server-stored overlay background image.
-- Displays top match metadata when present.
-- Displays blue and orange team names, scores, logos, and series pips.
-- Renders orange pips in reverse direction for visual balance.
-- Displays active-player roster stacks when roster fields are populated.
-- Shrinks roster text when needed to fit within its visual containers.
-- Displays the timing comparison panel when timing state is running or stopped with an elapsed value.
-- Applies overlay delay by scheduling incoming `stateUpdate` payloads.
+- Provides Main Menu, Module Select, Control Room, Settings, Dev Tools, and Preview Overlay scenes.
+- Loads module catalog metadata from `public/modules/catalog.json`.
+- Mounts normal app panels such as Rocket League from module `panelScriptUrl` metadata.
+- Keeps iframe panel fallback available for compatibility modules.
+- Routes Preview Overlay and Control Room background preview to the active module overlay output.
+- Owns global modals and navigation.
+
+### `public/modules/rocket-league/panel.js`
+
+The active Rocket League Control Room panel.
+
+Current responsibilities:
+
+- Renders the Rocket League operator panel as app DOM inside Caster Command.
+- Uses local module state under `zbroadcast:module:rocket-league`.
+- Provides Match Setup, Teams, saved teams, score controls, event history, undo, reset, and Swap Teams.
+- Requests app modals through the global modal layer.
+
+### `public/modules/rocket-league/overlay.html`
+
+The Rocket League Preview Overlay / OBS output.
+
+Current responsibilities:
+
+- Reads local Rocket League module state.
+- Renders the broadcast-facing Rocket League scorebug.
+- Displays team names, logos, scores, match info, series pips, and active-player stacks.
 - Applies instant display-info updates immediately and purges older delayed display-info state where needed.
 - Clears scheduled overlay states when reset events require the queue to be rebuilt.
 
@@ -177,11 +173,12 @@ The code serves those files through `/overlay-assets/...` URLs with cache-bustin
 ## Features That Already Work
 
 - Local web server launched with `npm start`.
-- Room-based control and overlay pages.
-- Default room redirects for old `/control.html` and `/overlay.html` links.
-- Real-time state sync from control page to overlay page.
-- Admin-gated control socket role.
-- Read-only overlay socket role.
+- Caster Command app shell with Main Menu, Module Select, Control Room, Settings, Dev Tools, and Preview Overlay.
+- Rocket League app-mounted Control Room panel.
+- Rocket League module overlay output.
+- Control Room background preview using the active Preview Overlay output.
+- Predictions module still available through the module system.
+- Local module state sync between Rocket League panel and overlay.
 - Blue and orange team names.
 - Blue and orange game scores.
 - Blue and orange series scores.
@@ -191,38 +188,27 @@ The code serves those files through `/overlay-assets/...` URLs with cache-bustin
 - Marking blue or orange as game winner, pushing history, advancing series, and resetting the current game score.
 - Reset current game.
 - Reset series and history.
-- Full reset while preserving the uploaded overlay background path.
-- Undo last action from server-side undo snapshots.
+- Undo last meaningful Rocket League event.
 - Swap team names, logos, rosters, and subs between blue and orange.
-- Match metadata fields for league name, week/round, and series info.
+- Match metadata fields for event name, division/season/etc, week/round, and series length.
 - Roster fields for three active players and two substitutes per team.
-- Click-based active/substitute roster swapping in the control UI.
-- Server-side PNG upload for overlay background images.
-- Server-side PNG upload for blue and orange team logos.
-- Overlay display of uploaded background and logos.
-- Match history rendering in the control page.
-- Overlay delay for delayed broadcast output.
-- Queued and instant match-info updates.
-- Overlay queue reset handling for full reset and undo.
-- Optional timing comparison panel.
-- Configurable hotkeys persisted in the operator browser.
-- Hotkey suppression while typing.
-- OBS-compatible overlay page with transparent body and fixed 1920x1080 canvas.
+- Active/substitute roster swapping in the Teams modal.
+- Saved Rocket League team library.
+- Overlay display of team logos.
+- Event history rendering in the Control Room panel.
+- OBS-compatible module overlay page with transparent body and fixed 1920x1080 canvas.
 
 ## Features That Must Be Preserved
 
 - OBS Browser Source compatibility.
-- Stable room URLs, especially `/room/:roomId/control` and `/room/:roomId/overlay`.
-- Legacy redirects for `/control.html` and `/overlay.html` unless intentionally deprecated later.
+- Stable module overlay URLs, especially `public/modules/rocket-league/overlay.html`.
+- Caster Command module navigation.
 - Blue/orange side conventions.
-- Fast score changes over Socket.IO.
+- Fast local score changes.
 - Manual operator workflow for goals, game winners, series wins, resets, and undo.
-- Series pips and reverse orange pip direction.
-- Server-side shared assets instead of browser-only overlay asset storage.
-- Room-scoped overlay backgrounds and team logos.
-- Admin password gating for the control role.
-- Overlay access without operator controls.
-- Overlay delay and instant-update behavior.
+- Series pips.
+- Module-scoped team logos and colors.
+- Overlay output without operator controls.
 - Undo/history behavior that operators rely on during live production.
 - Hotkeys that do not trigger while typing.
 - Current match metadata, roster, logo, and timing-display concepts.
@@ -257,26 +243,18 @@ npm start
 ```
 
 - The server listens on `process.env.PORT` or port `3000`.
-- Local default control URL:
+- Local app URL:
 
 ```text
-http://localhost:3000/room/default-room/control
+http://localhost:3000/caster-command.html
 ```
 
-- Local default overlay URL:
+- Rocket League module overlay URL:
 
 ```text
-http://localhost:3000/room/default-room/overlay
-```
-
-- Legacy local URLs redirect to the default room:
-
-```text
-http://localhost:3000/control.html
-http://localhost:3000/overlay.html
+http://localhost:3000/modules/rocket-league/overlay.html
 ```
 
 - The overlay URL is intended to be loaded into OBS as a Browser Source.
-- For any public or remote deployment, `ADMIN_PASSWORD` must be set to a real secret before launch.
 - The server process needs filesystem write access to `public/overlay-assets/`.
 - Uploaded room assets are stored locally on the server machine. Moving to a hosted or packaged desktop app should preserve an equivalent writable asset location.

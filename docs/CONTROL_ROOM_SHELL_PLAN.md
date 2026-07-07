@@ -71,13 +71,13 @@ Module context should come from the setup/selector flow, not from labels stacked
 
 ## Rocket League Current Role
 
-Rocket League is currently an embedded legacy controller from `public/control.html`.
+Rocket League is currently an app-mounted module panel loaded from `public/modules/rocket-league/panel.js`.
 
 Current role:
 
 - It is officially registered as a module.
 - It launches from the Control Room setup flow.
-- It keeps using the existing overlay route.
+- It uses `public/modules/rocket-league/overlay.html` as its overlay output.
 - It should remain functional while the app shell improves around it.
 
 Important constraint:

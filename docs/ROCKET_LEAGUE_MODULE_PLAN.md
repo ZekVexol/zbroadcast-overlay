@@ -1,25 +1,21 @@
-# Rocket League Proper Module Rebuild Plan
+# Rocket League Module Plan
 
 ## Goal
 
-Plan how Rocket League moves from a preserved embedded controller into a proper ZBroadcast module with a native Control Room panel.
-
-This is a planning document only. Do not modify the current Rocket League controller, overlay, or server as part of this plan.
+Track the current Rocket League module structure and remaining module work.
 
 ## Current Status
 
-Rocket League is transitioning from a preserved legacy-major flow into the active proper Rocket League module.
+Rocket League is now the active module path.
 
 Current shape:
 
-- Controller lives in `public/control.html`.
-- Overlay output lives in `public/overlay.html`.
-- Server-side state, room handling, assets, admin behavior, and Socket.IO events live in `server.js`.
-- The desktop app previously embedded the old controller through the Control Room flow.
-- The module catalog now points Rocket League at the proper module and marks it as `layoutSize: major`.
-- The catalog also marks Rocket League as the first `controlPanelMode: native-panel` target.
-
-The legacy files remain useful and should be preserved for reference/fallback, but normal app module navigation should move toward the proper Rocket League module.
+- Control Room panel mounts from `public/modules/rocket-league/panel.js`.
+- Control Room panel styles live in `public/modules/rocket-league/panel.css`.
+- Overlay output lives in `public/modules/rocket-league/overlay.html`.
+- Shared local module state lives in `public/modules/rocket-league/state.js`.
+- Overlay-facing styles continue to live in `public/modules/rocket-league/styles.css`.
+- The module catalog points Rocket League at `layoutSize: major` and the app-mounted panel script.
 
 ## Target Proper Module Structure
 
@@ -27,7 +23,8 @@ Future Rocket League should eventually move toward:
 
 ```text
 public/modules/rocket-league/
-  panel.html          temporary iframe fallback while native controls are ported
+  panel.js
+  panel.css
   overlay.html
   state.js
   styles.css
@@ -40,18 +37,16 @@ Optional later pieces:
 - preset support.
 - migration helpers from legacy state.
 
-The new module should coexist with the legacy flow until the replacement is proven.
-
 Current shell status:
 
-- `public/modules/rocket-league/panel.html` exists as a first local-only Control Room panel foundation.
-- `public/modules/rocket-league/overlay.html` exists as the first proper local-only overlay output.
+- `public/modules/rocket-league/panel.js` mounts the Control Room panel.
+- `public/modules/rocket-league/panel.css` styles the Control Room panel.
+- `public/modules/rocket-league/overlay.html` is the module overlay output.
 - `public/modules/rocket-league/state.js` defines the first local-first state schema using `zbroadcast:module:rocket-league`.
-- `public/modules/rocket-league/styles.css` exists for scoped module shell styles.
-- The proper Rocket League module is now the catalog/module-selection target.
-- The existing `panel.html` page remains the temporary iframe fallback while native Control Room controls are ported into `caster-command.html`.
-- The panel reads and writes only the local proper-module state namespace; it does not control the legacy overlay.
-- The proper overlay is routed through the same Preview Overlay output path used by the Control Room background preview layer.
+- `public/modules/rocket-league/styles.css` contains overlay-facing/shared module output styles.
+- Rocket League is the catalog/module-selection target.
+- The panel reads and writes only the local module state namespace.
+- The overlay is routed through the same Preview Overlay output path used by the Control Room background preview layer.
 
 ## Layer Mapping
 
@@ -79,10 +74,10 @@ Current catalog direction:
 
 ```text
 layoutSize: major
-controlPanelMode: native-panel
+panelScriptUrl: /modules/rocket-league/panel.js
 ```
 
-Keep iframe panel loading only as a temporary fallback until native panel controls are ported.
+Iframe panel loading is reserved for compatibility modules that explicitly need it.
 
 ## Preserve-First Rebuild Strategy
 
@@ -107,12 +102,13 @@ Goal: understand what must be preserved before rebuilding anything.
 
 ### Phase B: Create New Module Folder As A Prototype
 
-Create new module files without replacing the legacy flow.
+Create module files without depending on the old standalone Rocket League pages.
 
 Target files:
 
 ```text
-public/modules/rocket-league/panel.html
+public/modules/rocket-league/panel.js
+public/modules/rocket-league/panel.css
 public/modules/rocket-league/overlay.html
 public/modules/rocket-league/state.js
 public/modules/rocket-league/styles.css
@@ -121,14 +117,11 @@ public/modules/rocket-league/styles.css
 Early prototype rules:
 
 - Use local-first module state first.
-- Do not refactor `server.js`.
-- Do not edit `public/control.html`.
-- Do not edit `public/overlay.html`.
-- Keep the legacy files untouched while the proper module launch path is refined.
+- Use local-first module state first.
 
 Goal: build a safe sandbox for the proper module.
 
-Status: initial shell files exist and the first local-first state schema is defined. The proper module is now the catalog target, with iframe panel loading kept as a temporary fallback until native controls are ported.
+Status: Rocket League is the active catalog target with an app-mounted Control Room panel and module overlay output.
 
 ### Phase C: Build New Control Room Panel
 
@@ -144,13 +137,10 @@ Panel rules:
 - Requests app modals through the Global Modal Layer if needed.
 - Does not duplicate Home, Preview Overlay, or Change Module.
 
-Keep the old controller available during this phase.
-
-Status: first panel foundation exists as `public/modules/rocket-league/panel.html` and has a cleaner major-module layout. It is now the normal Rocket League module target, but it remains an iframe fallback while the native panel is ported into the app shell. The main panel focuses on local score/series controls and a scoreboard-style local preview. Match setup uses the Global Modal Layer with Event Name, Division / Season / Etc, Week / Round, and Series Length. Team setup uses a Teams modal for team names, rosters, logos, team colors, and same-team roster slot swaps. The current game number is derived from series score instead of being entered manually. The panel also has local-only Swap Teams, event history, and undo/reset behavior inspired by the legacy controller.
+Status: the panel mounts from `public/modules/rocket-league/panel.js` and has a cleaner major-module layout. The main panel focuses on local score/series controls and a scoreboard-style local preview. Match setup uses the Global Modal Layer with Event Name, Division / Season / Etc, Week / Round, and Series Length. Team setup uses a Teams modal for team names, rosters, logos, team colors, saved teams, and same-team roster slot swaps. The current game number is derived from series score instead of being entered manually. The panel also has local-only Swap Teams, event history, and undo/reset behavior.
 
 Next panel steps:
 
-- port the current Rocket League panel controls from iframe fallback into native app DOM/components.
 - add Dev Tools hooks for test state once the read-only panel/overlay loop is stable.
 - add real operator controls only after the state schema and overlay rendering are proven.
 - move instant/queued mode and overlay delay into module settings or a compact panel dropdown.
@@ -168,23 +158,19 @@ Overlay rules:
 - Handles empty/inactive state cleanly.
 - Remains OBS/browser-source friendly.
 
-Compare the new overlay against the old `public/overlay.html` output before switching.
-
-Status: first proper overlay output exists at `public/modules/rocket-league/overlay.html`. It reads the local module state namespace, renders a broadcast-facing scorebug with team names, logos, scores, fixed match-info cells, `GAME X OF Y` or `SERIES FINAL`, larger series pips, and active-player stacks. The proper Rocket League module routes this output into the Preview Overlay scene; when the Control Room live preview setting is enabled, the Control Room background layer uses that same active Preview Overlay output. The legacy `public/overlay.html` file remains preserved.
+Status: proper overlay output exists at `public/modules/rocket-league/overlay.html`. It reads the local module state namespace, renders a broadcast-facing scorebug with team names, logos, scores, fixed match-info cells, `GAME X OF Y` or `SERIES FINAL`, larger series pips, and active-player stacks. The Rocket League module routes this output into the Preview Overlay scene; when the Control Room live preview setting is enabled, the Control Room background layer uses that same active Preview Overlay output.
 
 ### Phase E: Migrate Control Room Launch Path
 
-Current status: partially complete.
+Current status: complete for the current local module path.
 
-- Module catalog routes point to the proper Rocket League module files.
+- Module catalog points to the Rocket League module panel script and overlay output.
 - Rocket League is now `layoutSize: major`.
-- Rocket League is marked as `controlPanelMode: native-panel`.
-- The current `panel.html` iframe remains the fallback while native controls are ported into `caster-command.html`.
-- Legacy files remain untouched.
+- Rocket League uses the app-mounted panel path.
 
-### Phase F: Deprecate Legacy Files Only When Safe
+### Phase F: Legacy Cleanup
 
-Do not remove or deprecate `public/control.html`, `public/overlay.html`, or related server behavior until the replacement has proven parity.
+Status: legacy Rocket League controller/overlay entry points have been removed from the current module path.
 
 Deprecation requirements:
 
@@ -334,8 +320,7 @@ Do not start the rebuild with:
 - server refactor.
 - database storage.
 - monetization or store logic.
-- replacing `public/control.html` immediately.
-- replacing `public/overlay.html` immediately.
+- broad server/state refactors beyond the current module cleanup.
 - changing existing Socket.IO events.
 - changing existing server state shape.
 
@@ -381,7 +366,7 @@ Rocket League becomes a proper ZBroadcast module when:
 - its state boundary is clear
 - its Dev Tools hooks live in the global Dev Tools Layer
 - its modals use the Global Modal Layer
-- it no longer depends on embedding the old `public/control.html` page
+- it no longer depends on embedding the old standalone controller page
 - current scoreboard behavior remains preserved or intentionally replaced
 
-Move slowly. Preserve the working legacy flow until the replacement is clearly better and safer.
+Move slowly. Preserve current Rocket League module behavior while cleaning up remaining legacy-only internals.

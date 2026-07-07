@@ -47,9 +47,9 @@ Layout size values:
 
 The catalog is the app shell's first source of truth for module availability and layout behavior.
 
-Control panel mode values:
+Control panel shape values:
 
-- `native-panel`: Control Room controls render as native app DOM/components inside `caster-command.html`.
+- `app-panel`: Control Room controls render as app-mounted DOM/components inside `caster-command.html`.
 - `iframe-panel`: temporary compatibility path for older or not-yet-ported panel pages.
 - `fullscreen-scene`: only for modules that intentionally own the whole app scene.
 
@@ -219,15 +219,14 @@ Predictions proves the intended pattern: clean live panel, stream-facing overlay
 
 ### Rocket League
 
-Rocket League is the first major module moving toward `controlPanelMode: "native-panel"`.
+Rocket League is the first major app-mounted panel module.
 
 Its current direction:
 
 - catalog metadata points at Rocket League as a major module
-- Control Room controls should move into native app DOM/components
+- Control Room controls mount from `public/modules/rocket-league/panel.js`
 - proper overlay output remains a separate overlay page
-- iframe panel loading remains only as a temporary fallback while native controls are ported
-- legacy files remain preserved until the new flow is proven
+- iframe panel loading remains only for modules that explicitly need the compatibility path
 
 Rocket League cleanup should not block new modules that already follow this contract.
 
